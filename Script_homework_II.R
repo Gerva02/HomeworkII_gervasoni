@@ -13,7 +13,7 @@ levels(X$credit_levels) <- c("vlow", "low", "medium", "high", "vhigh")
 X$credit_levels
 
 
-sample_frac()
+#sample_frac()
 
 creditors_data <- sample_frac(X, 0.8) %>% 
   select(SAVINGS,DEBT,INCOME)
