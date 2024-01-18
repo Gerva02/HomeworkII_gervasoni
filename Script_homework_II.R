@@ -15,15 +15,34 @@ X$credit_levels
 
 #sample_frac()
 
-creditors_data <- sample_frac(X, 0.8) %>% 
-  select(SAVINGS,DEBT,INCOME)
+creditors_data <- X %>% 
+  sample_frac(0.8) %>%
+  select(CUST_ID,SAVINGS,DEBT,INCOME,labels = credit_levels)
+# samples random data
 
+D_training <- X %>%
+  filter(CUST_ID %in% creditors_data$CUST_ID) %>% 
+  select(SAVINGS,DEBT,INCOME)  # 
+# Strips of the labels
+
+D_label <- X %>%
+  filter(CUST_ID %in% creditors_data$CUST_ID) %>% 
+  select(labels = credit_levels) %>%
+  as_vector()
+# Is the labels
+  
+Test <- X %>%
+  filter(!(CUST_ID %in% creditors_data$CUST_ID)) %>% 
+  select(SAVINGS,DEBT,INCOME,labels = credit_levels)
+# Data to test on 
 
 set.seed(321)
-(pr<-mixmodLearn(creditors_data, X$credit_levels,    #all three variables in diabetes.data
+(pr<-mixmodLearn(D_training, D_label,
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
 
 
-
 pr@bestResult
+
+
+#PREDICTION<- mixmodPredict() da implementare correttamente
