@@ -3,8 +3,9 @@
 library(tidyverse)
 library(mclust)
 library(Rmixmod)
-
+install.packages("Rmixmod")
 X <-read.csv("credit_score.csv")
+X
 #leggendo il dataset sembra essere generato randomicamente
 dataset <- tibble(X)
 X$credit_levels <- cut(X$CREDIT_SCORE, 5)
