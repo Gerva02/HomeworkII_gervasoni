@@ -1,9 +1,13 @@
 #qua faremo lo script e dopo nel markdown faremo vedere gli output dell'analisi
 #ovviamente senza mostrare lo script `echo = FALSE`
+#install.packages("Rmixmod")
 library(tidyverse)
 library(mclust)
 library(Rmixmod)
-install.packages("Rmixmod")
+
+# credit ------------------------------------------------------------------
+
+
 X <-read.csv("credit_score.csv")
 X
 #leggendo il dataset sembra essere generato randomicamente
@@ -47,3 +51,9 @@ pr@bestResult
 
 
 #PREDICTION<- mixmodPredict() da implementare correttamente
+
+# Fetal health ------------------------------------------------------------
+
+fetal_health <- tibble(read.csv("fetal_health.csv"))
+
+
