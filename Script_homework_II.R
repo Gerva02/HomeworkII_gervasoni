@@ -56,4 +56,32 @@ pr@bestResult
 
 fetal_health <- tibble(read.csv("fetal_health.csv"))
 
+sum(is.na(fetal_health)) #no NAs
+n <- nrow(fetal_health)
+fetal_health <- fetal_health %>% 
+  rowid_to_column("id")
 
+train <- fetal_health %>% 
+  sample_frac(.70)
+
+data_train <- fetal_health %>% 
+  select(-c(id, fetal_health, starts_with("histogram"), severe_decelerations))
+
+label_train <- fetal_health %>%
+  select(fetal_health) %>%
+  mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
+
+test  <- anti_join(fetal_health, train, by = 'id')
+
+(pr<-mixmodLearn(data_train, label_train$fetal_health,
+                 models=mixmodGaussianModel(family='all'),
+                 criterion=c('CV','BIC')))  
+
+
+
+
+
+
+
+
+  
