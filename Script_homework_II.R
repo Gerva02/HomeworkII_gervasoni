@@ -91,18 +91,18 @@ str(PREDICTION)
 mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION
 
+#c'è un modo migliore di fare la confusion matrix? 
 confusion_matrix <- table( test$fetal_health, PREDICTION@partition)
-accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix) # confirmed 86%
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix) # confirmed 86% (da aggiungere set.seed e vedere se rimane 86%....)
 
 
 #analisi delle componenti principali
-pca = princomp(data_train,cor=T)
+pca = princomp(data_train,cor=T) 
+#è necessario standardizzare siccome le variabili sono su ordini di grandezza differenti
+#altrimenti l'80% della variabilità sarebbe gestita unicamente da una variabile (variabile o componente?????? RIVEDERE)
 pca$sdev 
-cumsum(pca$sdev^2/10) < 0.60
+cumsum(pca$sdev^2/10) < 0.70 #4 componenti
 
-names(data_train)[apply(pca$loadings[,1:3], 2, function(x) which(x**2==max(x**2)))]
+names(data_train)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))]
 # da fare meglio
-
-
-
 
