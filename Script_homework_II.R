@@ -89,13 +89,20 @@ PREDICTION<- mixmodPredict(data = select(test,-fetal_health), classificationRule
 str(PREDICTION)
 
 mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
-
-
 PREDICTION
+
+confusion_matrix <- table( test$fetal_health, PREDICTION@partition)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix) # confirmed 86%
+
+
 #analisi delle componenti principali
 pca = princomp(data_train,cor=T)
 pca$sdev 
-cumsum(pca$sdev^2/10) < 0.85
+cumsum(pca$sdev^2/10) < 0.60
 
-names(data_train)[apply(pca$loadings[,1:5], 2, function(x) which(x**2==max(x**2)))]
+names(data_train)[apply(pca$loadings[,1:3], 2, function(x) which(x**2==max(x**2)))]
 # da fare meglio
+
+
+
+
