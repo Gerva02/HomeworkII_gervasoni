@@ -71,17 +71,31 @@ label_train <- fetal_health %>%
   select(fetal_health) %>%
   mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
 
-test  <- anti_join(fetal_health, train, by = 'id')
+test<- anti_join(fetal_health, train, by = 'id')%>%
+  select(-c(id, starts_with("histogram"), severe_decelerations))
+
+  
 
 (pr<-mixmodLearn(data_train, label_train$fetal_health,
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
 
+#prediction con il nostro classifier sembra accurate al 86 percento
+#bisogna capire meglio le variabili che iniziano per "histogram" che sembrano non entrare nel classifi
+summary(pr)
+str(pr)
+
+PREDICTION<- mixmodPredict(data = select(test,-fetal_health), classificationRule=pr["bestResult"])
+str(PREDICTION)
+
+mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 
 
+PREDICTION
+#analisi delle componenti principali
+pca = princomp(data_train,cor=T)
+pca$sdev 
+cumsum(pca$sdev^2/10) < 0.85
 
-
-
-
-
-  
+names(data_train)[apply(pca$loadings[,1:5], 2, function(x) which(x**2==max(x**2)))]
+# da fare meglio
