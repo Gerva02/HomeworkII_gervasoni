@@ -4,7 +4,7 @@
 library(tidyverse)
 library(mclust)
 library(Rmixmod)
-
+library(GGally)
 # credit ------------------------------------------------------------------
 
 
@@ -54,24 +54,49 @@ pr@bestResult
 
 # Fetal health ------------------------------------------------------------
 
-fetal_health <- tibble(read.csv("fetal_health.csv"))
-
-sum(is.na(fetal_health)) #no NAs
-n <- nrow(fetal_health)
-fetal_health <- fetal_health %>% 
-  rowid_to_column("id")
-
-train <- fetal_health %>% 
-  sample_frac(.70)
-
-data_train <- fetal_health %>% 
-  select(-c(id, fetal_health, starts_with("histogram"), severe_decelerations))
-
-label_train <- fetal_health %>%
-  select(fetal_health) %>%
+fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
   mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
 
-test<- anti_join(fetal_health, train, by = 'id')%>%
+sum(is.na(fetal_Health)) #no NAs
+n <- nrow(fetal_Health)
+
+#analisi delle componenti principali
+pca = fetal_Health%>% 
+  select(-c(fetal_health, starts_with("histogram"), severe_decelerations))%>%
+  princomp(cor=T) 
+#è necessario standardizzare siccome le variabili sono su ordini di grandezza differenti
+#altrimenti l'80% della variabilità sarebbe gestita unicamente da una variabile (variabile o componente?????? RIVEDERE)
+pca$sdev 
+cumsum(pca$sdev^2/10) < 0.70 #4 componenti
+
+names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))]
+# da fare meglio
+
+fetal_Health %>%
+  select(abnormal_short_term_variability, percentage_of_time_with_abnormal_long_term_variability, fetal_health) %>%
+  ggplot(mapping = aes(x=abnormal_short_term_variability , y =percentage_of_time_with_abnormal_long_term_variability, color = fetal_health)) +
+  geom_point()
+
+fetal_Health%>% 
+  select(-c(starts_with("histogram"), severe_decelerations))%>%
+  ggpairs(mapping = aes(color = fetal_health))
+
+
+
+fetal_Health <- fetal_Health %>% 
+  rowid_to_column("id")
+
+train <- fetal_Health %>% 
+  sample_frac(.70)
+
+data_train <- fetal_Health %>% 
+  select(-c(id, fetal_health, starts_with("histogram"), severe_decelerations))
+
+label_train <- fetal_Health %>%
+  select(fetal_health)
+  
+
+test<- anti_join(fetal_Health, train, by = 'id')%>%
   select(-c(id, starts_with("histogram"), severe_decelerations))
 
   
@@ -96,13 +121,5 @@ confusion_matrix <- table( test$fetal_health, PREDICTION@partition)
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix) # confirmed 86% (da aggiungere set.seed e vedere se rimane 86%....)
 
 
-#analisi delle componenti principali
-pca = princomp(data_train,cor=T) 
-#è necessario standardizzare siccome le variabili sono su ordini di grandezza differenti
-#altrimenti l'80% della variabilità sarebbe gestita unicamente da una variabile (variabile o componente?????? RIVEDERE)
-pca$sdev 
-cumsum(pca$sdev^2/10) < 0.70 #4 componenti
 
-names(data_train)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))]
-# da fare meglio
 
