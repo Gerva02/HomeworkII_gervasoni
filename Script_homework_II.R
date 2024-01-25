@@ -5,53 +5,6 @@ library(tidyverse)
 library(mclust)
 library(Rmixmod)
 library(GGally)
-# credit ------------------------------------------------------------------
-
-
-X <-read.csv("credit_score.csv")
-X
-#leggendo il dataset sembra essere generato randomicamente
-dataset <- tibble(X)
-X$credit_levels <- cut(X$CREDIT_SCORE, 5)
-levels(X$credit_levels) <- c("vlow", "low", "medium", "high", "vhigh")
-
-X$credit_levels
-
-
-#sample_frac()
-
-creditors_data <- X %>% 
-  sample_frac(0.8) %>%
-  select(CUST_ID,SAVINGS,DEBT,INCOME,labels = credit_levels)
-# samples random data
-
-D_training <- X %>%
-  filter(CUST_ID %in% creditors_data$CUST_ID) %>% 
-  select(SAVINGS,DEBT,INCOME)  # 
-# Strips of the labels
-
-D_label <- X %>%
-  filter(CUST_ID %in% creditors_data$CUST_ID) %>% 
-  select(labels = credit_levels) %>%
-  as_vector()
-# Is the labels
-  
-Test <- X %>%
-  filter(!(CUST_ID %in% creditors_data$CUST_ID)) %>% 
-  select(SAVINGS,DEBT,INCOME,labels = credit_levels)
-# Data to test on 
-
-set.seed(321)
-(pr<-mixmodLearn(D_training, D_label,
-                 models=mixmodGaussianModel(family='all'),
-                 criterion=c('CV','BIC')))  
-
-
-pr@bestResult
-
-
-#PREDICTION<- mixmodPredict() da implementare correttamente
-
 # Fetal health ------------------------------------------------------------
 
 #capiamo meglio come mai nelle analisi dobbiamo escludere (o capire come incorporare) 
