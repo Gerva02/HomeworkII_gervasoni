@@ -18,6 +18,12 @@ fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
   mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
 
 sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values are 0
+hist(fetal_Health$histogram_number_of_zeroes) # è un conteggio dunque probabilmente si distribuisce come poisson
+hist(fetal_Health$histogram_number_of_peaks) # è un conteggio dunque probabilmente si distribuisce come poisson
+hist(fetal_Health$histogram_variance) # questo sembra distribuirsi come gamma
+fetal_health$histogram_tendency
+
+
 fetal_Health%>% 
   select(c(starts_with("histogram"), severe_decelerations, fetal_health))%>%
   ggpairs(mapping = aes(color = fetal_health))
@@ -38,7 +44,7 @@ pca <- fetal_Health%>%
 pca$sdev 
 cumsum(pca$sdev^2/10) < 0.70 #4 componenti
 
-names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))]
+main_comp <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))]
 # da fare meglio
 
 fetal_Health %>%
@@ -103,27 +109,29 @@ confusion_matrix <- table( test$fetal_health, PREDICTION@partition)
 #install.packages("mclust")
 library(mclust)
 (fetal_Health_EM<-fetal_Health%>%
-  select(prolongued_decelerations,mean_value_of_short_term_variability,accelerations,baseline.value)) #dataset solo con le variabili selezionate tramite pca
+  select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca
 
 health_mclust_ICL<-mclustICL(fetal_Health_EM) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
 #a stimare anche il modello più complkesso VVV anche con 9 gruppi....diu default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
-summary(health_mclust_ICL) #modello EEV ma con ben 6 gruppi
-plot(health_mclust_ICL,ylim=c(20000,30000))  #guardate che bellino :-)
+summary(health_mclust_ICL) #modello VEV con 3 componenti 
+plot(health_mclust_ICL)  #guardate che bellino 
 str(health_mclust_ICL)
 
-health_mclust_BIC<-Mclust(fetal_Health_EM)
+
+health_mclust_BIC<-Mclust(fetal_Health_EM) # qua bisogna settare seed a volte viene 3 a volte 8
 summary(health_mclust_BIC)
 
 #SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
 
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
+?mclustICL
 summary(health_mclust_ICL_k3) #EEV (anche con 2000 di entropia di distanza da EEI....significa molto più accurato degli altri)
 
 health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
 summary(health_mclust_BIC_k3) #sempre EEV
 
 #confronto dei vari modelli
-health_EM_3gruppi<-Mclust(fetal_Health_EM,model="EEV",G=3)
+health_EM_3gruppi<-Mclust(fetal_Health_EM,model="VEV",G=3)
 #confronto classificazione
 (etichette<-fetal_Health$fetal_health)
 (etichette_stimate<-health_EM_3gruppi$classification)
