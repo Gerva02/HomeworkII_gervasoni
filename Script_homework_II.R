@@ -93,4 +93,31 @@ confusion_matrix <- table( test$fetal_health, PREDICTION@partition)
 
 #conviene provare a styimare la classificazine sia tramite 10 variabili
 #sia tramite le 4 slezionate (magari per far vedere che con 10 variabili alcuni modelli
-#non li stima)
+#non li stima)>>>>>>idem provare a fare un EM basato su tutte le variabili o quanto meno non solo sulle 4 selezionatre tramite pca
+
+
+#IMPLEMENTO UN EM DI NORMALI SENZA SPECIFICARE IL NUMERO DI GRUPPI
+#install.packages("mclust")
+library(mclust)
+(fetal_Health_EM<-fetal_Health%>%
+  select(prolongued_decelerations,mean_value_of_short_term_variability,accelerations,baseline.value)) #dataset solo con le variabili selezionate tramite pca
+
+health.mclust.ICL<-mclustICL(fetal_Health_EM) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
+#a stimare anche il modello più complkesso VVV anche con 9 gruppi....diu default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
+summary(health.mclust.ICL) #modello EEV ma con ben 6 gruppi
+plot(health.mclust.ICL) 
+str(health.mclust.ICL)
+
+health.mclust.BIC<-Mclust(fetal_Health_EM)
+summary(health.mclust.BIC)
+
+#SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
+
+health.mclust.ICL.3gruppi<-mclustICL(fetal_Health_EM,G=3)
+summary(health.mclust.ICL.3gruppi) #EEV (anche con 2000 di entropia di distanza da EEI....significa molto più accurato degli altri)
+
+health.mclust.BIC.3gruppi<-Mclust(fetal_Health_EM,G=3)
+summary(health.mclust.BIC.3gruppi) #sempre EEV
+
+#confronto dei vari modelli
+health.output.EM.3gruppi<-Mclust(fetal_Health_EM)
