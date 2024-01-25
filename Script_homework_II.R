@@ -54,8 +54,21 @@ pr@bestResult
 
 # Fetal health ------------------------------------------------------------
 
+#capiamo meglio come mai nelle analisi dobbiamo escludere (o capire come incorporare) 
+#le variabili con hist e severe decelleration
+
+#bisogna strutturare meglio la analisi iniziale 
 fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
   mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
+
+sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values are 0
+fetal_Health%>% 
+  select(c(starts_with("histogram"), severe_decelerations, fetal_health))%>%
+  ggpairs(mapping = aes(color = fetal_health))
+#se escludiamo tutte queste come vediamo dal grafico non va bene però ALCUNE D
+#di queste sono più problematiche, bisogna vedere 1 ad 1 
+#sembrano essere severe deceleration histogram number of zeros e histogram variance
+# mentre le altre potrebbero essere reinserite
 
 sum(is.na(fetal_Health)) #no NAs
 n <- nrow(fetal_Health)
@@ -100,7 +113,7 @@ test<- anti_join(fetal_Health, train, by = 'id')%>%
   select(-c(id, starts_with("histogram"), severe_decelerations))
 
   
-
+#dobbiamo provare altri modelli ovviamente 
 (pr<-mixmodLearn(data_train, label_train$fetal_health,
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
