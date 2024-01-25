@@ -27,7 +27,7 @@ sum(is.na(fetal_Health)) #no NAs
 n <- nrow(fetal_Health)
 
 #analisi delle componenti principali
-pca = fetal_Health%>% 
+pca <- fetal_Health%>% 
   select(-c(fetal_health, starts_with("histogram"), severe_decelerations))%>%
   princomp(cor=T) 
 #è necessario standardizzare siccome le variabili sono su ordini di grandezza differenti
@@ -49,8 +49,10 @@ fetal_Health%>%
 
 
 
-fetal_Health <- fetal_Health %>% 
-  rowid_to_column("id")
+(fetal_Health <- fetal_Health %>% 
+  rowid_to_column("id"))
+
+set.seed(123)
 
 train <- fetal_Health %>% 
   sample_frac(.70)
@@ -71,7 +73,7 @@ test<- anti_join(fetal_Health, train, by = 'id')%>%
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
 
-#prediction con il nostro classifier sembra accurate al 86 percento
+#prediction con il nostro classifier sembra accurate al 85 percento
 #bisogna capire meglio le variabili che iniziano per "histogram" che sembrano non entrare nel classifi
 summary(pr)
 str(pr)
@@ -84,8 +86,11 @@ PREDICTION
 
 #c'è un modo migliore di fare la confusion matrix? 
 confusion_matrix <- table( test$fetal_health, PREDICTION@partition)
-accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix) # confirmed 86% (da aggiungere set.seed e vedere se rimane 86%....)
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 85% 
 
 
 
 
+#conviene provare a styimare la classificazine sia tramite 10 variabili
+#sia tramite le 4 slezionate (magari per far vedere che con 10 variabili alcuni modelli
+#non li stima)
