@@ -7,6 +7,9 @@ library(Rmixmod)
 library(GGally)
 # Fetal health ------------------------------------------------------------
 
+#metto che si vedono tutte le variabili:
+options(tibble.width=Inf)
+
 #capiamo meglio come mai nelle analisi dobbiamo escludere (o capire come incorporare) 
 #le variabili con hist e severe decelleration
 
@@ -102,22 +105,45 @@ library(mclust)
 (fetal_Health_EM<-fetal_Health%>%
   select(prolongued_decelerations,mean_value_of_short_term_variability,accelerations,baseline.value)) #dataset solo con le variabili selezionate tramite pca
 
-health.mclust.ICL<-mclustICL(fetal_Health_EM) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
+health_mclust_ICL<-mclustICL(fetal_Health_EM) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
 #a stimare anche il modello più complkesso VVV anche con 9 gruppi....diu default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
-summary(health.mclust.ICL) #modello EEV ma con ben 6 gruppi
-plot(health.mclust.ICL) 
-str(health.mclust.ICL)
+summary(health_mclust_ICL) #modello EEV ma con ben 6 gruppi
+plot(health_mclust_ICL,ylim=c(20000,30000))  #guardate che bellino :-)
+str(health_mclust_ICL)
 
-health.mclust.BIC<-Mclust(fetal_Health_EM)
-summary(health.mclust.BIC)
+health_mclust_BIC<-Mclust(fetal_Health_EM)
+summary(health_mclust_BIC)
 
 #SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
 
-health.mclust.ICL.3gruppi<-mclustICL(fetal_Health_EM,G=3)
-summary(health.mclust.ICL.3gruppi) #EEV (anche con 2000 di entropia di distanza da EEI....significa molto più accurato degli altri)
+health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
+summary(health_mclust_ICL_k3) #EEV (anche con 2000 di entropia di distanza da EEI....significa molto più accurato degli altri)
 
-health.mclust.BIC.3gruppi<-Mclust(fetal_Health_EM,G=3)
-summary(health.mclust.BIC.3gruppi) #sempre EEV
+health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
+summary(health_mclust_BIC_k3) #sempre EEV
 
 #confronto dei vari modelli
-health.output.EM.3gruppi<-Mclust(fetal_Health_EM)
+health_EM_3gruppi<-Mclust(fetal_Health_EM,model="EEV",G=3)
+#confronto classificazione
+(etichette<-fetal_Health$fetal_health)
+(etichette_stimate<-health_EM_3gruppi$classification)
+
+precisione_EM<-classError(etichette_stimate, class=etichette)
+1-precisione_EM$errorRate
+#l'EM sapendo del numero di gruppi risulta preciso al 81.28% (poco più di 4 su 5)
+#Ma il vero problkema risulta nella scelta del numero di cluster che in assenza delle etichette
+#risulta spesso maggiore di 3 (6 o 7 a seconda dell'indice utilizzato)
+#probabilmente i cluster non sono ben definiti nemmeno dalle etichette note....stando al risultato
+#dell'algoritmo è possibile che alcuni di essi siano ulteriormente scomponibili in altri
+#sotto gruppi
+#come capire quale delle etichette è balorda:
+#valutare nelleclassificazione se alcuni gruppi vengono visti come misture....
+#possibile soluzione alla presenza di sotto gruppi (inoltre una analisis accurata di sentitivity e
+#specificity per valutare se una etichetta in particolare è soggetta ad errori)
+#anche la differenza sostanziale tra le numerosità nei gruppi può essere una motivazione
+#della scarsa precisione dell'algoritmo EM (risolvibile tramite under sampling o con le cavolate di Gervi????)
+
+
+
+
+#poi in futuro voi geni se volete mettere le variabili in INGLESE è più bello
