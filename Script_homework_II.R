@@ -21,8 +21,10 @@ sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values
 hist(fetal_Health$histogram_number_of_zeroes) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_number_of_peaks) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_variance) # questo sembra distribuirsi come gamma
-fetal_health$histogram_tendency
+fetal_Health$histogram_tendency
+fetal_Health$percentage_of_time_with_abnormal_long_term_variability # non è distribuito come normale
 
+#PRIMA DI FARE ALTRO BISOGNA CAPIRE CHE VARIABILI TENERE E CHE VARIABILI SCARTARE
 
 fetal_Health%>% 
   select(c(starts_with("histogram"), severe_decelerations, fetal_health))%>%
@@ -64,17 +66,18 @@ fetal_Health%>%
 set.seed(123)
 
 train <- fetal_Health %>% 
-  sample_frac(.70)
+  sample_frac(.70) # prendo il .70 percento e lo uso come training set 
 
 data_train <- fetal_Health %>% 
-  select(-c(id, fetal_health, starts_with("histogram"), severe_decelerations))
+  select(-c(id, fetal_health, starts_with("histogram"), severe_decelerations)) # rimuovo variabili problematiche e i labels
 
 label_train <- fetal_Health %>%
-  select(fetal_health)
+  select(fetal_health)   #  prendo i labels
   
 
 test<- anti_join(fetal_Health, train, by = 'id')%>%
-  select(-c(id, starts_with("histogram"), severe_decelerations))
+  select(-c(id, starts_with("histogram"), severe_decelerations)) # estraggo le osservazioni non presenti nel data set train 
+# e le uso come test set
 
   
 #dobbiamo provare altri modelli ovviamente 
@@ -118,26 +121,34 @@ plot(health_mclust_ICL)  #guardate che bellino
 str(health_mclust_ICL)
 
 
+set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM) # qua bisogna settare seed a volte viene 3 a volte 8
 summary(health_mclust_BIC)
 
 #SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
+# 
+# health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
+# ?mclustICL
+# summary(health_mclust_ICL_k3) #EEV (anche con 2000 di entropia di distanza da EEI....significa molto più accurato degli altri)
+# 
+# health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
+# summary(health_mclust_BIC_k3) #sempre EEV
+# 
+# #confronto dei vari modelli
+# health_EM_3gruppi<-Mclust(fetal_Health_EM,model="VEV",G=3)
+#(etichette<-fetal_Health$fetal_health)
+#(etichette_stimate<-health_EM_3gruppi$classification)
+# #confronto classificazione
+#questo lo commentato tutto perchè non penso abbia più ragione di esistere 
 
-health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
-?mclustICL
-summary(health_mclust_ICL_k3) #EEV (anche con 2000 di entropia di distanza da EEI....significa molto più accurato degli altri)
 
-health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
-summary(health_mclust_BIC_k3) #sempre EEV
 
-#confronto dei vari modelli
-health_EM_3gruppi<-Mclust(fetal_Health_EM,model="VEV",G=3)
-#confronto classificazione
 (etichette<-fetal_Health$fetal_health)
-(etichette_stimate<-health_EM_3gruppi$classification)
+(etichette_stimate<-health_mclust_BIC$classification)
+
 
 precisione_EM<-classError(etichette_stimate, class=etichette)
-1-precisione_EM$errorRate
+1-precisione_EM$errorRate   #perchè si è abbasato ?
 #l'EM sapendo del numero di gruppi risulta preciso al 81.28% (poco più di 4 su 5)
 #Ma il vero problkema risulta nella scelta del numero di cluster che in assenza delle etichette
 #risulta spesso maggiore di 3 (6 o 7 a seconda dell'indice utilizzato)
