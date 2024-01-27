@@ -21,14 +21,31 @@ sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values
 hist(fetal_Health$histogram_number_of_zeroes) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_number_of_peaks) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_variance) # questo sembra distribuirsi come gamma
-fetal_Health$histogram_tendency
+fetal_Health$histogram_tendency # questo è un factor
 fetal_Health$percentage_of_time_with_abnormal_long_term_variability # non è distribuito come normale
 
-#PRIMA DI FARE ALTRO BISOGNA CAPIRE CHE VARIABILI TENERE E CHE VARIABILI SCARTARE
+
+
+#variabile sospetta fetal_Health$mean_value_of_long_term_variability, fetal_Health$mean_value_of_short_term_variability
+#hanno un lower bound di 0 
+
+fetal_Health <- fetal_Health %>%
+  select(-c(severe_decelerations,
+            histogram_number_of_zeroes,
+            histogram_number_of_peaks,
+            histogram_variance,
+            histogram_tendency, 
+            percentage_of_time_with_abnormal_long_term_variability))
+
 
 fetal_Health%>% 
-  select(c(starts_with("histogram"), severe_decelerations, fetal_health))%>%
   ggpairs(mapping = aes(color = fetal_health))
+
+
+#PRIMA DI FARE ALTRO BISOGNA CAPIRE CHE VARIABILI TENERE E CHE VARIABILI SCARTARE
+#ho tolto queste variabili tutte se ne volete togliere altre fatelo UNA volta da qui
+
+
 #se escludiamo tutte queste come vediamo dal grafico non va bene però ALCUNE D
 #di queste sono più problematiche, bisogna vedere 1 ad 1 
 #sembrano essere severe deceleration histogram number of zeros e histogram variance
@@ -38,28 +55,26 @@ sum(is.na(fetal_Health)) #no NAs
 n <- nrow(fetal_Health)
 
 #analisi delle componenti principali
-pca <- fetal_Health%>% 
-  select(-c(fetal_health, starts_with("histogram"), severe_decelerations))%>%
+pca <- fetal_Health%>%
+  select(-fetal_health)%>%
   princomp(cor=T) 
+
+
 #è necessario standardizzare siccome le variabili sono su ordini di grandezza differenti
 #altrimenti l'80% della variabilità sarebbe gestita unicamente da una variabile (variabile o componente?????? RIVEDERE)
+k <- ncol(fetal_Health)
 pca$sdev 
-cumsum(pca$sdev^2/10) < 0.70 #4 componenti
+cumsum(pca$sdev^2/k) < 0.70 #4 componenti
 
 #selezioniamo le prime d variabili che sono normali e unite coprono il 60 o 70 % della variabilità
 (main_comp <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
 # da fare meglio
 
+
 #scatterplot con le prime 2 variabili più significative a seguito della pca
 fetal_Health %>%
-  select(abnormal_short_term_variability, percentage_of_time_with_abnormal_long_term_variability, fetal_health) %>%
-  ggplot(mapping = aes(x=abnormal_short_term_variability , y =percentage_of_time_with_abnormal_long_term_variability, color = fetal_health)) +
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point()
-
-fetal_Health%>% 
-  select(-c(starts_with("histogram"), severe_decelerations))%>%
-  ggpairs(mapping = aes(color = fetal_health))
-
 
 
 (fetal_Health <- fetal_Health %>% 
@@ -71,14 +86,14 @@ train <- fetal_Health %>%
   sample_frac(.70) # prendo il .70 percento e lo uso come training set 
 
 data_train <- fetal_Health %>% 
-  select(-c(id, fetal_health, starts_with("histogram"), severe_decelerations)) # rimuovo variabili problematiche e i labels
+  select(-c(id, fetal_health)) # rimuovo variabili problematiche e i labels
 
 label_train <- fetal_Health %>%
   select(fetal_health)   #  prendo i labels
   
 
 test<- anti_join(fetal_Health, train, by = 'id')%>%
-  select(-c(id, starts_with("histogram"), severe_decelerations)) # estraggo le osservazioni non presenti nel data set train 
+  select(-c(id)) # estraggo le osservazioni non presenti nel data set train 
 # e le uso come test set
 
   
@@ -162,6 +177,15 @@ summary(health_mclust_BIC)
 
 precisione_EM<-classError(etichette_stimate, class=etichette)
 1-precisione_EM$errorRate   #perchè si è abbasato ?
+
+(confusion_matrix <- table( etichette, etichette_stimate))
+
+#sbagliamo quasi tutti i malati e i dubbiosi 
+#i 3 gruppi che sembra indovinare sono sbagliati
+
+
+#questo è diventato tutto falso?
+
 #l'EM sapendo del numero di gruppi risulta preciso al 81.28% (poco più di 4 su 5)
 #Ma il vero problkema risulta nella scelta del numero di cluster che in assenza delle etichette
 #risulta spesso maggiore di 3 (6 o 7 a seconda dell'indice utilizzato)
