@@ -21,7 +21,7 @@ library(GGally)
 fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
   mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
 
-sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values are 0 (cos'è sta cosa????)
+sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values are 0 
 hist(fetal_Health$histogram_number_of_zeroes) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_number_of_peaks) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_variance) # questo sembra distribuirsi come gamma
@@ -148,11 +148,11 @@ mod2 <- MclustDA(data_train, label_train$fetal_health, modelNames = "VVV", G = 4
 summary(mod2)
 str(mod2) 
 
+
 predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
 mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health)) #pull estrae un vettore da un db
 # a quanto pare riesce a predirre un 80 % 
 #quindi bisogna fare oversampling
-
 
 
 # Ho messo nei commenti tutto il codice spaghetti se ti serve qualcosa lo lascio ma mi sembra tutto da canellare
