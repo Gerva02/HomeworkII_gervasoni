@@ -111,19 +111,21 @@ train <- fetal_Health %>%
   sample_frac(.70) # prendo il .70 percento e lo uso come training set 
 
 data_train <- train %>% # tenere train NON fetal_Health
-  select(-c(id, fetal_health)) # rimuovo variabili problematiche e i labels
-
+  #select(-c(id, fetal_health)) %>%# rimuovo variabili problematiche e i labels
+  select(all_of(main_comp))
+  
 label_train <- train %>%
   select(fetal_health)   #  prendo i labels
 
 
 test<- anti_join(fetal_Health, train, by = 'id')%>%
-  select(-c(id)) # estraggo le osservazioni non presenti nel data set train 
+#  select(-c(id)) # estraggo le osservazioni non presenti nel data set train 
 # e le uso come test set
+  select(all_of(main_comp),fetal_health)
 
 
 #dobbiamo provare altri modelli ovviamente 
-(pr<-mixmodLearn(data_train[,1:7], c(label_train$fetal_health),
+(pr<-mixmodLearn(data_train, c(label_train$fetal_health),
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
 #fino alla colonna 7 il mio pc funziona dopo crusha 
@@ -134,7 +136,7 @@ test<- anti_join(fetal_Health, train, by = 'id')%>%
 summary(pr) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
 str(pr)
 
-PREDICTION<- mixmodPredict(data = select(test,-fetal_health)[,1:7], classificationRule=pr["bestResult"])
+PREDICTION<- mixmodPredict(data = select(test,-fetal_health), classificationRule=pr["bestResult"])
 str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
