@@ -219,11 +219,15 @@ set.seed(123)
 prop.table(table(index)) #ci sta
 
 #stima modello migliore + calcolo MER sul test set (STO SCHIFPO NON FUNZIONA)
-set.seed(123)
-(fetal_Health_bozza_train<-fetal_Health_EM[index,])
-(etichette_train<-fetal_Health[index,"fetal_health"])
-(fetal_Health_bozza_test<-fetal_Health_EM[ifelse(index==F,T,F),])
-(etichette_test<-fetal_Health[ifelse(index==F,T,F),"fetal_health"])
+
+# Lo script per dividere in traning e test è già scritto!
+
+
+# set.seed(123)
+# (fetal_Health_bozza_train<-fetal_Health_EM[index,])
+# (etichette_train<-fetal_Health[index,"fetal_health"])
+# (fetal_Health_bozza_test<-fetal_Health_EM[ifelse(index==F,T,F),])
+# (etichette_test<-fetal_Health[ifelse(index==F,T,F),"fetal_health"])
 mod = MclustDA(data=data.frame(fetal_Health_bozza_train), as.factor(etichette_train)) # sul primo si è soffermato sul 20%
 sum(predict(mod, fetal_Health_bozza_test)$class != etichette_test)
 class(data.frame(fetal_Health_bozza_train))
@@ -233,12 +237,17 @@ class(data.frame(fetal_Health_bozza_train))
 table(fetal_Health$fetal_health)
 # 1655 295 176
 
-#ha senso provare ad implementare un MDA basato sul MER con il quale:
-#60% training
-#20% selection (basata sul MER o sul BIC....col MER tocca implementarla)
-#20% testing 
-#con cui poi fare un cross-validation ripetendo 10 volte la selezione dei 3 sets e valutare la media dei MER 
-#per selezionare il miglior modello
+
+# NON HA SENSO FARE CON UN 20 PERCENTO FISSO IL MER A QUESTO PUNTO FAI SOLO IL CV
+# CHE è PIU' UTILIZZATO E HA MOLTO PIù SENSO 
+# BISOGNEREBBE PERò VEDERE L'OVERSAMPLING COME FUNZIONA
+
+# ha senso provare ad implementare un MDA basato sul MER con il quale:
+# 60% training
+# 20% selection (basata sul MER o sul BIC....col MER tocca implementarla)
+# 20% testing
+# con cui poi fare un cross-validation ripetendo 10 volte la selezione dei 3 sets e valutare la media dei MER
+# per selezionare il miglior modello
 
 #provare una funzione che prende g1 g2 e g3 e mod1 mod2 e mod3 e restituisce un MER (facendo la media 
 #con 10 cross-validation)
