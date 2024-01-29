@@ -144,14 +144,18 @@ confusion_matrix <- table( test$fetal_health, PREDICTION@partition)  #non prendi
 set.seed(869)
 mod2 <- MclustDA(data_train, label_train$fetal_health, modelNames = "VVV", G = 4)
 #bisogna capire come mai non mi specifica i modelli se non metto niente in model names e
-#se lascio g senza niente 
+#se lascio g senza niente (perchè devo specificare che modello e quanti g non dovrebbe farlo da solo????)
 summary(mod2)
 str(mod2) 
 
-predict(mod2, select(test,-fetal_health))$class
-mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health))
+predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
+mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health)) #pull estrae un vettore da un db
+# a quanto pare riesce a predirre un 80 % 
+#quindi bisogna fare oversampling
 
 
+
+# Ho messo nei commenti tutto il codice spaghetti se ti serve qualcosa lo lascio ma mi sembra tutto da canellare
 
 # #creo un dataset come bozza x fare la classificazione (DA RIVEDERE LE VARIABILI DA USARE)
 # (fetal_Health_bozza<-fetal_Health%>%
@@ -208,6 +212,8 @@ mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_healt
 # #del BIC (o magari VVV con 5 gruppi va in overfitting e quindi su dati nuovi (del selection set) non worka)
 # 
 # #ci penso lunedì
+
+# over sampling
 
 # clustering --------------------------------------------------------------
 
