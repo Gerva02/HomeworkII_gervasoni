@@ -24,7 +24,9 @@ hist(fetal_Health$histogram_variance) # questo sembra distribuirsi come gamma
 fetal_Health$histogram_tendency # questo è un factor
 fetal_Health$percentage_of_time_with_abnormal_long_term_variability # non è distribuito come normale
 
-
+hist(fetal_Health$accelerations )
+hist(fetal_Health$fetal_movement)
+hist(fetal_Health$prolongued_decelerations)
 
 #variabile sospetta fetal_Health$mean_value_of_long_term_variability, fetal_Health$mean_value_of_short_term_variability
 #hanno un lower bound di 0 
@@ -35,7 +37,10 @@ fetal_Health <- fetal_Health %>%
             histogram_number_of_peaks,
             histogram_variance,
             histogram_tendency, 
-            percentage_of_time_with_abnormal_long_term_variability))
+            percentage_of_time_with_abnormal_long_term_variability, 
+            accelerations, 
+            fetal_movement,
+            prolongued_decelerations))
 
 
 fetal_Health%>% 
@@ -64,7 +69,7 @@ pca <- fetal_Health%>%
 #altrimenti l'80% della variabilità sarebbe gestita unicamente da una variabile (variabile o componente?????? RIVEDERE)
 k <- ncol(fetal_Health)
 pca$sdev 
-cumsum(pca$sdev^2/k) < 0.70 #4 componenti
+cumsum(pca$sdev^2/k) < 0.80 #4 componenti
 
 #selezioniamo le prime d variabili che sono normali e unite coprono il 60 o 70 % della variabilità
 (main_comp <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
@@ -85,10 +90,10 @@ set.seed(123)
 train <- fetal_Health %>% 
   sample_frac(.70) # prendo il .70 percento e lo uso come training set 
 
-data_train <- fetal_Health %>% 
+data_train <- train %>% # tenere train NON fetal_Health
   select(-c(id, fetal_health)) # rimuovo variabili problematiche e i labels
 
-label_train <- fetal_Health %>%
+label_train <- train %>%
   select(fetal_health)   #  prendo i labels
   
 
@@ -98,24 +103,29 @@ test<- anti_join(fetal_Health, train, by = 'id')%>%
 
   
 #dobbiamo provare altri modelli ovviamente 
-(pr<-mixmodLearn(data_train, label_train$fetal_health,
+(pr<-mixmodLearn(data_train[,1:7], c(label_train$fetal_health),
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
+#fino alla colonna 7 il mio pc funziona dopo crusha 
+#capire perchè
 
-#prediction con il nostro classifier sembra accurate al 85 percento
+#prediction con il nostro classifier sembra accurate al 80 percento
 #bisogna capire meglio le variabili che iniziano per "histogram" che sembrano non entrare nel classifi
 summary(pr)
 str(pr)
 
-PREDICTION<- mixmodPredict(data = select(test,-fetal_health), classificationRule=pr["bestResult"])
+PREDICTION<- mixmodPredict(data = select(test,-fetal_health)[,1:7], classificationRule=pr["bestResult"])
 str(PREDICTION)
+#fino alla colonna 7 il mio pc funziona dopo crusha 
+#capire perchè
+
 
 mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION
 
 #c'è un modo migliore di fare la confusion matrix? 
-confusion_matrix <- table( test$fetal_health, PREDICTION@partition)
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 85% 
+confusion_matrix <- table( test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 80% confirmed
 
 
 
