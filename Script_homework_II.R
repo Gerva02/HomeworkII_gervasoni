@@ -50,7 +50,16 @@ fetal_Health <- fetal_Health %>%
 fetal_Health%>% 
   ggpairs(mapping = aes(color = fetal_health))
 
+#alcune variabili sono già evidenti tipo le ultime 2 in basso che una delle categorie siu distingue benone
 
+#ha senso vedere se ci sono outliers o cose del genere nelle variabili selezionate???
+
+#qualche outliers......
+boxplot(fetal_Health[,-c(2,3,5,6,13)])
+boxplot(fetal_Health[,6])
+boxplot(fetal_Health[,c(2,3)])
+boxplot(fetal_Health[,5])
+boxplot(fetal_Health[,13])
 #PRIMA DI FARE ALTRO BISOGNA CAPIRE CHE VARIABILI TENERE E CHE VARIABILI SCARTARE
 #ho tolto queste variabili tutte se ne volete togliere altre fatelo UNA volta da qui
 
@@ -122,7 +131,7 @@ test<- anti_join(fetal_Health, train, by = 'id')%>%
 
 #prediction con il nostro classifier sembra accurate al 80 percento
 #bisogna capire meglio le variabili che iniziano per "histogram" che sembrano non entrare nel classifi
-summary(pr)
+summary(pr) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
 str(pr)
 
 PREDICTION<- mixmodPredict(data = select(test,-fetal_health)[,1:7], classificationRule=pr["bestResult"])
@@ -132,11 +141,11 @@ str(PREDICTION)
 
 
 mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
-PREDICTION
+PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
 confusion_matrix <- table( test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 80% confirmed
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 81% confirmed
 
 # con MDA X
 #CLASSIFICAZIONE SECONDO MDA
@@ -233,18 +242,14 @@ set.seed(123) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabi
 health_mclust_ICL<-mclustICL(fetal_Health_EM) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
 #a stimare anche il modello più complkesso VVV anche con 9 gruppi....diu default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
 summary(health_mclust_ICL) #modello VEV con 3 componenti 
-plot(health_mclust_ICL,ylim=c(-20000,20000))  #guardate che bellino (si vede che il modello EEV con più cluster sta prendendo una buona risalita)
+plot(health_mclust_ICL,ylim=c(-35000,-25000))  #guardate che bellino
 str(health_mclust_ICL)
 
 #per curiosità:
 set.seed(123)
-plot(mclustICL(fetal_Health_EM,G=2:21),ylim=c(0,50000)) #dopo k=18 sembra scendere quindi il modello VEV con 3 componenti è il migliore ma ci va bene solo con
-#accurati starting values (probabilmente 3 gruppi è raro che li colga accuratamente...motivazione: DA COMPLETARE)
-#qui si vede la difficoltà dell'EM probabilmente con gruppi molto vicini tra loro (DA ARGOMENTARE)
-#nessun salto nel fitting dei modelli (le u.s. sono sufficienti anche per k molto grande (con 4 variabili i parametri non sono eccessivi))
-#CURSE OF DIMENSION
-#da verificare questa cosa che stima tutti i modelli....
-
+plot(mclustICL(fetal_Health_EM,G=2:15)) #non risulta per nulla un k predominante
+#gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia
+#il numero di gruppi
 
 set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM) # qua bisogna settare seed a volte viene 3 a volte 8
@@ -266,10 +271,20 @@ summary(health_mclust_BIC)
 # #confronto classificazione
 #questo lo commentato tutto perchè non penso abbia più ragione di esistere 
 
+#necessario provare con k=3 (SENZA set.seed VIENE DIVERSISSIMO) >>>escono precisioni che variano dal 60% all'80%
+#significa che è un EM molto variabile/instabile e poco robusto (tutte caratteristiche che rendono cruciale la scelta dei valori iniziali)
+set.seed(123)
+health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
+summary(health_mclust_ICL_k3) #EVV
+set.seed(123)
+health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
+summary(health_mclust_BIC_k3) #EVV
+
+#megliobasarsi sull'ICL ma in questo caso si popssono prendere le etichette dal BIC senza problemi perchè i 2 modelli coincidono
 
 
 (etichette<-fetal_Health$fetal_health)
-(etichette_stimate<-health_mclust_BIC$classification)
+(etichette_stimate<-health_mclust_BIC_k3$classification)
 
 
 precisione_EM<-classError(etichette_stimate, class=etichette)
