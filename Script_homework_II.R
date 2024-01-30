@@ -372,7 +372,7 @@ etichette[index=="train"]
 
 accuracy(g=c(1,2,2),mod=c("EII","VVV","VII"),data=fetal_Health_EM,etichette=etichette,nCV=5)
 set.seed(123)
-MclustDA(fetal_Health_EM[index=="train",],class=etichette[index=="train"],G=list(1,2,2),modelNames=list("EII","VVV","VII")) #nemmeno qua lo stime corretto
+MclustDA(fetal_Health_EM[index=="train",],class=etichette[index=="train"],G=list(1,2,2),modelNames=list("EEE","EEE","VII")) #nemmeno qua lo stime corretto
 
 as.list(c("EII","VVV","VII"))
 
