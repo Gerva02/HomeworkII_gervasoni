@@ -343,4 +343,39 @@ precisione_EM<-classError(etichette_stimate, class=etichette)
 
 #MDA con MER e suddivisione train evaluation e test
 
-mer<-function
+accuracy<-function(g,mod,nCV=10,data,etichette,perc=0.75){
+  set.seed(123)
+  n<-nrow(as.data.frame(data)) 
+  mer<-c()
+  index<-list()
+  for (i in 1:nCV){
+    index$i<-sample(c("train","test"),size=n,replace=T,prob=c(perc,1-perc))
+  }
+  for (i in 1:nCV){
+    train<-data[index$i=="train",]
+    test<-data[index$i=="test",]
+    train.labels<-as.factor(etichette)[index$i=="train"]
+    test.labels<-as.factor(etichette)[index$i=="test"]
+    mod<-MclustDA(train,class=train.labels,G=as.list(g),modelName=as.list(mod))
+    mer[i]<-mean(predict(mod,test)$class==as.factor(test.labels))
+  }
+  return(1-mean(mer)) #restituisce la precisione
+}
+
+fetal_Health %>% 
+  sample_frac(0.75)
+
+?MclustDA
+index<-sample(c("train","test"),size=n,replace=T,prob=c(0.75,0.25))
+index
+etichette[index=="train"]
+
+accuracy(g=c(1,2,2),mod=c("EII","VVV","VII"),data=fetal_Health_EM,etichette=etichette,nCV=5)
+set.seed(123)
+MclustDA(fetal_Health_EM[index=="train",],class=etichette[index=="train"],G=list(1,2,2),modelNames=list("EEE","EEE","VII")) #nemmeno qua lo stime corretto
+
+as.list(c("EII","VVV","VII"))
+
+lis<-list()
+lis$a<-c(1,2,3)
+lis
