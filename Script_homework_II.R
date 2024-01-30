@@ -235,6 +235,45 @@ mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_healt
 
 # over sampling
 
+#install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
+
+
+library(lattice)
+library(grid)
+library(DMwR)
+
+train2<-train %>%
+  select(all_of(main_comp), fetal_health) %>% 
+  as.data.frame()
+table(train2$fetal_health)
+
+levels(train2$fetal_health) <- c(1,1,3) # ho messo tutti della classe 2 nella classe 1
+
+table(train2$fetal_health)
+
+
+new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 200, perc.under = 500)
+# + perc.over/100 % is the number of cases generated (in questo caso 1/3 sono reali)
+
+
+#  if 200 new examples were generated for the minority class, a value of perc.under of 100 will randomly select exactly 
+#  200 cases belonging to the majority classes from the original data set to belong to the final data set. Values above 100 will select more examples from the majority classes.
+# in questo caso prendiamo (+ perc.over/100 %) * ncasi * 5 di casi sani 
+
+table(new_train$fetal_health)
+
+mod3 <- MclustDA(new_train[,-5], new_train$fetal_health)
+summary(mod3)
+str(mod3) 
+predicted_labels <- predict(mod3, select(test,-fetal_health))$class #  questo sono le prediction del MDA
+real_labels <- pull(test,fetal_health) #etichette vere
+levels(real_labels) <- c(1,1,3)
+real_labels
+mean(predicted_labels == real_labels) #pull estrae un vettore da un db
+
+table(predicted_labels,real_labels ) # vediamo che sbagliamo in maniera simile ma riusciamo 
+#a non perderci i "falsi sani" 
+
 # clustering --------------------------------------------------------------
 
 #conviene provare a styimare la classificazine sia tramite 10 variabili
