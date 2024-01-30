@@ -53,7 +53,9 @@ fetal_Health%>%
   ggpairs(mapping = aes(color = fetal_health))
 # nome variabili distinte
 
-#alcune variabili sono già evidenti tipo le ultime 2 in basso che una delle categorie siu distingue benone
+#alcune variabili sono già evidenti tipo le ultime 3 in basso che una delle categorie siu distingue benone
+
+#SEGNARE ULTIME 3 VARIABILI DEL ggpairs
 
 #ha senso vedere se ci sono outliers o cose del genere nelle variabili selezionate???
 
@@ -107,6 +109,7 @@ fetal_Health%>%
 fetal_Health %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point()
+  #strano che i dubbiosi si collochino a destra dei sani e non tra sani e malati
 
 
 (fetal_Health <- fetal_Health %>% 
@@ -166,9 +169,14 @@ mod2 <- MclustDA(data_train, label_train$fetal_health) #, modelNames = "VVV", G 
 # Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 str(mod2) 
+<<<<<<< HEAD
 
 
 
+=======
+mod2
+?MclustDA
+>>>>>>> c5a5a122085c91e05d1187f37454389715a7e653
 predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
 mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health)) #pull estrae un vettore da un db
 # a quanto pare riesce a predirre un 83 % 
@@ -328,3 +336,7 @@ precisione_EM<-classError(etichette_stimate, class=etichette)
 
 #poi in futuro voi geni se volete mettere le variabili in INGLESE è più bello
 
+
+#MDA con MER e suddivisione train evaluation e test
+
+mer<-function
