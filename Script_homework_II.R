@@ -52,6 +52,11 @@ etichette<-fetal_Health$fetal_health
 fetal_Health%>% 
   ggpairs(mapping = aes(color = fetal_health))
 # nome variabili distinte
+#histogram_mean and median (molto correlate) e mode
+
+
+# commento che si può fare è che evidente anche in casi unidensionali si può vedere che le variabili (anche se distinte per fetal health)
+#SONO MULTIMODALI (perforza andrà usato un MDA)
 
 #alcune variabili sono già evidenti tipo le ultime 3 in basso che una delle categorie siu distingue benone
 
@@ -81,7 +86,7 @@ n <- nrow(fetal_Health)
 pca <- fetal_Health%>%
   select(-fetal_health)%>%
   princomp(cor=T) 
-
+pca$loadings
 
 #è necessario standardizzare siccome le variabili sono su ordini di grandezza differenti
 #altrimenti l'80% della variabilità sarebbe gestita unicamente da una variabile (variabile o componente?????? RIVEDERE)
