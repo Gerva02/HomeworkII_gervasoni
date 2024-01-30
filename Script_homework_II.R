@@ -8,6 +8,8 @@ library(GGally)
 # Fetal health ------------------------------------------------------------
 
 # data exploration  -------------------------------------------------------
+
+#TO do :
 # Usare grafici migliore per scartare variabili 
 # fare un buon gg paris v
 # PCA v
@@ -49,6 +51,7 @@ fetal_Health <- fetal_Health %>%
 
 fetal_Health%>% 
   ggpairs(mapping = aes(color = fetal_health))
+# nome variabili distinte
 
 #alcune variabili sono già evidenti tipo le ultime 2 in basso che una delle categorie siu distingue benone
 
@@ -163,6 +166,7 @@ mod2 <- MclustDA(data_train, label_train$fetal_health) #, modelNames = "VVV", G 
 # Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 str(mod2) 
+
 
 
 predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
