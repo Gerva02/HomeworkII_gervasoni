@@ -343,4 +343,28 @@ precisione_EM<-classError(etichette_stimate, class=etichette)
 
 #MDA con MER e suddivisione train evaluation e test
 
-mer<-function
+accuracy<-function(g,mod,nCV=10,data,etichette,perc=0.75){
+  set.seed(123)
+  n<-nrow(as.data.frame(data)) 
+  mer<-c()
+  for (i in 1:nCV){
+    index<-sample(c("train","test"),size=n,replace=T,prob=c(perc,1-perc))
+    train<-data[index=="train",]
+    test<-data[index=="test",]
+    train.labels<-as.factor(etichette)[index=="train"]
+    test.labels<-as.factor(etichette)[index=="test"]
+    mod<-MclustDA(train,class=train.labels,G=g,modelName=mod)
+    mer[i]<-mean(predict(mod,test)$class==as.factor(test.labels))
+  }
+  return(1-mean(mer)) #restituisce la precisione
+}
+
+fetal_Health %>% 
+  sample_frac(0.75)
+
+?MclustDA
+index<-sample(c("train","test"),size=n,replace=T,prob=c(0.75,0.25))
+index
+etichette[index=="train"]
+
+accuracy()
