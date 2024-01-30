@@ -347,13 +347,16 @@ accuracy<-function(g,mod,nCV=10,data,etichette,perc=0.75){
   set.seed(123)
   n<-nrow(as.data.frame(data)) 
   mer<-c()
+  index<-list()
   for (i in 1:nCV){
-    index<-sample(c("train","test"),size=n,replace=T,prob=c(perc,1-perc))
-    train<-data[index=="train",]
-    test<-data[index=="test",]
-    train.labels<-as.factor(etichette)[index=="train"]
-    test.labels<-as.factor(etichette)[index=="test"]
-    mod<-MclustDA(train,class=train.labels,G=g,modelName=mod)
+    index$i<-sample(c("train","test"),size=n,replace=T,prob=c(perc,1-perc))
+  }
+  for (i in 1:nCV){
+    train<-data[index$i=="train",]
+    test<-data[index$i=="test",]
+    train.labels<-as.factor(etichette)[index$i=="train"]
+    test.labels<-as.factor(etichette)[index$i=="test"]
+    mod<-MclustDA(train,class=train.labels,G=as.list(g),modelName=as.list(mod))
     mer[i]<-mean(predict(mod,test)$class==as.factor(test.labels))
   }
   return(1-mean(mer)) #restituisce la precisione
@@ -367,4 +370,12 @@ index<-sample(c("train","test"),size=n,replace=T,prob=c(0.75,0.25))
 index
 etichette[index=="train"]
 
-accuracy()
+accuracy(g=c(1,2,2),mod=c("EII","VVV","VII"),data=fetal_Health_EM,etichette=etichette,nCV=5)
+set.seed(123)
+MclustDA(fetal_Health_EM[index=="train",],class=etichette[index=="train"],G=list(1,2,2),modelNames=list("EII","VVV","VII")) #nemmeno qua lo stime corretto
+
+as.list(c("EII","VVV","VII"))
+
+lis<-list()
+lis$a<-c(1,2,3)
+lis
