@@ -169,14 +169,6 @@ mod2 <- MclustDA(data_train, label_train$fetal_health) #, modelNames = "VVV", G 
 # Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 str(mod2) 
-<<<<<<< HEAD
-
-
-
-=======
-mod2
-?MclustDA
->>>>>>> c5a5a122085c91e05d1187f37454389715a7e653
 predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
 mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health)) #pull estrae un vettore da un db
 # a quanto pare riesce a predirre un 83 % 
