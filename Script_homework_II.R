@@ -87,6 +87,10 @@ cumsum(pca$sdev^2/k) < 0.80 #4 componenti
 #selezioniamo le prime d variabili che sono normali e unite coprono il 60 o 70 % della variabilità
 (main_comp <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
 # da fare meglio
+fetal_Health%>% 
+  select(all_of(main_comp), fetal_health)%>%
+  ggpairs(mapping = aes(color = fetal_health))
+
 
 # classification ----------------------------------------------------------
 # da fare  
@@ -146,23 +150,24 @@ mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la spe
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
-confusion_matrix <- table( test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
+confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
 (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 81% confirmed
 
 # con MDA X
 #CLASSIFICAZIONE SECONDO MDA
 
 set.seed(869)
-mod2 <- MclustDA(data_train, label_train$fetal_health, modelNames = "VVV", G = 4)
+mod2 <- MclustDA(data_train, label_train$fetal_health) #, modelNames = "VVV", G = 4
 #bisogna capire come mai non mi specifica i modelli se non metto niente in model names e
 #se lascio g senza niente (perchè devo specificare che modello e quanti g non dovrebbe farlo da solo????)
+# Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 str(mod2) 
 
 
 predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
 mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health)) #pull estrae un vettore da un db
-# a quanto pare riesce a predirre un 80 % 
+# a quanto pare riesce a predirre un 83 % 
 #quindi bisogna fare oversampling
 
 
@@ -247,14 +252,15 @@ summary(health_mclust_ICL) #modello VEV con 3 componenti
 plot(health_mclust_ICL,ylim=c(-35000,-25000))  #guardate che bellino
 str(health_mclust_ICL)
 
+
 #per curiosità:
 set.seed(123)
 plot(mclustICL(fetal_Health_EM,G=2:15)) #non risulta per nulla un k predominante
 #gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia
 #il numero di gruppi
 
-set.seed(123)
-health_mclust_BIC<-Mclust(fetal_Health_EM) # qua bisogna settare seed a volte viene 3 a volte 8
+set.seed(314)
+health_mclust_BIC<-Mclust(fetal_Health_EM) 
 summary(health_mclust_BIC)
 
 #SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
