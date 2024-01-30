@@ -327,6 +327,18 @@ precisione_EM<-classError(etichette_stimate, class=etichette)
 
 
 #poi in futuro voi geni se volete mettere le variabili in INGLESE è più bello
+# IPOTETICA CLASSIFICAZIONE SOLO SANI E MALATI E POI VEDIAMO COSA FA STO MODELLO
+#SUI DUBBIOSI (DA VEDERE IN FUTURO) >>>>MODELLO MDA CON 2 CLUSTER
+#BASATO SU BIC O SU MER E POI OUTPUT CON LA SUDDIVISIONE DEI DUBBIOSI IN MALATI E NON
+#per selezionare il miglior modello con 2 gruppi:
+#tra tutti i possibili facciamo cv ripetuta 10 volte e poi ristimiamo il modello
+#selezioanto come migliore (avente mer più basso) su tutti i dati che abbiamo di 
+#malati e sani>>>>stimato questo modello poi classifichiamo i dubbiosi e vediamo
+#se effettivamente finiscono nei sani (DA GIUSTIFICARE CHE SONO SOLO ASSUNZIONI
+#BASATE SUI DATI E NON SUPERANO QUELLE DI UN MEDICO: i dati sembrano molto più simili ai sani
+#ma sono anche diversi/anomali e non ancora classsificati dal pto di vista scientifico)
+#DA RIVEDERE
+
 
 
 #MDA con MER e suddivisione train evaluation e test
