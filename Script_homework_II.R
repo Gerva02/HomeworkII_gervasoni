@@ -47,7 +47,7 @@ fetal_Health <- fetal_Health %>%
             accelerations, 
             fetal_movement,
             prolongued_decelerations))
-
+etichette<-fetal_Health$fetal_health
 
 fetal_Health%>% 
   ggpairs(mapping = aes(color = fetal_health))
@@ -259,11 +259,11 @@ str(health_mclust_ICL)
 
 #per curiosità:
 set.seed(123)
-plot(mclustICL(fetal_Health_EM,G=2:15)) #non risulta per nulla un k predominante
+plot(mclustICL(fetal_Health_EM,G=2:15,ylim=c(-34000,-26000))) #non risulta per nulla un k predominante
 #gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia
 #il numero di gruppi
 
-set.seed(314)
+set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM) 
 summary(health_mclust_BIC)
 
@@ -343,39 +343,47 @@ precisione_EM<-classError(etichette_stimate, class=etichette)
 
 #MDA con MER e suddivisione train evaluation e test
 
-accuracy<-function(g,mod,nCV=10,data,etichette,perc=0.75){
+accuracy<-function(g,mod,nCV=5,data,etichette){
   set.seed(123)
-  n<-nrow(as.data.frame(data)) 
-  mer<-c()
-  index<-list()
-  for (i in 1:nCV){
-    index$i<-sample(c("train","test"),size=n,replace=T,prob=c(perc,1-perc))
-  }
-  for (i in 1:nCV){
-    train<-data[index$i=="train",]
-    test<-data[index$i=="test",]
-    train.labels<-as.factor(etichette)[index$i=="train"]
-    test.labels<-as.factor(etichette)[index$i=="test"]
-    mod<-MclustDA(train,class=train.labels,G=as.list(g),modelName=as.list(mod))
-    mer[i]<-mean(predict(mod,test)$class==as.factor(test.labels))
-  }
-  return(1-mean(mer)) #restituisce la precisione
+  mod_mda<-MclustDA(data,class=etichette,G=as.list(g),modelName=mod)
+  return(1-cvMclustDA(mod_mda,nfold=nCV)$ce)
 }
 
-fetal_Health %>% 
-  sample_frac(0.75)
 
-?MclustDA
-index<-sample(c("train","test"),size=n,replace=T,prob=c(0.75,0.25))
-index
-etichette[index=="train"]
+g1<-g2<-g3<-c(1,2,3,4)
+g1<-as.data.frame(g1)
+g2<-as.data.frame(g2)
+g3<-as.data.frame(g3)
 
-accuracy(g=c(1,2,2),mod=c("EII","VVV","VII"),data=fetal_Health_EM,etichette=etichette,nCV=5)
-set.seed(123)
-MclustDA(fetal_Health_EM[index=="train",],class=etichette[index=="train"],G=list(1,2,2),modelNames=list("EEE","EEE","VII")) #nemmeno qua lo stime corretto
+join<-cross_join(cross_join(g1,g2),g3)
+join["mod"]<-"VII" 
+#altrimenti con più modelli il codice impegherebbe troppo tempo
+#usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
+dim(join)
+join
 
-as.list(c("EII","VVV","VII"))
+#CI METTE QUALCHE MINUTINO
+output<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=fetal_Health,etichette=etichette))
 
-lis<-list()
-lis$a<-c(1,2,3)
-lis
+
+
+(lis<-list(modello=join[which.max(output),],accuracy=output[which.max(output)]))
+
+
+
+modello_MDA_k3<-function(data,etichette){
+  g1<-g2<-g3<-c(1,2,3,4)
+  g1<-as.data.frame(g1)
+  g2<-as.data.frame(g2)
+  g3<-as.data.frame(g3)
+  join<-cross_join(cross_join(g1,g2),g3)
+  join["mod"]<-"VII" 
+  out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=data,etichette=etichette))
+  lis<-list(modello=join[which.max(out)],accuracy=out[which.max(out)])
+  return(lis)
+}
+modello_MDA_k3(fetal_Health,etichette)
+#la valutazione del test set deve essere fatta attraverso un dataset che non ha partecipato
+#alla costruzione del modello
+
+
