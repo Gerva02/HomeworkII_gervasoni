@@ -410,12 +410,8 @@ accuracy<-function(g,mod,nCV=5,data,etichette){
 }
 
 
-
-#CI METTE QUALCHE MINUTINO
-
-
 modello_MDA_k3<-function(data,etichette){
-  g1<-g2<-g3<-c(1,2,3,4)
+  g1<-g2<-g3<-c(1,2,3,4,5)
   g1<-as.data.frame(g1)
   g2<-as.data.frame(g2)
   g3<-as.data.frame(g3)
@@ -426,8 +422,27 @@ modello_MDA_k3<-function(data,etichette){
   lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
   return(lis)
 }
-out<-modello_MDA_k3(fetal_Health[,-1],etichette)
-#la valutazione del test set deve essere fatta attraverso un dataset che non ha partecipato
-#alla costruzione del modello
 
-out
+#CI METTE QUALCHE MINUTINO
+(out<-modello_MDA_k3(data_train,as.factor(label_train$fetal_health)))
+#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy
+
+mod_mda_k3<-MclustDA(data_train,label_train$fetal_health,G=c(5,2,2),modelNames="VII")
+mean(c(predict(mod_mda_k3, select(test,-fetal_health))$class) == pull(test,fetal_health)) #83.4%
+table((predict(mod_mda_k3, select(test,-fetal_health))$class),pull(test,fetal_health)) #confusion matrix
+
+
+#funzione per un modello mda con soli 2 gruppi:
+modello_MDA_k2<-function(data,etichette){
+  g1<-g2<-c(1,2,3,4,5)
+  g1<-as.data.frame(g1)
+  g2<-as.data.frame(g2)
+  join<-cross_join(g1,g2)
+  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
+  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
+  out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:2],mod=pos[3],nCV=4,data=data,etichette=etichette))
+  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
+  return(lis)
+}
+
+fetal_Health
