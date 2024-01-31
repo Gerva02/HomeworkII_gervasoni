@@ -336,9 +336,9 @@ library(mclust)
 (fetal_Health_EM<-fetal_Health%>%
   select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca
 
-set.seed(123) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabilmente la scelta degli initial values è cruciale...
+set.seed(245) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabilmente la scelta degli initial values è cruciale...
 #da specificare nell'homework)
-health_mclust_ICL<-mclustICL(fetal_Health_EM) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
+health_mclust_ICL<-mclustICL(fetal_Health_EM, G=1:6) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
 #a stimare anche il modello più complkesso VVV anche con 9 gruppi....diu default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
 summary(health_mclust_ICL) #modello VEV con 3 componenti 
 plot(health_mclust_ICL,ylim=c(-35000,-25000))  #guardate che bellino
@@ -376,12 +376,15 @@ summary(health_mclust_BIC)
 set.seed(123)
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
 summary(health_mclust_ICL_k3) #EVV
+
+
 set.seed(123)
 health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
 summary(health_mclust_BIC_k3) #EVV
 
-#megliobasarsi sull'ICL ma in questo caso si popssono prendere le etichette dal BIC senza problemi perchè i 2 modelli coincidono
 
+#megliobasarsi sull'ICL ma in questo caso si popssono prendere le etichette dal BIC senza problemi perchè i 2 modelli coincidono
+plot
 
 (etichette<-fetal_Health$fetal_health)
 (etichette_stimate<-health_mclust_BIC_k3$classification)
@@ -391,6 +394,20 @@ precisione_EM<-classError(etichette_stimate, class=etichette)
 1-precisione_EM$errorRate   #perchè si è abbasato ?
 
 (confusion_matrix <- table( etichette, etichette_stimate))
+
+
+coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
+           classification=health_mclust_BIC_k3$classification,
+           col=c("dodgerblue2","green3","red2"), symbols=c(0 ,16 ,17),
+           sub="(b) Model-Based Clustering")
+points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19)
+
+
+coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z) #più questa che vogliamo implementare
+
+adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
+
 
 #sbagliamo quasi tutti i malati e i dubbiosi 
 #i 3 gruppi che sembra indovinare sono sbagliati
