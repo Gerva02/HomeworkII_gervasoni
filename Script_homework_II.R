@@ -268,8 +268,6 @@ confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendia
 (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # ESCE 68% OCCHIO!!!
 
 
-
-
  
 
 # clustering --------------------------------------------------------------
@@ -305,26 +303,13 @@ health_mclust_BIC<-Mclust(fetal_Health_EM)
 summary(health_mclust_BIC) #secondo il BIC (non accurato come ICL) risulta k=8 e modello VEV
 
 #SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
-# 
-# health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
-# ?mclustICL
-# summary(health_mclust_ICL_k3) #EEV (anche con 2000 di entropia di distanza da EEI....significa molto più accurato degli altri)
-# 
-# health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
-# summary(health_mclust_BIC_k3) #sempre EEV
-# 
-# #confronto dei vari modelli
-# health_EM_3gruppi<-Mclust(fetal_Health_EM,model="VEV",G=3)
-#(etichette<-fetal_Health$fetal_health)
-#(etichette_stimate<-health_EM_3gruppi$classification)
-# #confronto classificazione
-#questo lo commentato tutto perchè non penso abbia più ragione di esistere 
+
 
 #necessario provare con k=3 (SENZA set.seed VIENE DIVERSISSIMO) >>>escono precisioni che variano dal 60% all'80%
 #significa che è un EM molto variabile/instabile e poco robusto (tutte caratteristiche che rendono cruciale la scelta dei valori iniziali)
 set.seed(123) #MA è CORRETTO USARE TUTTE LE VOLTE SET.SEED (oltre per avere gli stessi risultati su qualunque pc.....)
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
-summary(health_mclust_ICL_k3) #EVV
+summary(health_mclust_ICL_k3) #EVV 
 
 
 set.seed(123)
@@ -406,7 +391,8 @@ modello_MDA_k3<-function(data,etichette){
   join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
   #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
   out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=data,etichette=etichette))
-  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
+  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)]) #questa accuracy non è valida siccome è stimata sullo stesso dataset usato
+  #per allenaere il modello (fuori dalla funzione viene valuatto su un test set a parte)
   return(lis)
 }
 
@@ -417,6 +403,8 @@ modello_MDA_k3<-function(data,etichette){
 mod_mda_k3<-MclustDA(data_train,label_train$fetal_health,G=c(5,2,2),modelNames="VII")
 mean(c(predict(mod_mda_k3, select(test,-fetal_health))$class) == pull(test,fetal_health)) #83.4%
 table((predict(mod_mda_k3, select(test,-fetal_health))$class),pull(test,fetal_health)) #confusion matrix
+#fatica sulla etichetta "dubbiosi"
+#da calcolare tutte le specificity ecc...
 
 
 #funzione per un modello mda con soli 2 gruppi:
@@ -441,7 +429,9 @@ modello_MDA_k2<-function(data,etichette){
 levels(etichette_k2)<-c("1","1","3")
 etichette_k2
 modello_MDA_k2(fetal_Health_no_dubbiosi[,1:4],etichette_k2)
+#set.seed() serve?????
 mod_mda_k2<-MclustDA(fetal_Health_no_dubbiosi[,1:4],etichette_k2,G=4,modelNames="VII")
+summary(mod_mda_k2)
 
 (fetal_Healt_dubbiosi<-fetal_Health%>%
   filter(fetal_health==2)%>%
@@ -450,3 +440,30 @@ mod_mda_k2<-MclustDA(fetal_Health_no_dubbiosi[,1:4],etichette_k2,G=4,modelNames=
 table(predict(mod_mda_k2,fetal_Healt_dubbiosi)$class)
 
 #PROVARE CON EEE OPPURE FATTO GIà SOPRA?????? IN TEORIA COINCIDE CON EDDA...?????????
+
+
+
+
+
+
+train_test<-function(data,gruppi,perc=0.7){
+  #gruppi è il nome della variabile con le etichette
+  set.seed(123)
+  index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
+  train<-data[index=="train",]
+  test<-data[index=="test",]
+  lis<-list(data_train=train,
+            data_test=test)
+  return(lis)
+}
+UOsampling<-train_test(new_train,gruppi="fetal_health",0.8)
+str(UOsampling)
+
+(train_set<-UOsampling$data_train)
+(test_set<-UOsampling$data_test)
+
+set.seed(123)
+modello_MDA_k2(train_set[,1:4],as.factor(train_set$fetal_health))
+modello_MDA_k2_UOsampling<-MclustDA(train_set[,1:4],as.factor(train_set$fetal_health),G=5,modelNames="VII")
+mean(predict(modello_MDA_k2_UOsampling,test_set[,1:4])$class==as.factor(test_set$fetal_health)) 
+#solito 83%....io proverei a non mettere le etichette 2 come etichette 1...
