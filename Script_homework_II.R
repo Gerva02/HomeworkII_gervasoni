@@ -276,7 +276,7 @@ new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117)
 
 #  if 200 new examples were generated for the minority class, a value of perc.under of 100 will randomly select exactly 
 #  200 cases belonging to the majority classes from the original data set to belong to the final data set. Values above 100 will select more examples from the majority classes.
-# in questo caso prendiamo (+ perc.over/100 %) * ncasi * perc.under
+# in questo caso prendiamo (+ perc.over/100 %) * ncasi * perc.under 
 
 table(new_train$fetal_health)
 
@@ -321,7 +321,7 @@ confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendia
 
 
 
-
+ 
 
 # clustering --------------------------------------------------------------
 
@@ -437,7 +437,7 @@ accuracy<-function(g,mod,nCV=5,data,etichette){
   return(1-cvMclustDA(mod_mda,nfold=nCV)$ce)
 }
 
-
+#funzione che valuta il miglior modello mda tramite cross validation con nfold=4 e restituisce il più accurato:
 modello_MDA_k3<-function(data,etichette){
   g1<-g2<-g3<-c(1,2,3,4,5)
   g1<-as.data.frame(g1)
@@ -473,4 +473,20 @@ modello_MDA_k2<-function(data,etichette){
   return(lis)
 }
 
-fetal_Health
+(fetal_Health_no_dubbiosi<-fetal_Health%>%
+  select(all_of(main_comp),fetal_health)%>%
+  filter(fetal_health!=2))
+
+
+(etichette_k2<-as.factor(fetal_Health_no_dubbiosi$fetal_health))
+levels(etichette_k2)<-c("1","1","3")
+etichette_k2
+modello_MDA_k2(fetal_Health_no_dubbiosi[,1:4],etichette_k2)
+mod_mda_k2<-MclustDA(fetal_Health_no_dubbiosi[,1:4],etichette_k2,G=4,modelNames="VII")
+
+(fetal_Healt_dubbiosi<-fetal_Health%>%
+  filter(fetal_health==2)%>%
+  select(all_of(main_comp)))
+
+table(predict(mod_mda_k2,fetal_Healt_dubbiosi)$class)
+
