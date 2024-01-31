@@ -1,17 +1,29 @@
 ---
-title: "hw2_markdown"
-author: "bona-gerva-mahhadi"
-date: "2024-01-31"
+title: <center> Classificazione della salute del feto <center>
+author: <center> Bonanomi Gervasoni Mahhadi <center>
+date: <center> 16 Gennaio 2024 <center>
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+<br><br>
 
-## R Markdown
+<center> 
+#### *Abstract*
+</center>
+<div style="text-align: justify;">
+La lettura delle cardiotografie CTGs, che sono registrazioni grafiche (tracciati) della frequenza cardiaca fetale durante la gravidanza, è soggetta a interpretazioni differenti quando viene eseguita da diversi operatori sanitari. 
+Si tratta di una fase essenziale per valutare la salute del feto durante la gravidanza e il travaglio. Essa infatti influenza le decisioni sull'intervento del medico che, a seconda di come viene valutato il feto, opterà ad esempio per la somministrazione di ossigeno alla madre, o in casi più gravi, procederà con un taglio cesareo d'emergenza.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+L'obiettivo di questa nostra analisi sarà costruire dei modelli in grado di prevedere con una buona accuratezza se il feto è Normale, Sospetto o Patologico.
+I dati utilizzati sono stati estratti dal database di **SisPorto**, un programma di analisi automatizzata dei cardiotogrammi che individua e quantifica, seguendo i criteri guida della FIGO (Federazione Internazionale di Ginecologia e Ostetricia), una serie di parametri rilevanti che vengono valutati durante il monitoraggio cardiotografico del feto.(((( NB:qui segue descrizione variabili e infine breve spiegazione dei modelli utilizzati))))
+
+
+Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Classification-Kaggle](https://www.kaggle.com/datasets/andrewmvd/fetal-health-classification/data>)
+<div style="text-align: justify;">
+<br><br>
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
