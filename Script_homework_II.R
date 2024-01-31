@@ -265,7 +265,7 @@ PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partit
 
 #c'è un modo migliore di fare la confusion matrix? 
 confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 81% confirmed
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # ESCE 68% OCCHIO!!!
 
 
 
@@ -285,24 +285,24 @@ library(mclust)
 (fetal_Health_EM<-fetal_Health%>%
   select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca
 
-set.seed(245) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabilmente la scelta degli initial values è cruciale...
-#da specificare nell'homework)
-health_mclust_ICL<-mclustICL(fetal_Health_EM, G=1:6) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
-#a stimare anche il modello più complkesso VVV anche con 9 gruppi....diu default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
-summary(health_mclust_ICL) #modello VEV con 3 componenti 
+set.seed(123) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabilmente la scelta degli initial values è cruciale...
+#da specificare nell'homework)>>>>>CON IL SEED PRECEDENTE NON RISULTAVA K=3
+health_mclust_ICL<-mclustICL(fetal_Health_EM, G=2:6) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
+#a stimare anche il modello più complkesso VVV anche con 9 gruppi....di default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
+summary(health_mclust_ICL) #modello EEV con 3 componenti 
 plot(health_mclust_ICL,ylim=c(-35000,-25000))  #guardate che bellino
 str(health_mclust_ICL)
 
 
 #per curiosità:
 set.seed(123)
-plot(mclustICL(fetal_Health_EM,G=2:15),ylim=c(-34000,-26000)) #non risulta per nulla un k predominante
+plot(mclustICL(fetal_Health_EM,G=2:10),ylim=c(-34000,-26000)) #non risulta per nulla un k predominante
 #gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia
 #il numero di gruppi
 
 set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM) 
-summary(health_mclust_BIC)
+summary(health_mclust_BIC) #secondo il BIC (non accurato come ICL) risulta k=8 e modello VEV
 
 #SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
 # 
@@ -322,7 +322,7 @@ summary(health_mclust_BIC)
 
 #necessario provare con k=3 (SENZA set.seed VIENE DIVERSISSIMO) >>>escono precisioni che variano dal 60% all'80%
 #significa che è un EM molto variabile/instabile e poco robusto (tutte caratteristiche che rendono cruciale la scelta dei valori iniziali)
-set.seed(123)
+set.seed(123) #MA è CORRETTO USARE TUTTE LE VOLTE SET.SEED (oltre per avere gli stessi risultati su qualunque pc.....)
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
 summary(health_mclust_ICL_k3) #EVV
 
@@ -332,17 +332,16 @@ health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
 summary(health_mclust_BIC_k3) #EVV
 
 
-#megliobasarsi sull'ICL ma in questo caso si popssono prendere le etichette dal BIC senza problemi perchè i 2 modelli coincidono
-plot
+#megliobasarsi sull'ICL ma in questo caso si ppssono prendere le etichette dal BIC senza problemi perchè i 2 modelli coincidono
 
 (etichette<-fetal_Health$fetal_health)
 (etichette_stimate<-health_mclust_BIC_k3$classification)
 
 
 precisione_EM<-classError(etichette_stimate, class=etichette)
-1-precisione_EM$errorRate   #perchè si è abbasato ?
+1-precisione_EM$errorRate   #76%
 
-(confusion_matrix <- table( etichette, etichette_stimate))
+(confusion_matrix <- table( etichette, etichette_stimate)) #DA CORREGGERE
 
 
 coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
@@ -358,15 +357,13 @@ coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty
 adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
 
 
+
 #sbagliamo quasi tutti i malati e i dubbiosi 
 #i 3 gruppi che sembra indovinare sono sbagliati
 
 
-#questo è diventato tutto falso?
-
-#l'EM sapendo del numero di gruppi risulta preciso al 81.28% (poco più di 4 su 5)
-#Ma il vero problkema risulta nella scelta del numero di cluster che in assenza delle etichette
-#risulta spesso maggiore di 3 (6 o 7 a seconda dell'indice utilizzato)
+#il vero problkema risulta nella scelta del numero di cluster che in assenza delle etichette
+#risulta spesso maggiore di 3 (6 o 7 a seconda del seed utilizzato)
 #probabilmente i cluster non sono ben definiti nemmeno dalle etichette note....stando al risultato
 #dell'algoritmo è possibile che alcuni di essi siano ulteriormente scomponibili in altri
 #sotto gruppi
@@ -381,12 +378,8 @@ adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
 
 
 #poi in futuro voi geni se volete mettere le variabili in INGLESE è più bello
-# IPOTETICA CLASSIFICAZIONE SOLO SANI E MALATI E POI VEDIAMO COSA FA STO MODELLO
-#SUI DUBBIOSI (DA VEDERE IN FUTURO) >>>>MODELLO MDA CON 2 CLUSTER
-#BASATO SU BIC O SU MER E POI OUTPUT CON LA SUDDIVISIONE DEI DUBBIOSI IN MALATI E NON
-#per selezionare il miglior modello con 2 gruppi:
-#tra tutti i possibili facciamo cv ripetuta 10 volte e poi ristimiamo il modello
-#selezioanto come migliore (avente mer più basso) su tutti i dati che abbiamo di 
+
+#classificazione su sani e malati (ultima parte dello script)
 #malati e sani>>>>stimato questo modello poi classifichiamo i dubbiosi e vediamo
 #se effettivamente finiscono nei sani (DA GIUSTIFICARE CHE SONO SOLO ASSUNZIONI
 #BASATE SUI DATI E NON SUPERANO QUELLE DI UN MEDICO: i dati sembrano molto più simili ai sani
@@ -456,3 +449,4 @@ mod_mda_k2<-MclustDA(fetal_Health_no_dubbiosi[,1:4],etichette_k2,G=4,modelNames=
 
 table(predict(mod_mda_k2,fetal_Healt_dubbiosi)$class)
 
+#PROVARE CON EEE OPPURE FATTO GIà SOPRA?????? IN TEORIA COINCIDE CON EDDA...?????????
