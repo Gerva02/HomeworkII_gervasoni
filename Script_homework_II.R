@@ -270,30 +270,58 @@ levels(train2$fetal_health) <- c(1,1,3) # ho messo tutti della classe 2 nella cl
 table(train2$fetal_health)
 
 
-new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 200, perc.under = 500)
+new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117)
 # + perc.over/100 % is the number of cases generated (in questo caso 1/3 sono reali)
 
 
 #  if 200 new examples were generated for the minority class, a value of perc.under of 100 will randomly select exactly 
 #  200 cases belonging to the majority classes from the original data set to belong to the final data set. Values above 100 will select more examples from the majority classes.
-# in questo caso prendiamo (+ perc.over/100 %) * ncasi * 5 di casi sani 
+# in questo caso prendiamo (+ perc.over/100 %) * ncasi * perc.under
 
 table(new_train$fetal_health)
 
-mod3 <- MclustDA(new_train[,-5], new_train$fetal_health)
+# mod3 <- MclustDA(new_train[,-5], new_train$fetal_health)
+# summary(mod3)
+# str(mod3) 
+# predicted_labels <- predict(mod3, select(test,-fetal_health))$class #  questo sono le prediction del MDA
+# real_labels <- pull(test,fetal_health) #etichette vere
+# levels(real_labels) <- c(1,1,3)
+# real_labels
+# mean(predicted_labels == real_labels) #pull estrae un vettore da un db
+# 
+# table(predicted_labels,real_labels ) # vediamo che sbagliamo in maniera simile ma riusciamo 
+# #a non perderci i "falsi sani" 
 
 
+mm <-mixmodGaussianModel(family = "all",
+                                        free.proportions = F, equal.proportions = TRUE)
+                  
+modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
+                        criterion = "CV")
 
-summary(mod3)
-str(mod3) 
-predicted_labels <- predict(mod3, select(test,-fetal_health))$class #  questo sono le prediction del MDA
+
+#bisogna capire meglio le variabili che iniziano per "histogram" che sembrano non entrare nel classifi
+summary(modsmote) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
+str(modsmote)
+
+PREDICTION<- mixmodPredict(data = select(test,-fetal_health), classificationRule=modsmote["bestResult"])
+str(PREDICTION)
+#fino alla colonna 7 il mio pc funziona dopo crusha 
+#capire perchè
 real_labels <- pull(test,fetal_health) #etichette vere
 levels(real_labels) <- c(1,1,3)
-real_labels
-mean(predicted_labels == real_labels) #pull estrae un vettore da un db
 
-table(predicted_labels,real_labels ) # vediamo che sbagliamo in maniera simile ma riusciamo 
-#a non perderci i "falsi sani" 
+mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
+PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
+
+#c'è un modo migliore di fare la confusion matrix? 
+confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 81% confirmed
+
+
+
+
+
 
 # clustering --------------------------------------------------------------
 
