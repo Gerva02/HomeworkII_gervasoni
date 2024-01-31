@@ -254,6 +254,7 @@ mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_healt
 #install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
 #install.packages("grid")
 #install.packages("DMwR")
+#install.packages("ROCR")
 
 library(lattice)
 library(grid)
@@ -318,7 +319,7 @@ str(health_mclust_ICL)
 
 #per curiosità:
 set.seed(123)
-plot(mclustICL(fetal_Health_EM,G=2:15,ylim=c(-34000,-26000))) #non risulta per nulla un k predominante
+plot(mclustICL(fetal_Health_EM,G=2:15),ylim=c(-34000,-26000)) #non risulta per nulla un k predominante
 #gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia
 #il numero di gruppi
 
@@ -409,25 +410,8 @@ accuracy<-function(g,mod,nCV=5,data,etichette){
 }
 
 
-g1<-g2<-g3<-c(1,2,3,4)
-g1<-as.data.frame(g1)
-g2<-as.data.frame(g2)
-g3<-as.data.frame(g3)
-
-join<-cross_join(cross_join(g1,g2),g3)
-join["mod"]<-"VII" 
-#altrimenti con più modelli il codice impegherebbe troppo tempo
-#usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
-dim(join)
-join
 
 #CI METTE QUALCHE MINUTINO
-output<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=fetal_Health,etichette=etichette))
-
-
-
-(lis<-list(modello=join[which.max(output),],accuracy=output[which.max(output)]))
-
 
 
 modello_MDA_k3<-function(data,etichette){
@@ -436,13 +420,14 @@ modello_MDA_k3<-function(data,etichette){
   g2<-as.data.frame(g2)
   g3<-as.data.frame(g3)
   join<-cross_join(cross_join(g1,g2),g3)
-  join["mod"]<-"VII" 
+  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
+  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
   out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=data,etichette=etichette))
-  lis<-list(modello=join[which.max(out)],accuracy=out[which.max(out)])
+  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
   return(lis)
 }
-modello_MDA_k3(fetal_Health,etichette)
+out<-modello_MDA_k3(fetal_Health[,-1],etichette)
 #la valutazione del test set deve essere fatta attraverso un dataset che non ha partecipato
 #alla costruzione del modello
 
-
+out
