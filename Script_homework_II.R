@@ -27,7 +27,7 @@ sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values
 hist(fetal_Health$histogram_number_of_zeroes) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_number_of_peaks) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_variance) # questo sembra distribuirsi come gamma
-fetal_Health$histogram_tendency # questo è un factor
+fetal_Health$histogram_tendency # questo è un factor (-1/0/1)
 fetal_Health$percentage_of_time_with_abnormal_long_term_variability # non è distribuito come normale
 
 hist(fetal_Health$accelerations )
@@ -35,7 +35,7 @@ hist(fetal_Health$fetal_movement)
 hist(fetal_Health$prolongued_decelerations)
 
 #variabile sospetta fetal_Health$mean_value_of_long_term_variability, fetal_Health$mean_value_of_short_term_variability
-#hanno un lower bound di 0 
+#hanno un lower bound di 0 >>>>>le possiamo accettare
 
 fetal_Health <- fetal_Health %>%
   select(-c(severe_decelerations,
@@ -47,7 +47,7 @@ fetal_Health <- fetal_Health %>%
             accelerations, 
             fetal_movement,
             prolongued_decelerations))
-etichette<-fetal_Health$fetal_health
+(etichette<-fetal_Health$fetal_health)
 
 
 fetal_Health %>%
@@ -173,7 +173,7 @@ PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partit
 
 #c'è un modo migliore di fare la confusion matrix? 
 confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 81% confirmed
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 82% confirmed
 
 # con MDA X
 #CLASSIFICAZIONE SECONDO MDA
@@ -193,61 +193,9 @@ mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_healt
 
 # Ho messo nei commenti tutto il codice spaghetti se ti serve qualcosa lo lascio ma mi sembra tutto da canellare
 
-# #creo un dataset come bozza x fare la classificazione (DA RIVEDERE LE VARIABILI DA USARE)
-# (fetal_Health_bozza<-fetal_Health%>%
-#     select(-c(starts_with("histogram"), severe_decelerations, fetal_health))) #se ricordo bene l'mda coglie 
-# 
-# 
-# #le misture tra diverse variabili..non all'interno di una singola variabile che quindi viene richietsa normale
-# #DA VERIFICARE
-# etichette  
-# 
-# 
-# #suddivisione train test
-# set.seed(123)
-# (index<-sample(c(T,F),size=n,replace=T,prob=c(0.7,0.3)))
-# prop.table(table(index)) #ci sta
-# 
-# #stima modello migliore + calcolo MER sul test set (STO SCHIFPO NON FUNZIONA)
-# 
-# # Lo script per dividere in traning e test è già scritto!
-# 
-# 
-# # set.seed(123)
-# # (fetal_Health_bozza_train<-fetal_Health_EM[index,])
-# # (etichette_train<-fetal_Health[index,"fetal_health"])
-# # (fetal_Health_bozza_test<-fetal_Health_EM[ifelse(index==F,T,F),])
-# # (etichette_test<-fetal_Health[ifelse(index==F,T,F),"fetal_health"])
-# mod = MclustDA(data=data.frame(fetal_Health_bozza_train), as.factor(etichette_train)) # sul primo si è soffermato sul 20%
-# sum(predict(mod, fetal_Health_bozza_test)$class != etichette_test)
-# class(data.frame(fetal_Health_bozza_train))
 # 
 # #per il futuro un eventuale under/over sampling ha senso (probabilmente più under sampling dalla
 # #categoria sano che è maggiormente presente rispetto alle altre 2)
-# table(fetal_Health$fetal_health)
-# # 1655 295 176
-# 
-# 
-# # NON HA SENSO FARE CON UN 20 PERCENTO FISSO IL MER A QUESTO PUNTO FAI SOLO IL CV
-# # CHE è PIU' UTILIZZATO E HA MOLTO PIù SENSO 
-# # BISOGNEREBBE PERò VEDERE L'OVERSAMPLING COME FUNZIONA
-# 
-# # ha senso provare ad implementare un MDA basato sul MER con il quale:
-# # 60% training
-# # 20% selection (basata sul MER o sul BIC....col MER tocca implementarla)
-# # 20% testing
-# # con cui poi fare un cross-validation ripetendo 10 volte la selezione dei 3 sets e valutare la media dei MER
-# # per selezionare il miglior modello
-# 
-# #provare una funzione che prende g1 g2 e g3 e mod1 mod2 e mod3 e restituisce un MER (facendo la media 
-# #con 10 cross-validation)
-# #si può implementare con un apply ma devo creare una matrice
-# # con 6 variabili: g1 (numero gruppi nella mistura della prima etichetta) g2 g3 mod1 (tipo modello prima etichetta)
-# #mod2 e mod3
-# #rischio: che per ogni gruppo il più accurato sia sempre VVV con 5 cluster non avcendo penalizzazione se uso il MER invece
-# #del BIC (o magari VVV con 5 gruppi va in overfitting e quindi su dati nuovi (del selection set) non worka)
-# 
-# #ci penso lunedì
 
 # over sampling
 
@@ -265,12 +213,13 @@ train2<-train %>%
   as.data.frame()
 table(train2$fetal_health)
 
-levels(train2$fetal_health) <- c(1,1,3) # ho messo tutti della classe 2 nella classe 1
+levels(train2$fetal_health) <- c(1,1,3) # ho messo tutti della classe 2 nella classe 1 (DA RIVEDERE)
 
 table(train2$fetal_health)
 
 
 new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117)
+dim(new_train)
 # + perc.over/100 % is the number of cases generated (in questo caso 1/3 sono reali)
 
 
@@ -278,7 +227,7 @@ new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117)
 #  200 cases belonging to the majority classes from the original data set to belong to the final data set. Values above 100 will select more examples from the majority classes.
 # in questo caso prendiamo (+ perc.over/100 %) * ncasi * perc.under 
 
-table(new_train$fetal_health)
+table(new_train$fetal_health) #PAREGGIARE LE U.S. NEI 2 GRUPPI NON è ECCESSIVO????
 
 # mod3 <- MclustDA(new_train[,-5], new_train$fetal_health)
 # summary(mod3)
