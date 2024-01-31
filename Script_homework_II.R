@@ -49,8 +49,18 @@ fetal_Health <- fetal_Health %>%
             prolongued_decelerations))
 etichette<-fetal_Health$fetal_health
 
+
+fetal_Health %>%
+ggplot(aes(x=fetal_health,
+                y= ..count../sum(..count..))) + 
+  geom_bar(aes(fill = fetal_health), color="black") +         
+  labs(x="Condizione del feto", y="Frequenza Relativa", title="Salute del feto")+
+  scale_x_discrete(labels = c('Normale','Sospetto','Patologico')) 
+
+
 fetal_Health%>% 
-  ggpairs(mapping = aes(color = fetal_health))
+  select(-fetal_health)%>%
+  ggpairs(mapping = aes(color = fetal_Health$fetal_health))
 # nome variabili distinte
 #histogram_mean and median (molto correlate) e mode
 
@@ -97,9 +107,10 @@ cumsum(pca$sdev^2/k) < 0.80 #4 componenti
 #selezioniamo le prime d variabili che sono normali e unite coprono il 60 o 70 % della variabilità
 (main_comp <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
 # da fare meglio
+
 fetal_Health%>% 
-  select(all_of(main_comp), fetal_health)%>%
-  ggpairs(mapping = aes(color = fetal_health))
+  select(all_of(main_comp))%>%
+  ggpairs(mapping = aes(color = fetal_Health$fetal_health))
 
 
 # classification ----------------------------------------------------------
@@ -269,6 +280,9 @@ new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 200, perc.under = 500)
 table(new_train$fetal_health)
 
 mod3 <- MclustDA(new_train[,-5], new_train$fetal_health)
+
+
+
 summary(mod3)
 str(mod3) 
 predicted_labels <- predict(mod3, select(test,-fetal_health))$class #  questo sono le prediction del MDA
