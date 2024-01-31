@@ -241,7 +241,8 @@ mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_healt
 # over sampling
 
 #install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
-
+#install.packages("grid")
+#install.packages("DMwR")
 
 library(lattice)
 library(grid)
