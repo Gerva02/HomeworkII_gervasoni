@@ -1,5 +1,5 @@
 ---
-title: <center> Classificazione della salute del feto <center>
+title: <center> **Classificazione della salute del feto** <center>
 author: <center> Bonanomi Gervasoni Mahhadi <center>
 date: <center> 16 Gennaio 2024 <center>
 output: html_document
@@ -18,15 +18,43 @@ La lettura delle cardiotografie CTGs, che sono registrazioni grafiche (tracciati
 Si tratta di una fase essenziale per valutare la salute del feto durante la gravidanza e il travaglio. Essa infatti influenza le decisioni sull'intervento del medico che, a seconda di come viene valutato il feto, opterà ad esempio per la somministrazione di ossigeno alla madre, o in casi più gravi, procederà con un taglio cesareo d'emergenza.
 
 L'obiettivo di questa nostra analisi sarà costruire dei modelli in grado di prevedere con una buona accuratezza se il feto è Normale, Sospetto o Patologico.
-I dati utilizzati sono stati estratti dal database di **SisPorto**, un programma di analisi automatizzata dei cardiotogrammi che individua e quantifica, seguendo i criteri guida della FIGO (Federazione Internazionale di Ginecologia e Ostetricia), una serie di parametri rilevanti che vengono valutati durante il monitoraggio cardiotografico del feto.(((( NB:qui segue descrizione variabili e infine breve spiegazione dei modelli utilizzati))))
+I dati utilizzati sono stati estratti dal database di **SisPorto**, un programma di analisi automatizzata dei cardiotogrammi che individua e quantifica, seguendo i criteri guida della FIGO (Federazione Internazionale di Ginecologia e Ostetricia), una serie di parametri rilevanti che vengono valutati durante il monitoraggio cardiotografico del feto.(((( NB segue breve spiegazione dei modelli utilizzati da completare)))) Utilizzeremo (((tot))) metodologie di classificazione per valutare e costruire il modello che più si adatta ai nostri dati: (((elenco))). (((Breve descrizione cronologica di quale modello si è fatto per primo, quale si è scartato ecc)))
+
 
 
 Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Classification-Kaggle](https://www.kaggle.com/datasets/andrewmvd/fetal-health-classification/data>)
 <div style="text-align: justify;">
 <br><br>
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+### 1) Introduzione
+<div style="text-align: justify;">
+(((Descrizione più precisa e dettagliata di cosa differenzia le tre classi )))
+<div style="text-align: justify;">
 
+### 2) Materiali
+<div style="text-align: justify;">
+(((Descrizione di come è fatto il dataset e spiegazione variabili, forse anche il link al dataset ci starebbe qua boh)))
+<div style="text-align: justify;">
+
+### 3) Analisi esplorativa
+<div style="text-align: justify;">
+(((Analisi esplorativa dei dati)))
+<div style="text-align: justify;">
+
+### 4) Model Based Clustering
+<div style="text-align: justify;">
+((((()))))
+<div style="text-align: justify;">
+
+#### 4.1) Model Based Clustering: il clustering
+<div style="text-align: justify;">
+((((((()))))))
+<div style="text-align: justify;">
+
+#### 4.2) Model Based Clustering: la classification
+<div style="text-align: justify;">
+((((((((()))))))))
+<div style="text-align: justify;">
 ```{r cars}
 summary(cars)
 ```
