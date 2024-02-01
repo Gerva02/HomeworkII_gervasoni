@@ -29,12 +29,17 @@ Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Cla
 ### 1) Introduzione
 <div style="text-align: justify;">
 La riduzione della mortalità neonatale fa parte dei principi cardine dell'Agenda 2030 per lo sviluppo sostenibile. Sottoscritta nel 2015 dai governi dei 193 membri delle Nazioni Unite, fra gli obiettivi che si prefigge vi è quello di porre fine alle morti prevenibili di neonati e bambini sotto i 5 anni di età. In particolare viene richiesto che tutti i paesi dovranno cercare di ridurre la mortalità neonatale ad almeno 12 per ogni 1000 abitanti nati vivi. Ad oggi però sono più di 60 gli stati lontani da questo traguardo e 2.3 milioni di neonati muoiono ogni anno.
+Di questi 904 400 neonati sopravvivono solo pochi giorni a causa di complicanze alla nascita, e oltre un milione sono quelli che muoiono durante il parto. 
+La maggior parte di questi decessi sono causati dalla scarsa qualità dell’assistenza prima e durante il parto. Il miglioramento dei servizi sanitari e il potenziamento dei supporti informatici a costi accessibili,quindi, sono punti chiave per arginare queste tragedie.<br><br>
+Fatte queste premesse, non si può non considerare la cardiotografia computerizzata CTGc vista la posizione di primaria importanza che occupa nel fornire l'ausilio al monitoraggio della salute del feto. Essa infatti è stata introdotta con l’obiettivo di ridurre i falsi positivi e la soggettività dell’interpretazione poichè fornisce un’interpretazione oggettiva della
+CTG consentendo la comunicazione di numeri piuttosto che di opinioni. Negli anni infatti ci si è resi conto che i risultati pratici conseguiti dall’uso «di massa» della cardiotocografia sono stati di gran lunga inferiori alle aspettative, principalmente dovuti alla carenza di criteri univoci di interpretazione e a scarsa preparazione degli operatori sanitari.
+
 <div style="text-align: justify;">
 
 ### 2) Materiali
 <div style="text-align: justify;">
 (((Descrizione di come è fatto il dataset e spiegazione variabili, forse anche il link al dataset ci starebbe qua boh)))
-I dati di interesse sono stati estratti dal dataset **fetal_health**,esportabile gratuitamente dal link sopracitato. Si tratta di un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 
+I dati di interesse sono stati estratti dal dataset **fetal_health**,esportabile gratuitamente dal link sopracitato. Si tratta di un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* che rappresenta
 <div style="text-align: justify;">
 
 ### 3) Analisi esplorativa
