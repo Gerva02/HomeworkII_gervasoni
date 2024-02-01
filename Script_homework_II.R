@@ -427,6 +427,13 @@ table(train2$fetal_health)
 
 
 new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117) #oversampling e undersampling
+#SMOTE è un algoritmo di bilanciamento dei dati utilizzato per affrontare 
+#il problema dei dataset sbilanciati. Genera sinteticamente nuovi esempi per 
+#la classe minoritaria, identificando vicini prossimi e creando combinazioni 
+#lineari tra le istanze esistenti. Questo processo migliora la rappresentazione 
+#della classe meno frequente nel dataset, aiutando i modelli di machine learning a 
+#generalizzare meglio durante l'addestramento. La corretta regolazione dei parametri,
+#come il numero di vicini, è essenziale per evitare eccessiva generazione di dati sintetici. In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
 
 # + perc.over/100 % is the number of cases generated (in questo caso 1/3 sono reali)
 
