@@ -114,6 +114,15 @@ Dopodichè abbiamo fatto un ggpairs delle variabili selezionate. Dal grafico si 
 le ultime 2 variabili sezionate (mean_value_of_long_term_variability e uterine_contractions)
 non rispettano la normalità e la simmetria in tutti i gruppi.((((ggpairs))))
 ```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+n <- nrow(fetal_Health)
+#analisi delle componenti principali: 
+pca <- fetal_Health%>%
+  select(-fetal_health)%>%
+  princomp(cor=T) 
+k <- ncol(fetal_Health)
+#selezioniamo le prime 4 variabili in base ai loadings (quanto peso ha la singola 
+#variabile all'interno della componente principale)
+(load_vars <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
 
 ```
 Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi così come segue:
@@ -132,38 +141,37 @@ fetal_Health %>%
 ### 4.1) Model Based Clustering
 <div style="text-align: justify;">
 Fatte le dovute analisi, per il clustering abbiamo optato per il dataset con le sole variabili selezionate tramite pca (non servono le etichette per il clustering).
-```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
-
-```
-<div style="text-align: justify;">
-
-### 4.2) Model Based Classification
-<div style="text-align: justify;">
-((((((((()))))))))
-<div style="text-align: justify;">
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
-
-
-
-
-### Clustering
-IMPLEMENTO UN EM DI NORMALI SENZA SPECIFICARE IL NUMERO DI GRUPPI
-
 ```{r}
-#install.packages("mclust")
+#dataset per model-based clustering:
+(fetal_Health_EM<-fetal_Health%>%
+  select(all_of(load_vars))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
+
+#dataset per model-based classification
+(fetal_Health_classification <-fetal_Health%>%
+  select(all_of(load_vars),fetal_health))
+
+fetal_Health_viz <- fetal_Health_classification %>%
+  gather(key = "Variable", value = "Value", -fetal_health)
+
+# Create a facetted box plot using ggplot2
+ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) +
+  geom_boxplot() +
+  facet_wrap(~Variable, scales = "free_y", ncol = 2) +
+  labs(title = "Box Plot",
+       x = "Species",
+       y = "Value",
+       fill = "Variable") +
+  theme_minimal()
+```
+a livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile "histogram_mean". Non si esclude che non vi sia corrispondenza a livello bivariato (scatterplot precedenti) o multivariato che non è verificabile con strumenti grafici.  
+
+Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili.
+<div style="text-align: justify;">
+<br><br>
+Ora implementiamo un EM di normali senza specificare il numero dei gruppi
+```{r}
+install.packages("mclust")
+
 library(mclust)
 
 set.seed(123) 
