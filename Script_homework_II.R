@@ -316,7 +316,7 @@ str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
 
-<<<<<<< HEAD
+
 
 mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
@@ -324,7 +324,7 @@ PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partit
 #c'è un modo migliore di fare la confusion matrix? 
 confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
 (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 82% confirmed
-=======
+
 etichette_prediction_EDDA<-PREDICTION@partition
 mean(etichette_prediction_EDDA == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
@@ -332,7 +332,7 @@ PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partit
 #c'è un modo migliore di fare la confusion matrix? 
 (confusion_matrix <- table(data_test$fetal_health, etichette_prediction_EDDA)) #non prendiamo bene gli ammalati molto male (DA COMMENTARE)
 (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
->>>>>>> a27a7d1e981780a86cd1f0acfb043a8c1c43dde1
+
 
 
 # MDA BIC --------------------------------------------------------------------------------------------
@@ -344,16 +344,16 @@ mod2 <- MclustDA(data_train, label_train$fetal_health) #, modelNames = "VVV", G 
 # Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 str(mod2) 
-<<<<<<< HEAD
+
 predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
 mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health)) #pull estrae un vettore da un db
 # a quanto pare riesce a predirre un 83 % 
-=======
+
 etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class #  questo sono le prediction del MDA
 mean(etichette_prediction == data_test$fetal_health) 
 (confusion_matrix <- table(data_test$fetal_health,etichette_prediction_MDA)) #(DA COMMENTARE)
 # a quanto pare riesce a predirre un 85 % 
->>>>>>> a27a7d1e981780a86cd1f0acfb043a8c1c43dde1
+
 #quindi bisogna fare oversampling
 
 # MDA CV -------------------------------------------------------------------------------------------------------
