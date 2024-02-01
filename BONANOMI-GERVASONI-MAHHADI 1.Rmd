@@ -164,41 +164,29 @@ ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) 
   theme_minimal()
 ```
 a livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile "histogram_mean". Non si esclude che non vi sia corrispondenza a livello bivariato (scatterplot precedenti) o multivariato che non è verificabile con strumenti grafici.  
-
 Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili.
-<div style="text-align: justify;">
 <br><br>
-Ora implementiamo un EM di normali senza specificare il numero dei gruppi
+Arrivati a questo punto, implementiamo un EM di normali senza specificare il numero dei gruppi:
 ```{r}
-install.packages("mclust")
-
-library(mclust)
-
+#install.packages("mclust")
 set.seed(123) 
 health_mclust_ICL<-mclustICL(fetal_Health_EM, G=2:10) #l'algoritmo EM non riesce a stimare modelli complessi come VVV a causa della
 #bassa disponibilità di u.s. (nemmeno VVV con k=3)
 summary(health_mclust_ICL)
 ```
-l'algoritmo EM non riesce a stimare modelli complessi come VVV a causa della
-bassa disponibilità di u.s. (nemmeno VVV con k=3)
-VEV,7 e EVV,3 (sono molto vicini tra loro)
+Essendo un dataset con un numero relativamente limitato di osservazioni l'algoritmo EM non riesce a stimare dei modelli complessi come il VVV(nemmeno VVV con k=3),mentre osserviamo che VEV,7 e EVV,3 sono molto vicini tra loro. Notiamo inoltre dal grafico ottenuto come gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia il numero di gruppi. Ipotizziamo che ciò può essere dato dal fatto che essendo dati reali è verosimile che ciascun gruppo abbia diversi sotto gruppi. Alla luce di ciò riteniamo oppurtono eseguire un MDA in fase di model-based classification.
 
-
-```{r}
+```{r,echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
 plot(health_mclust_ICL,ylim=c(-33000,-29000)) 
 
 ```
-non risulta un k predominante
-gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia il numero di gruppi
-dovuto al fatto che essendo dati reali è verosimile che ciascun gruppo abbia diversi sotto gruppi (sensato un MDA in fase
-di model-based classification)
-
+Provando a valutare il BIC (non accurato come ICL, in quanto non tiene conto dell'entropia) risulta k=8 e modello VEV
 ```{r}
 set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM,G=2:10) 
 summary(health_mclust_BIC)
 ```
-secondo il BIC (non accurato come ICL, in quanto non tiene conto dell'entropia) risulta k=8 e modello VEV
+
 
 è un EM molto variabile/instabile e poco robusto (tutte caratteristiche che rendono cruciale la scelta dei valori iniziali)
 
@@ -253,7 +241,7 @@ coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z)
 ```
 più è grande il pallino più l'unità 
-
+<div style="text-align: justify;">
 ### Classification
 funzione per eseguire una suddivisione in train set e test set:
 ```{r}
@@ -442,10 +430,10 @@ normale e sospetto
 
 
 ```{r}
-#install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
-#install.packages("grid")
-#install.packages("DMwR")
-#install.packages("ROCR")
+install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
+install.packages("grid")
+install.packages("DMwR")
+install.packages("ROCR")
 
 library(lattice)
 library(grid)
