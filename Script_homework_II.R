@@ -1,10 +1,12 @@
 #qua faremo lo script e dopo nel markdown faremo vedere gli output dell'analisi
 #ovviamente senza mostrare lo script `echo = FALSE`
 #install.packages("Rmixmod")
+#install.packages("caret")
 library(tidyverse)
 library(mclust)
 library(Rmixmod)
 library(GGally)
+library(caret)
 # Fetal health ------------------------------------------------------------
 
 # data exploration  -------------------------------------------------------
