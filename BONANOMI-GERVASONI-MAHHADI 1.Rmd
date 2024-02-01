@@ -50,8 +50,8 @@ fetal_movement|Presenza media di movimenti fetali| Hz
 uterine_contractions| Numero di contrazioni uterine| Numerico (conteggio)
 light_decelerations|Numero di decelerazioni leggere della FHR|Numerico (conteggio)             
 severe_decelerations|Numero di decelerazioni gravi della FHR|Numerico (conteggio)            
-prolongued_decelerations|Numero di decelerazioni prolungate della FHR|Numerico (conteggio)      abnormal_short_term_variability|Presenza di variabilità a breve termine anormale|Binario (0 o 1)
-mean_value_of_short_term_variability| Valore medio della variabilità a breve termine|Numerico   percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anormale | Percentuale                      
+prolongued_decelerations|Numero di decelerazioni prolungate della FHR|Numerico (conteggio) |     abnormal_short_term_variability|Presenza di variabilità a breve termine anormale|Binario (0 o 1)|
+mean_value_of_short_term_variability| Valore medio della variabilità a breve termine|Numerico|   percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anormale | Percentuale                      
 mean_value_of_long_term_variability| Valore medio della variabilità a lungo termine| Numerico   
 histogram_width| Larghezza dell'istogramma della FHR| Numerico                         
 histogram_min| Valore minimo dell'istogramma della FHR| Numerico                         
