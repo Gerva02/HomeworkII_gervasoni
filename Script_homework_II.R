@@ -300,23 +300,28 @@ str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
 
+etichette_prediction_EDDA <- PREDICTION@partition
+etichette_prediction_EDDA <-as.factor(etichette_prediction_EDDA)
+levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
 mean(etichette_prediction_EDDA == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
 # (confusion_matrix <- table(data_test$fetal_health, etichette_prediction_EDDA)) #non prendiamo bene gli ammalati molto male (DA COMMENTARE)
 # (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
-etichette_prediction_EDDA <-as.factor(etichette_prediction_EDDA)
-levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
-confusionMatrix(etichette_prediction_EDDA, data_test$fetal_health) #qua c'è sia confusion matrix che tutto
 
+confmatrix <-confusionMatrix(etichette_prediction_EDDA,  data_test$fetal_health) #qua c'è sia confusion matrix che tutto
+confmatrix
+?confusionMatrix  
+  
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
 
 data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
-  geom_point(size=prob.post_incertezza$incertezza*10)
+  geom_point(size=prob.post_incertezza$incertezza*10)+
+  geom_point(alpha=0.3, filter(etichette_prediction_EDDA != fetal_health))
 ?geom_point
 
 # MDA (BIC) --------------------------------------------------------------------------------------------
