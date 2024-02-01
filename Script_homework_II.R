@@ -295,7 +295,7 @@ set.seed(123)
 summary(pr) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
 str(pr)
 
-PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])
+PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])   #non puoi fare direttamente predict??????????
 str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
@@ -332,8 +332,8 @@ mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health)
 summary(mod2)
 str(mod2) 
 etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class #  questo sono le prediction del MDA
-mean(etichette_prediction == data_test$fetal_health) 
-(confusion_matrix <- table(data_test$fetal_health,etichette_prediction_MDA)) #(DA COMMENTARE)
+mean(etichette_prediction_MDA == data_test$fetal_health) 
+confusionMatrix(etichette_prediction_MDA, data_test$fetal_health) #(DA COMMENTARE)
 
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
@@ -379,7 +379,7 @@ modello_MDA_k3<-function(data,etichette){
 mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
 etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
 mean(etichette_prediction_MDA_cv== data_test$fetal_health) #84%
-(confusion_matrix <- table(data_test$fetal_health,etichette_prediction_MDA_cv)) #confusion matrix
+confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) #confusion matrix
 #fatica sulla etichetta "dubbiosi"
 #da calcolare tutte le specificity ecc...
 
@@ -408,22 +408,22 @@ modello_MDA_k2<-function(data,etichette){
 }
 
 
-(fetal_Health_no_dubbiosi<-fetal_Health_classification%>%
-  filter(fetal_health!=2))
+(fetal_Health_no_sospetti<-fetal_Health_classification%>%
+  filter(fetal_health!="Sospetto"))
 
 
-(etichette_k2<-as.factor(fetal_Health_no_dubbiosi$fetal_health))
-levels(etichette_k2)<-c("1","1","3")
+(etichette_k2<-as.factor(fetal_Health_no_sospetti$fetal_health))
+levels(etichette_k2)<-c("Normale","Normale","Patologico")
 etichette_k2
-modello_MDA_k2(fetal_Health_no_dubbiosi[,1:4],etichette_k2)
+modello_MDA_k2(fetal_Health_no_sospetti[,1:4],etichette_k2)
 #set.seed() serve?????
-mod_mda_k2<-MclustDA(fetal_Health_no_dubbiosi[,1:4],etichette_k2,G=4,modelNames="VII")
+mod_mda_k2<-MclustDA(fetal_Health_no_sospetti[,1:4],etichette_k2,G=4,modelNames="VII")
 summary(mod_mda_k2)
 
-(fetal_Healt_dubbiosi<-fetal_Health_classification%>%
-  filter(fetal_health==2))
+(fetal_Healt_sospetti<-fetal_Health_classification%>%
+  filter(fetal_health=="Sospetto"))
 
-table(predict(mod_mda_k2,fetal_Healt_dubbiosi[,1:4])$class)/nrow(fetal_Healt_dubbiosi)
+table(predict(mod_mda_k2,fetal_Healt_sospetti[,1:4])$class)/nrow(fetal_Healt_sospetti)
 
 #7 dubbiosi su 8 classificati come sani
 
@@ -454,7 +454,7 @@ library(DMwR)
   as.data.frame())
 table(train2$fetal_health)
 
-levels(train2$fetal_health) <- c(1,1,3) # ho messo tutti della classe 2 nella classe 1 (DA RIVEDERE)
+levels(train2$fetal_health) <- c("Normale","Normale","Patologico") # ho messo tutti della classe 2 nella classe 1 (DA RIVEDERE)
 
 table(train2$fetal_health)
 
@@ -489,26 +489,34 @@ mm <-mixmodGaussianModel(family = "all",
 modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
                         criterion = "CV")
 
+new_train
+#TUTTA STA PARTE DA RICONTROLLARE PERCHè CI SONO I NOMI DEI DATASET SBAGLIATI
+
 
 #bisogna capire meglio le variabili che iniziano per "histogram" che sembrano non entrare nel classifi
 summary(modsmote) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
 str(modsmote)
 
-PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
+(test_no_sospetti<-data_test%>%filter(fetal_health!="Sospetto"))
+
+PREDICTION<- mixmodPredict(data = select(test_no_sospetti,-fetal_health), classificationRule=modsmote["bestResult"])
 str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
-real_labels <- data_test$fetal_health #etichette vere
-levels(real_labels) <- c(1,1,3)
 
-etichette_prediction_oversampling<-PREDICTION@partition
-mean(etichette_prediction_oversampling == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
+(real_labels <- as.factor(test_no_sospetti$fetal_health)) #etichette vere
+levels(real_labels) <- c("Normale","Normale","Patologico")
+
+(etichette_prediction_oversampling<-as.factor(PREDICTION@partition))
+levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
+mean(etichette_prediction_oversampling == real_labels) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
-confusion_matrix <- table(data_test$fetal_health, etichette_prediction_oversampling)  #non prendiamo bene gli ammalati molto male
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # ESCE 73% OCCHIO!!!
+confusionMatrix(etichette_prediction_oversampling,real_labels)  #non prendiamo bene gli ammalati molto male!
+#questo è un 88% dato da un oversampling su un modello EDDA (credo) ?????
 
+#ora lo provo su MDA
 
  
 
@@ -528,25 +536,16 @@ confusion_matrix <- table(data_test$fetal_health, etichette_prediction_oversampl
 
 
 
-
-
-
-
-
-
-
-
-
 #provare il daatset con oversampling in un MDA CV
 
-UOsampling<-train_test(new_train,gruppi="fetal_health",0.8)
-str(UOsampling)
-
-(train_set<-UOsampling$data_train)
-(test_set<-UOsampling$data_test)
+new_train #per il training del modello MDA con oversampling (forse 50 e 50 è eccesivo????? un 2/3 e 1/3 non andava già bene??????)
+test_no_sospetti #per valutare se i normali e malati li mette nella categoria giusta ma qui i "Sospetti" li esclude....
+#....mentre nel training i sospetti li considera come sani (che facciamo ??????)
 
 set.seed(123)
-modello_MDA_k2(train_set[,1:4],as.factor(train_set$fetal_health))
-modello_MDA_k2_UOsampling<-MclustDA(train_set[,1:4],as.factor(train_set$fetal_health),G=5,modelNames="VII")
-mean(predict(modello_MDA_k2_UOsampling,test_set[,1:4])$class==as.factor(test_set$fetal_health)) 
-#solito 83%....io proverei a non mettere le etichette 2 come etichette 1...
+modello_MDA_k2(new_train[,1:4],as.factor(new_train$fetal_health))
+modello_MDA_k2_UOsampling<-MclustDA(new_train[,1:4],as.factor(new_train$fetal_health),G=list(4,5),modelNames="VII")
+(etichette_prediction_MDA_oversampling_k2<-predict(modello_MDA_k2_UOsampling,test_no_sospetti[,1:4])$class)
+confusionMatrix(etichette_prediction_MDA_oversampling_k2,real_labels)
+#solito 91%....
+#..io proverei a non mettere le etichette 2 come etichette 1......
