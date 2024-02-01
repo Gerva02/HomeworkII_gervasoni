@@ -53,7 +53,7 @@ fetal_Health <- fetal_Health %>%
 
 fetal_Health %>%
 ggplot(aes(x=fetal_health,
-                y= ..count../sum(..count..))) + 
+                y= after_stat(count)/sum(after_stat(count)))) + 
   geom_bar(aes(fill = fetal_health), color="black") +         
   labs(x="Condizione del feto", y="Frequenza Relativa", title="Salute del feto")+
   scale_x_discrete(labels = c('Normale','Sospetto','Patologico')) 
@@ -136,6 +136,9 @@ fetal_Health %>%
   #strano che i dubbiosi si collochino a destra dei sani e non tra sani e malati
 
 
+(fetal_Health <- fetal_Health %>% 
+    rowid_to_column("id"))
+
 #dataset per model-based clustering
 (fetal_Health_EM<-fetal_Health%>%
   select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
@@ -144,6 +147,19 @@ fetal_Health %>%
 (fetal_Health_classification <-fetal_Health%>%
   select(all_of(main_comp),fetal_health))
 
+fetal_Health_viz <- fetal_Health_classification %>%
+  
+  gather(key = "Variable", value = "Value", -fetal_health)
+
+# Create a facetted box plot using ggplot2
+ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) +
+  geom_boxplot() +
+  facet_wrap(~Variable, scales = "free_y", ncol = 2) +
+  labs(title = "Box Plot",
+       x = "Species",
+       y = "Value",
+       fill = "Variable") +
+  theme_minimal()
 
 # clustering --------------------------------------------------------------
 
@@ -246,7 +262,7 @@ adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
 
 #normal
 
-train_test<-function(data,perc=0.7){
+train_test<-function(data,gruppi,perc=0.7){
   #gruppi è il nome della variabile con le etichette
   set.seed(123)
   index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
@@ -260,17 +276,31 @@ train_test<-function(data,perc=0.7){
 
 #costruzione train e test set per classification:
 
+train <- fetal_Health %>% 
+  sample_frac(.70) # prendo il .70 percento e lo uso come training set 
+
+data_train <- train %>% # tenere train NON fetal_Health
+  #select(-c(id, fetal_health)) %>%# rimuovo variabili problematiche e i labels
+  select(all_of(main_comp))
+  
+label_train <- train %>%
+  select(fetal_health)   #  prendo i labels
 
 
-out<-train_test(fetal_Health_classification,0.7)
-data_train<-out$data_train
-data_test<-out$data_test
+test<- anti_join(fetal_Health, train, by = 'id')%>%
+#  select(-c(id)) # estraggo le osservazioni non presenti nel data set train 
+# e le uso come test set
+  select(all_of(main_comp),fetal_health)
 
-# EDDA -------------------------------------------------------------------------------------
+
+
+
+
+# EDDA BIC ????? -------------------------------------------------------------------------------------
+# EDDA fatta comunque con evaluation su test set???????
 
 #dobbiamo provare altri modelli ovviamente 
-set.seed(123)
-(pr<-mixmodLearn(data_train[,1:4], c(data_train$fetal_health),
+(pr<-mixmodLearn(data_train, c(label_train$fetal_health),
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
 #fino alla colonna 7 il mio pc funziona dopo crusha 
@@ -281,38 +311,33 @@ set.seed(123)
 summary(pr) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
 str(pr)
 
-PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])
+PREDICTION<- mixmodPredict(data = select(test,-fetal_health), classificationRule=pr["bestResult"])
 str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
 
 
-mean(PREDICTION@partition == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
+mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
-confusion_matrix <- table(data_test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
+confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 82% confirmed
 
 
 # MDA BIC --------------------------------------------------------------------------------------------
 
-set.seed(123)
-mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
-
-#COMMENTO DA CONTROLLARE
-#, modelNames = "VVV", G = 4
+set.seed(869)
+mod2 <- MclustDA(data_train, label_train$fetal_health) #, modelNames = "VVV", G = 4
 #bisogna capire come mai non mi specifica i modelli se non metto niente in model names e
 #se lascio g senza niente (perchè devo specificare che modello e quanti g non dovrebbe farlo da solo????)
 # Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 str(mod2) 
-predict(mod2, select(data_test,-fetal_health))$class #  questo sono le prediction del MDA
-mean(c(predict(mod2, select(data_test,-fetal_health))$class) == data_test$fetal_health) 
-# a quanto pare riesce a predirre un 85 % 
+predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
+mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health)) #pull estrae un vettore da un db
+# a quanto pare riesce a predirre un 83 % 
 #quindi bisogna fare oversampling
-#da fare confusion matrix specificity sensitivity ecc... (ha senso fare una funzione in cui gli diamo: etichette previste ed etichette reali (sul test set) e
-#ci restituisce tutto....)
 
 # MDA CV -------------------------------------------------------------------------------------------------------
 
