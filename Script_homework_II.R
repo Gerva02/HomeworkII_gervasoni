@@ -229,15 +229,9 @@ coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty
 
 
 # classification ----------------------------------------------------------
-# da fare  
-# normal V
-# con MDA X
-# con oversampling X
 
-#normal
-
+#funzione per eseguire una suddivisione in train set e test set:
 train_test<-function(data,perc=0.7){
-  #gruppi è il nome della variabile con le etichette
   set.seed(123)
   index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
   train<-data[index=="train",]
@@ -251,45 +245,37 @@ train_test<-function(data,perc=0.7){
 #costruzione train e test set per classification:
 
 
-
 out<-train_test(fetal_Health_classification,0.7)
 data_train<-out$data_train
 data_test<-out$data_test
 
+
 # EDDA (CV) -------------------------------------------------------------------------------------
 
-#dobbiamo provare altri modelli ovviamente 
+
 set.seed(123)
 (pr<-mixmodLearn(data_train[,1:4], c(data_train$fetal_health),
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
-#fino alla colonna 7 il mio pc funziona dopo crusha 
-#capire perchè
 
-#prediction con il nostro classifier sembra accurate al 80 percento
-#bisogna capire meglio le variabili che iniziano per "histogram" che sembrano non entrare nel classifi
-summary(pr) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
-str(pr)
 
-PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])   #non puoi fare direttamente predict??????????
-str(PREDICTION)
-#fino alla colonna 7 il mio pc funziona dopo crusha 
-#capire perchè
 
-etichette_prediction_EDDA <- PREDICTION@partition
-etichette_prediction_EDDA <-as.factor(etichette_prediction_EDDA)
+summary(pr) #la parte di evaluation deve essere svolta sul test set
+
+
+PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])   
+
+
+etichette_prediction_EDDA <- as.factor(PREDICTION@partition)
 levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
-mean(etichette_prediction_EDDA == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
-PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
-#c'è un modo migliore di fare la confusion matrix? 
-# (confusion_matrix <- table(data_test$fetal_health, etichette_prediction_EDDA)) #non prendiamo bene gli ammalati molto male (DA COMMENTARE)
-# (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
 
-confmatrix <-confusionMatrix(etichette_prediction_EDDA,  data_test$fetal_health) #qua c'è sia confusion matrix che tutto
-confmatrix
+(confmatrix <-confusionMatrix(etichette_prediction_EDDA,  data_test$fetal_health)) #l'accuracy è elevata solo a causa
+#della differenza di numerosità tra i gruppi; infatti ben61 dei casi sospetti vengono nuovamente classificati come normali
+#anche (seppur in minor parte) nei casi patologici si verifica questa missclassification (osservabile tramite sia la
+#confusion matrix sia tramite sensitivity e specificity)
 
-  
+
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
@@ -300,22 +286,25 @@ data_test %>%
   geom_point(size=prob.post_incertezza$incertezza*10)+
   geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)
+#maggior incertezza nella sezione del grafico in cui sono presenti gli individui sospetti
+
 
 # MDA (BIC) --------------------------------------------------------------------------------------------
 
+#sia dal ggpairs sia dall'algoritmo EM si evince la necessità di implementare un modello di classificazione di tipo MDA
 set.seed(123)
 mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
 
 #COMMENTO DA CONTROLLARE
-#, modelNames = "VVV", G = 4
 #bisogna capire come mai non mi specifica i modelli se non metto niente in model names e
 #se lascio g senza niente (perchè devo specificare che modello e quanti g non dovrebbe farlo da solo????)
 # Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
-str(mod2) 
-etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class #  questo sono le prediction del MDA
-mean(etichette_prediction_MDA == data_test$fetal_health) 
-confusionMatrix(etichette_prediction_MDA, data_test$fetal_health) #(DA COMMENTARE)
+
+etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class 
+confusionMatrix(etichette_prediction_MDA, data_test$fetal_health) #rimane la classe dei sospetti la più problematica stando ai valori di 
+#sensitivity (bassa in patologico) e specificity (alta in patologico)
+# in ogni caso la classificazione tramite MDA risulta migliore di quella eseguita attraverso il modello EDDA
 
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
@@ -325,13 +314,13 @@ data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point(size=prob.post_incertezza$incertezza*10)+
   geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
-             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10) #in nero la u.s. missclassified
+#maggior incertezza nella sezione del grafico in cui sono presenti gli individui sospetti
+
+#riesce a predirre un 85 % 
+#la sensitivity del caso patologico è inferiore rispetto ad un valore soddisfacente, si può ipotizzare un oversampling
 
 
-# a quanto pare riesce a predirre un 85 % 
-#quindi bisogna fare oversampling
-#da fare confusion matrix specificity sensitivity ecc... (ha senso fare una funzione in cui gli diamo: etichette previste ed etichette reali (sul test set) e
-#ci restituisce tutto....)
 
 # MDA (CV) -------------------------------------------------------------------------------------------------------
 
@@ -352,34 +341,29 @@ modello_MDA_k3<-function(data,etichette){
   #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
   out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=data,etichette=etichette))
   lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)]) #questa accuracy non è valida siccome è stimata sullo stesso dataset usato
-  #per allenaere il modello (fuori dalla funzione viene valuatto su un test set a parte)
+  #per allenaere il modello (fuori dalla funzione viene valutato su un test set)
   return(lis)
 }
 
-#PROVARE CON EEE OPPURE FATTO GIà SOPRA?????? IN TEORIA COINCIDE CON EDDA...?????????
 
-#CI METTE QUALCHE MINUTINO
-(out<-modello_MDA_k3(data_train[,1:4],as.factor(data_train$fetal_health)))
-#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy
+(out<-modello_MDA_k3(data_train[,1:4],as.factor(data_train$fetal_health))) #G=(5,4,5)
+#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy e la confusion matrix
 
+set.seed(123)
 mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
 etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
-mean(etichette_prediction_MDA_cv== data_test$fetal_health) #84%
-confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) #confusion matrix
-#fatica sulla etichetta "dubbiosi"
-#da calcolare tutte le specificity ecc...
+confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) 
+
+#fatica in "Sospetto" e "Patologico"
+#abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del caso "patologico"
 
 
-# MDA classificare dubbiosi come sani o malati -----------------------------------------------------------------
 
+# MDA classificare sospetti come sani o malati -----------------------------------------------------------------
+
+#implementare un MDA con lo scopo di classificare gli individui "sospetti" in una delle altre 2 classi
 
 #funzione per un modello mda con soli 2 gruppi:
-accuracy<-function(g,mod,nCV=5,data,etichette){
-  set.seed(123)
-  mod_mda<-MclustDA(data,class=etichette,G=as.list(g),modelName=mod)
-  return(1-cvMclustDA(mod_mda,nfold=nCV)$ce)
-}
-
 modello_MDA_k2<-function(data,etichette){
   g1<-g2<-c(1,2,3,4,5)
   g1<-as.data.frame(g1)
@@ -399,10 +383,9 @@ modello_MDA_k2<-function(data,etichette){
 
 (etichette_k2<-as.factor(fetal_Health_no_sospetti$fetal_health))
 levels(etichette_k2)<-c("Normale","Normale","Patologico")
-etichette_k2
 modello_MDA_k2(fetal_Health_no_sospetti[,1:4],etichette_k2)
-#set.seed() serve?????
-mod_mda_k2<-MclustDA(fetal_Health_no_sospetti[,1:4],etichette_k2,G=4,modelNames="VII")
+set.seed(123)
+mod_mda_k2<-MclustDA(fetal_Health_no_sospetti[,1:4],etichette_k2,G=4,modelNames="VII") #G=(4,4)
 summary(mod_mda_k2)
 
 (fetal_Healt_sospetti<-fetal_Health_classification%>%
@@ -410,7 +393,7 @@ summary(mod_mda_k2)
 
 table(predict(mod_mda_k2,fetal_Healt_sospetti[,1:4])$class)/nrow(fetal_Healt_sospetti)
 
-#7 dubbiosi su 8 classificati come sani
+#stando ai dati si evince che nella gran parte dei casi "sospetti" apparterrebbero alla classe normale
 
 
 
@@ -418,11 +401,10 @@ table(predict(mod_mda_k2,fetal_Healt_sospetti[,1:4])$class)/nrow(fetal_Healt_sos
 
 # MDA under/oversampling --------------------------------------------------------------------------------------
 
-# Ho messo nei commenti tutto il codice spaghetti se ti serve qualcosa lo lascio ma mi sembra tutto da canellare
-
-# 
-# #per il futuro un eventuale under/over sampling ha senso (probabilmente più under sampling dalla
-# #categoria sano che è maggiormente presente rispetto alle altre 2)
+# idea del modello: basandosi sull'analisi precedente nel quale 7 individui su 8 della classe dei sospetti sono classificati nella normali, non avendo certezze scientifiche
+# sul futuro del feto essendo dati anomali ma sul quale la ricerca in campo medico non è sufficientemente approfondita; vista la difficoltà dei modelli nel classificare la 
+#classe dei sospetti (sensitivity troppo bassa) costruiamo un modello solo con lo scopo di classificare un feto come patologico o no...senza suddividere i dati in 
+#normale e sospetto
 
 # over sampling
 
@@ -439,13 +421,13 @@ library(DMwR)
   as.data.frame())
 table(train2$fetal_health)
 
-levels(train2$fetal_health) <- c("Normale","Normale","Patologico") # ho messo tutti della classe 2 nella classe 1 (DA RIVEDERE)
+levels(train2$fetal_health) <- c("Normale","Normale","Patologico") # i sospetti vengono considerati normali (vedi definizione patologici)
 
 table(train2$fetal_health)
 
 
-new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117)
-dim(new_train)
+new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117) #oversampling e undersampling
+
 # + perc.over/100 % is the number of cases generated (in questo caso 1/3 sono reali)
 
 
@@ -453,36 +435,23 @@ dim(new_train)
 #  200 cases belonging to the majority classes from the original data set to belong to the final data set. Values above 100 will select more examples from the majority classes.
 # in questo caso prendiamo (+ perc.over/100 %) * ncasi * perc.under 
 
-table(new_train$fetal_health) #PAREGGIARE LE U.S. NEI 2 GRUPPI NON è ECCESSIVO????
+table(new_train$fetal_health) 
 
-# mod3 <- MclustDA(new_train[,-5], new_train$fetal_health)
-# summary(mod3)
-# str(mod3) 
-# predicted_labels <- predict(mod3, select(test,-fetal_health))$class #  questo sono le prediction del MDA
-# real_labels <- pull(test,fetal_health) #etichette vere
-# levels(real_labels) <- c(1,1,3)
-# real_labels
-# mean(predicted_labels == real_labels) #pull estrae un vettore da un db
-# 
-# table(predicted_labels,real_labels ) # vediamo che sbagliamo in maniera simile ma riusciamo 
-# #a non perderci i "falsi sani" 
 
 
 mm <-mixmodGaussianModel(family = "all",
-                                        free.proportions = F)
+                                        free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
+#di oversampling e undersampling                                      
 
-?mixmodGaussianModel
 modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
                         criterion = "CV")
 
 modsmote@bestResult
-new_train
-#TUTTA STA PARTE DA RICONTROLLARE PERCHè CI SONO I NOMI DEI DATASET SBAGLIATI
+
+summary(modsmote) 
 
 
-#bisogna capire meglio le variabili che iniziano per "histogram" che sembrano non entrare nel classifi
-summary(modsmote) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
-str(modsmote)
+
 
 (test_no_sospetti<-data_test%>%filter(fetal_health!="Sospetto"))
 
@@ -507,21 +476,22 @@ confusionMatrix(etichette_prediction_oversampling,real_labels)  #non prendiamo b
 
 
 PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
-str(PREDICTION)
 PREDICTION@classificationRule
-#fino alla colonna 7 il mio pc funziona dopo crusha 
-#capire perchè
 
 (real_labels <- as.factor(data_test$fetal_health)) #etichette vere
 levels(real_labels) <- c("Normale","Normale","Patologico")
 
 (etichette_prediction_oversampling<-as.factor(PREDICTION@partition))
 levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
-mean(etichette_prediction_oversampling == real_labels) # bisogna andare a vedere la specificity dei malati 3
-PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
-#c'è un modo migliore di fare la confusion matrix? 
 confusionMatrix(etichette_prediction_oversampling,real_labels) 
+#aumento della sensitivity del caso patologico (significa che siamo pèiù accurati nell'identificare un caso patologico) da 0.7 a 0.83
+#qui la sensitivity del caso patologico è indicata dalla specificity del caso normale
+#tende il modello ad essere pessimista sui casi normali preferendo una classificazione come patologici
+#cioè se Ho: caso patologico allora in generale abbiamo un basso errore di primo tipo (classificare i patologici come normali) ma
+#un errore di secondo tipo necessariamente più alto (preferribile avere errore di secondo tipo alto e di primo tipo basso)
+#errore di primo tipo: classificare malati come sani
+#errore di secondo tipo: classificare sani come malati
 
 
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
@@ -534,42 +504,9 @@ data_test %>%
   geom_point(size=prob.post_incertezza$incertezza*5)+
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*5)
-
-data_test%>%
-  select(-fetal_health)%>%
-  ggpairs(aes(colour = ifelse(etichette_prediction_oversampling != real_labels,real_labels, "black"), alpha = 1)) 
- 
-#ora lo provo su MDA
-
- 
-
-
-
-#poi in futuro voi geni se volete mettere le variabili in INGLESE è più bello
-
-#classificazione su sani e malati (ultima parte dello script)
-#malati e sani>>>>stimato questo modello poi classifichiamo i dubbiosi e vediamo
-#se effettivamente finiscono nei sani (DA GIUSTIFICARE CHE SONO SOLO ASSUNZIONI
-#BASATE SUI DATI E NON SUPERANO QUELLE DI UN MEDICO: i dati sembrano molto più simili ai sani
-#ma sono anche diversi/anomali e non ancora classsificati dal pto di vista scientifico)
-#DA RIVEDERE
+#si può notare che le etichette dei malati sono ben evidenziate anche se poste lontane dal baricentro del gruppo dei malati
 
 
 
 
-
-
-#provare il daatset con oversampling in un MDA CV
-
-new_train #per il training del modello MDA con oversampling (forse 50 e 50 è eccesivo????? un 2/3 e 1/3 non andava già bene??????)
-test_no_sospetti #per valutare se i normali e malati li mette nella categoria giusta ma qui i "Sospetti" li esclude....
-#....mentre nel training i sospetti li considera come sani (che facciamo ??????)
-
-set.seed(123)
-modello_MDA_k2(new_train[,1:4],as.factor(new_train$fetal_health))
-modello_MDA_k2_UOsampling<-MclustDA(new_train[,1:4],as.factor(new_train$fetal_health),G=list(4,5),modelNames="VII")
-(etichette_prediction_MDA_oversampling_k2<-predict(modello_MDA_k2_UOsampling,test_no_sospetti[,1:4])$class)
-confusionMatrix(etichette_prediction_MDA_oversampling_k2,real_labels)
-#solito 91%....
-#..io proverei a non mettere le etichette 2 come etichette 1......
-
+#per markdown confronto tra grafico iniziale e finale (migliore vs peggiore)
