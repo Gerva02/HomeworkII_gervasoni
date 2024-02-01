@@ -32,15 +32,27 @@ La riduzione della mortalità neonatale fa parte dei principi cardine dell'Agend
 Di questi 904 400 neonati sopravvivono solo pochi giorni a causa di complicanze alla nascita, e oltre un milione sono quelli che muoiono durante il parto. 
 La maggior parte di questi decessi sono causati dalla scarsa qualità dell’assistenza prima e durante il parto. Il miglioramento dei servizi sanitari e il potenziamento dei supporti informatici a costi accessibili,quindi, sono punti chiave per arginare queste tragedie.<br><br>
 Fatte queste premesse, non si può non considerare la cardiotografia computerizzata CTGc vista la posizione di primaria importanza che occupa nel fornire l'ausilio al monitoraggio della salute del feto. Essa infatti è stata introdotta con l’obiettivo di ridurre i falsi positivi e la soggettività dell’interpretazione poichè fornisce un’interpretazione oggettiva della
-CTG consentendo la comunicazione di numeri piuttosto che di opinioni. Negli anni infatti ci si è resi conto che i risultati pratici conseguiti dall’uso «di massa» della cardiotocografia sono stati di gran lunga inferiori alle aspettative, principalmente dovuti alla carenza di criteri univoci di interpretazione e a scarsa preparazione degli operatori sanitari.
+CTG consentendo la comunicazione di numeri piuttosto che di opinioni. Negli anni infatti ci si è resi conto che i risultati pratici conseguiti dall’uso «di massa» della cardiotocografia sono stati di gran lunga inferiori alle aspettative a causa della carenza di criteri univoci di interpretazione e a scarsa preparazione degli operatori sanitari.
 
 <div style="text-align: justify;">
 
 ### 2) Materiali
 <div style="text-align: justify;">
 (((Descrizione di come è fatto il dataset e spiegazione variabili, forse anche il link al dataset ci starebbe qua boh)))
-I dati di interesse sono stati estratti dal dataset **fetal_health**,esportabile gratuitamente dal link sopracitato. Si tratta di un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* che rappresenta
+I dati di interesse sono stati estratti dal dataset **fetal_health**,esportabile gratuitamente dal link sopracitato. Si tratta di un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* rappresentata dalle seguenti modalità: 1,2,3 che indicano rispettivamente uno stato di salute del feto Normale, Sospetto, Patologico. Per completezza di informazione segue una tabella che riporta sinteticamente la descrizione e le modalità dell variabili:
+
 <div style="text-align: justify;">
+VARIABILE     | DESCRIZIONE  | MODALITÀ 
+------------- | -------------| ---------
+baseline_value| Valore di base della frequenza cardiaca fetale (FHR) |  
+accelerations|Numero di accelerazioni della FHR | numero accelerazioni medio per minuto
+fetal_movement|
+uterine_contractions|
+light_decelerations|     
+severe_decelerations|
+prolongued_decelerations|
+abnormal_short_term_variability|
+          
 
 ### 3) Analisi esplorativa
 <div style="text-align: justify;">
