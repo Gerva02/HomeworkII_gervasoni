@@ -304,9 +304,18 @@ mean(etichette_prediction_EDDA == data_test$fetal_health) # bisogna andare a ved
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
-(confusion_matrix <- table(data_test$fetal_health, etichette_prediction_EDDA)) #non prendiamo bene gli ammalati molto male (DA COMMENTARE)
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
+# (confusion_matrix <- table(data_test$fetal_health, etichette_prediction_EDDA)) #non prendiamo bene gli ammalati molto male (DA COMMENTARE)
+# (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
+confusionMatrix(as.factor(etichette_prediction_EDDA), data_test$fetal_health) #qua c'è sia confusion matrix che tutto
 
+prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+  rowwise() %>% # operiamo riga per riga
+  mutate(incertezza = 1 - max(c_across(everything()))) 
+
+data_test %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
+  geom_point(size=prob.post_incertezza$incertezza*10)
+?geom_point
 
 # MDA (BIC) --------------------------------------------------------------------------------------------
 
