@@ -131,7 +131,10 @@ fetal_Health %>%
 
 ### 4.1) Model Based Clustering
 <div style="text-align: justify;">
-Ora che
+Fatte le dovute analisi, per il clustering abbiamo optato per il dataset con le sole variabili selezionate tramite pca (non servono le etichette per il clustering).
+```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+
+```
 <div style="text-align: justify;">
 
 ### 4.2) Model Based Classification
