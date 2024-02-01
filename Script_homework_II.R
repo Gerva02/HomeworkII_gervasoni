@@ -76,11 +76,12 @@ fetal_Health%>%
 
 #qualche outliers...... non ha senso ragionare sugli outliers ma ci sta fare dei boxplot suddivisi per etichetta e selezionare se c'è qualche variabile 
 #molto rilevante per classification
-boxplot(fetal_Health[,-c(2,3,5,6,13)])
+boxplot(fetal_Health[,-c(2,3,5,6,13,14)])
 boxplot(fetal_Health[,6])
 boxplot(fetal_Health[,c(2,3)])
 boxplot(fetal_Health[,5])
 boxplot(fetal_Health[,13])
+colnames(fetal_Health)
 #PRIMA DI FARE ALTRO BISOGNA CAPIRE CHE VARIABILI TENERE E CHE VARIABILI SCARTARE
 #ho tolto queste variabili tutte se ne volete togliere altre fatelo UNA volta da qui
 
@@ -229,6 +230,18 @@ adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
 # con oversampling X
 
 #normal
+
+train_test<-function(data,gruppi,perc=0.7){
+  #gruppi è il nome della variabile con le etichette
+  set.seed(123)
+  index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
+  train<-data[index=="train",]
+  test<-data[index=="test",]
+  lis<-list(data_train=train,
+            data_test=test)
+  return(lis)
+}
+
 
 
 set.seed(123)
@@ -456,16 +469,7 @@ table(predict(mod_mda_k2,fetal_Healt_dubbiosi)$class)
 
 
 
-train_test<-function(data,gruppi,perc=0.7){
-  #gruppi è il nome della variabile con le etichette
-  set.seed(123)
-  index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
-  train<-data[index=="train",]
-  test<-data[index=="test",]
-  lis<-list(data_train=train,
-            data_test=test)
-  return(lis)
-}
+
 UOsampling<-train_test(new_train,gruppi="fetal_health",0.8)
 str(UOsampling)
 
