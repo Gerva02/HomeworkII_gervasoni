@@ -128,8 +128,7 @@ fetal_Health %>%
 
 <div style="text-align: justify;">
 
-<br><br>
-<br><br>
+
 ### 4.1) Model Based Clustering
 <div style="text-align: justify;">
 Ora che
