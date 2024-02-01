@@ -57,9 +57,7 @@ fetal_Health %>%
 ggplot(aes(x=fetal_health,
                 y= after_stat(count)/sum(after_stat(count)))) + 
   geom_bar(aes(fill = fetal_health), color="black") +         
-  labs(x="Condizione del feto", y="Frequenza Relativa", title="Salute del feto")+
-  scale_x_discrete(labels = c('Normale','Sospetto','Patologico')) 
-
+  labs(x="Condizione del feto", y="Frequenza Relativa", title="Salute del feto")
 
 fetal_Health%>% 
   select(-fetal_health)%>%
@@ -308,7 +306,9 @@ PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partit
 #c'è un modo migliore di fare la confusion matrix? 
 # (confusion_matrix <- table(data_test$fetal_health, etichette_prediction_EDDA)) #non prendiamo bene gli ammalati molto male (DA COMMENTARE)
 # (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
-confusionMatrix(as.factor(etichette_prediction_EDDA), data_test$fetal_health) #qua c'è sia confusion matrix che tutto
+etichette_prediction_EDDA <-as.factor(etichette_prediction_EDDA)
+levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
+confusionMatrix(etichette_prediction_EDDA, data_test$fetal_health) #qua c'è sia confusion matrix che tutto
 
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
