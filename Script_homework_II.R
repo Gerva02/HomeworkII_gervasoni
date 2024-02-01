@@ -139,8 +139,13 @@ fetal_Health %>%
 (fetal_Health <- fetal_Health %>% 
     rowid_to_column("id"))
 
+#dataset per model-based clustering
+(fetal_Health_EM<-fetal_Health%>%
+  select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
 
-
+#dataset per model-based classification
+(fetal_Health_classification <-fetal_Health%>%
+  select(all_of(main_comp),fetal_health))
 
 
 # clustering --------------------------------------------------------------
@@ -153,8 +158,6 @@ fetal_Health %>%
 #IMPLEMENTO UN EM DI NORMALI SENZA SPECIFICARE IL NUMERO DI GRUPPI
 #install.packages("mclust")
 library(mclust)
-(fetal_Health_EM<-fetal_Health%>%
-  select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
 
 set.seed(123) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabilmente la scelta degli initial values è cruciale...
 #da specificare nell'homework)>>>>>CON IL SEED PRECEDENTE NON RISULTAVA K=3
@@ -258,8 +261,7 @@ train_test<-function(data,gruppi,perc=0.7){
 }
 
 
-
-set.seed(123)
+#costruzione train e test set per classification:
 
 train <- fetal_Health %>% 
   sample_frac(.70) # prendo il .70 percento e lo uso come training set 
@@ -277,6 +279,12 @@ test<- anti_join(fetal_Health, train, by = 'id')%>%
 # e le uso come test set
   select(all_of(main_comp),fetal_health)
 
+
+
+
+
+# EDDA BIC ????? -------------------------------------------------------------------------------------
+# EDDA fatta comunque con evaluation su test set???????
 
 #dobbiamo provare altri modelli ovviamente 
 (pr<-mixmodLearn(data_train, c(label_train$fetal_health),
@@ -303,8 +311,8 @@ PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partit
 confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
 (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 82% confirmed
 
-# con MDA X
-#CLASSIFICAZIONE SECONDO MDA
+
+# MDA BIC --------------------------------------------------------------------------------------------
 
 set.seed(869)
 mod2 <- MclustDA(data_train, label_train$fetal_health) #, modelNames = "VVV", G = 4
@@ -318,6 +326,28 @@ mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_healt
 # a quanto pare riesce a predirre un 83 % 
 #quindi bisogna fare oversampling
 
+# MDA CV -------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+# MDA classificare dubbiosi come sani o malati -----------------------------------------------------------------
+
+
+
+
+
+
+
+
+# MDA under/oversampling --------------------------------------------------------------------------------------
 
 # Ho messo nei commenti tutto il codice spaghetti se ti serve qualcosa lo lascio ma mi sembra tutto da canellare
 
