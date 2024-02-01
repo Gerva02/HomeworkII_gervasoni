@@ -47,26 +47,28 @@ VARIABILE     | DESCRIZIONE  | MODALITÀ
 baseline_value| Valore di base della frequenza cardiaca fetale (FHR) |  Bpm
 accelerations|Conteggio delle accelerazioni medie dalla FHR | Hz
 fetal_movement|Presenza media di movimenti fetali| Hz                
-uterine_contractions| Numero di contrazioni uterine| Numerico (conteggio)
-light_decelerations|Numero di decelerazioni leggere della FHR|Numerico (conteggio)             
-severe_decelerations|Numero di decelerazioni gravi della FHR|Numerico (conteggio)            
-prolongued_decelerations|Numero di decelerazioni prolungate della FHR|Numerico (conteggio) |     abnormal_short_term_variability|Presenza di variabilità a breve termine anormale|Binario (0 o 1)|
-mean_value_of_short_term_variability| Valore medio della variabilità a breve termine|Numerico|   percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anormale | Percentuale                      
+uterine_contractions| Numero di contrazioni uterine| Hz
+light_decelerations|Numero di decelerazioni leggere della FHR|Hz            
+severe_decelerations|Numero di decelerazioni gravi della FHR|Hz          
+prolongued_decelerations|Numero di decelerazioni prolungate della FHR|Hz |    
+abnormal_short_term_variability|Presenza di variabilità a breve termine anormale|Binario (0 o 1)|
+mean_value_of_short_term_variability| Valore medio della variabilità a breve termine|Numerico|  
+percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anormale | Percentuale                      
 mean_value_of_long_term_variability| Valore medio della variabilità a lungo termine| Numerico   
 histogram_width| Larghezza dell'istogramma della FHR| Numerico                         
 histogram_min| Valore minimo dell'istogramma della FHR| Numerico                         
-histogram_max| Valore massimo dell'istogramma della FHR| Numerico                        
-| histogram_number_of_peaks                     | Numero di picchi nell'istogramma della FHR                 | Numerico (conteggio)             |
-| histogram_number_of_zeroes                    | Numero di zeri nell'istogramma della FHR                   | Numerico (conteggio)             |
-| histogram_mode                                | Modalità dell'istogramma della FHR                         | Numerico                         |
-| histogram_mean                                | Valore medio dell'istogramma della FHR                      | Numerico                         |
+histogram_max| Valore massimo dell'istogramma della FHR| Numerico| 
+histogram_number_of_peaks| Numero di picchi nell'istogramma della FHR| Numerico (conteggio) |
+histogram_number_of_zeroes| Numero di zeri nell'istogramma della FHR| Numerico (conteggio)|
+histogram_mode | Modalità dell'istogramma della FHR | Numerico|
+histogram_mean                                | Valore medio dell'istogramma della FHR                      | Numerico                         |
 | histogram_median                              | Mediana dell'istogramma della FHR                           | Numerico                         |
 | histogram_variance                            | Varianza dell'istogramma della FHR                          | Numerico                         |
 | histogram_tendency                            | Asimmetria dell'istogramma della FHR  | **-1**: sinistra **0**:simmetrica **1**:destra  |
 | fetal_health                                  | Salute fetale (etichetta di classe)                         |**1**: Sano **2**:Sospetto **3**:Patologico     |                      
                  
 <div style="text-align: justify;">
-Il dataset non presenta valori mancanti. In prima analisi è stata valutata la distribuzione delle variabili. Le variabili di conteggio come naturalmente previsto seguono una distribuzione assimilabile a quella di Poisson di conseguenza si è optato ad escluderle dalle successive analisi assieme alle variabili che dimostravano una pronunciata asimmetria. È stata esclusa anche la variabile histogram_tendency poichè fattoriale
+Il dataset non presenta valori mancanti. In prima analisi è stata valutata la distribuzione delle variabili. Le variabili di conteggio come naturalmente previsto seguono una distribuzione assimilabile a quella di Poisson di conseguenza si è optato ad escluderle dalle successive analisi assieme alle variabili che dimostravano una pronunciata asimmetria. È stata esclusa anche la variabile histogram_tendency poichè fattoriale.
 <div style="text-align: justify;">
           
 
