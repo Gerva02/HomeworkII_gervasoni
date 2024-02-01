@@ -113,6 +113,106 @@ fetal_Health%>%
   ggpairs(mapping = aes(color = fetal_Health$fetal_health))
 
 
+
+
+
+
+# clustering --------------------------------------------------------------
+
+#conviene provare a styimare la classificazine sia tramite 10 variabili
+#sia tramite le 4 slezionate (magari per far vedere che con 10 variabili alcuni modelli
+#non li stima)>>>>>>idem provare a fare un EM basato su tutte le variabili o quanto meno non solo sulle 4 selezionatre tramite pca
+
+
+#IMPLEMENTO UN EM DI NORMALI SENZA SPECIFICARE IL NUMERO DI GRUPPI
+#install.packages("mclust")
+library(mclust)
+(fetal_Health_EM<-fetal_Health%>%
+  select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca
+
+set.seed(123) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabilmente la scelta degli initial values è cruciale...
+#da specificare nell'homework)>>>>>CON IL SEED PRECEDENTE NON RISULTAVA K=3
+health_mclust_ICL<-mclustICL(fetal_Health_EM, G=2:6) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
+#a stimare anche il modello più complkesso VVV anche con 9 gruppi....di default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
+summary(health_mclust_ICL) #modello EEV con 3 componenti 
+plot(health_mclust_ICL,ylim=c(-35000,-25000))  #guardate che bellino
+str(health_mclust_ICL)
+
+
+#per curiosità:
+set.seed(123)
+plot(mclustICL(fetal_Health_EM,G=2:10),ylim=c(-34000,-26000)) #non risulta per nulla un k predominante
+#gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia
+#il numero di gruppi
+
+set.seed(123)
+health_mclust_BIC<-Mclust(fetal_Health_EM) 
+summary(health_mclust_BIC) #secondo il BIC (non accurato come ICL) risulta k=8 e modello VEV
+
+#SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
+
+
+#necessario provare con k=3 (SENZA set.seed VIENE DIVERSISSIMO) >>>escono precisioni che variano dal 60% all'80%
+#significa che è un EM molto variabile/instabile e poco robusto (tutte caratteristiche che rendono cruciale la scelta dei valori iniziali)
+set.seed(123) #MA è CORRETTO USARE TUTTE LE VOLTE SET.SEED (oltre per avere gli stessi risultati su qualunque pc.....)
+health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
+summary(health_mclust_ICL_k3) #EVV 
+
+
+set.seed(123)
+health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
+summary(health_mclust_BIC_k3) #EVV
+
+
+#megliobasarsi sull'ICL ma in questo caso si ppssono prendere le etichette dal BIC senza problemi perchè i 2 modelli coincidono
+
+(etichette<-fetal_Health$fetal_health)
+(etichette_stimate<-health_mclust_BIC_k3$classification)
+
+
+precisione_EM<-classError(etichette_stimate, class=etichette)
+1-precisione_EM$errorRate   #76%
+
+(confusion_matrix <- table( etichette, etichette_stimate)) #DA CORREGGERE
+
+
+coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
+           classification=health_mclust_BIC_k3$classification,
+           col=c("dodgerblue2","green3","red2"), symbols=c(0 ,16 ,17),
+           sub="(b) Model-Based Clustering")
+points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19)
+
+
+coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z) #più questa che vogliamo implementare
+
+adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
+
+
+
+#sbagliamo quasi tutti i malati e i dubbiosi 
+#i 3 gruppi che sembra indovinare sono sbagliati
+
+
+#il vero problkema risulta nella scelta del numero di cluster che in assenza delle etichette
+#risulta spesso maggiore di 3 (6 o 7 a seconda del seed utilizzato)
+#probabilmente i cluster non sono ben definiti nemmeno dalle etichette note....stando al risultato
+#dell'algoritmo è possibile che alcuni di essi siano ulteriormente scomponibili in altri
+#sotto gruppi
+#come capire quale delle etichette è balorda:
+#valutare nelleclassificazione se alcuni gruppi vengono visti come misture....
+#possibile soluzione alla presenza di sotto gruppi (inoltre una analisis accurata di sentitivity e
+#specificity per valutare se una etichetta in particolare è soggetta ad errori)
+#anche la differenza sostanziale tra le numerosità nei gruppi può essere una motivazione
+#della scarsa precisione dell'algoritmo EM (risolvibile tramite under sampling o con le cavolate di Gervi????)
+
+
+
+
+
+
+
+
 # classification ----------------------------------------------------------
 # da fare  
 # normal V
@@ -269,96 +369,6 @@ confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendia
 
 
  
-
-# clustering --------------------------------------------------------------
-
-#conviene provare a styimare la classificazine sia tramite 10 variabili
-#sia tramite le 4 slezionate (magari per far vedere che con 10 variabili alcuni modelli
-#non li stima)>>>>>>idem provare a fare un EM basato su tutte le variabili o quanto meno non solo sulle 4 selezionatre tramite pca
-
-
-#IMPLEMENTO UN EM DI NORMALI SENZA SPECIFICARE IL NUMERO DI GRUPPI
-#install.packages("mclust")
-library(mclust)
-(fetal_Health_EM<-fetal_Health%>%
-  select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca
-
-set.seed(123) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabilmente la scelta degli initial values è cruciale...
-#da specificare nell'homework)>>>>>CON IL SEED PRECEDENTE NON RISULTAVA K=3
-health_mclust_ICL<-mclustICL(fetal_Health_EM, G=2:6) #non ha fatto alcun salto (si può ipoptizzare che il numero di u.s. sia sufficiente
-#a stimare anche il modello più complkesso VVV anche con 9 gruppi....di default mclust stima da 1 a 9 gruppi per i 14 modelli possibili)
-summary(health_mclust_ICL) #modello EEV con 3 componenti 
-plot(health_mclust_ICL,ylim=c(-35000,-25000))  #guardate che bellino
-str(health_mclust_ICL)
-
-
-#per curiosità:
-set.seed(123)
-plot(mclustICL(fetal_Health_EM,G=2:10),ylim=c(-34000,-26000)) #non risulta per nulla un k predominante
-#gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia
-#il numero di gruppi
-
-set.seed(123)
-health_mclust_BIC<-Mclust(fetal_Health_EM) 
-summary(health_mclust_BIC) #secondo il BIC (non accurato come ICL) risulta k=8 e modello VEV
-
-#SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
-
-
-#necessario provare con k=3 (SENZA set.seed VIENE DIVERSISSIMO) >>>escono precisioni che variano dal 60% all'80%
-#significa che è un EM molto variabile/instabile e poco robusto (tutte caratteristiche che rendono cruciale la scelta dei valori iniziali)
-set.seed(123) #MA è CORRETTO USARE TUTTE LE VOLTE SET.SEED (oltre per avere gli stessi risultati su qualunque pc.....)
-health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
-summary(health_mclust_ICL_k3) #EVV 
-
-
-set.seed(123)
-health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
-summary(health_mclust_BIC_k3) #EVV
-
-
-#megliobasarsi sull'ICL ma in questo caso si ppssono prendere le etichette dal BIC senza problemi perchè i 2 modelli coincidono
-
-(etichette<-fetal_Health$fetal_health)
-(etichette_stimate<-health_mclust_BIC_k3$classification)
-
-
-precisione_EM<-classError(etichette_stimate, class=etichette)
-1-precisione_EM$errorRate   #76%
-
-(confusion_matrix <- table( etichette, etichette_stimate)) #DA CORREGGERE
-
-
-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
-           classification=health_mclust_BIC_k3$classification,
-           col=c("dodgerblue2","green3","red2"), symbols=c(0 ,16 ,17),
-           sub="(b) Model-Based Clustering")
-points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19)
-
-
-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
-           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z) #più questa che vogliamo implementare
-
-adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
-
-
-
-#sbagliamo quasi tutti i malati e i dubbiosi 
-#i 3 gruppi che sembra indovinare sono sbagliati
-
-
-#il vero problkema risulta nella scelta del numero di cluster che in assenza delle etichette
-#risulta spesso maggiore di 3 (6 o 7 a seconda del seed utilizzato)
-#probabilmente i cluster non sono ben definiti nemmeno dalle etichette note....stando al risultato
-#dell'algoritmo è possibile che alcuni di essi siano ulteriormente scomponibili in altri
-#sotto gruppi
-#come capire quale delle etichette è balorda:
-#valutare nelleclassificazione se alcuni gruppi vengono visti come misture....
-#possibile soluzione alla presenza di sotto gruppi (inoltre una analisis accurata di sentitivity e
-#specificity per valutare se una etichetta in particolare è soggetta ad errori)
-#anche la differenza sostanziale tra le numerosità nei gruppi può essere una motivazione
-#della scarsa precisione dell'algoritmo EM (risolvibile tramite under sampling o con le cavolate di Gervi????)
-
 
 
 
