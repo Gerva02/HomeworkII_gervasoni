@@ -1,0 +1,508 @@
+---
+title: <center> **Classificazione della salute del feto** <center>
+author: <center> Bonanomi Gervasoni Mahhadi <center>
+date: <center> 16 Gennaio 2024 <center>
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r warning=FALSE, message= FALSE,echo=FALSE }
+library(tidyverse)
+library(mclust)
+library(Rmixmod)
+library(GGally)
+library(caret)
+```
+
+<center> 
+#### *Abstract*
+</center>
+<div style="text-align: justify;">
+La lettura delle cardiotografie CTGs, che sono registrazioni grafiche (tracciati) della frequenza cardiaca fetale durante la gravidanza, è soggetta a interpretazioni differenti quando viene eseguita da diversi operatori sanitari. 
+Si tratta di una fase essenziale per valutare la salute del feto durante la gravidanza e il travaglio. Essa infatti influenza le decisioni sull'intervento del medico che, a seconda di come viene valutato il feto, opterà ad esempio per la somministrazione di ossigeno alla madre, o in casi più gravi, procederà con un taglio cesareo d'emergenza.
+
+L'obiettivo di questa nostra analisi sarà costruire dei modelli in grado di prevedere con una buona accuratezza se il feto è Normale, Sospetto o Patologico.
+I dati utilizzati sono stati estratti dal database di **SisPorto**, un programma di analisi automatizzata del tracciato cardiotografico che individua e quantifica, seguendo i criteri guida della FIGO (Federazione Internazionale di Ginecologia e Ostetricia), una serie di parametri rilevanti che vengono valutati durante il monitoraggio cardiotografico del feto.(((( NB segue breve spiegazione dei modelli utilizzati da completare)))) Utilizzeremo (((tot))) metodologie di classificazione per valutare e costruire il modello che più si adatta ai nostri dati: (((elenco))). (((Breve descrizione cronologica di quale modello si è fatto per primo, quale si è scartato ecc)))
+
+
+
+Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Classification-Kaggle](https://www.kaggle.com/datasets/andrewmvd/fetal-health-classification/data>)
+<div style="text-align: justify;">
+<br><br> 
+
+### 1) Introduzione
+<div style="text-align: justify;">
+La riduzione della mortalità neonatale fa parte dei principi cardine dell'Agenda 2030 per lo sviluppo sostenibile. Sottoscritta nel 2015 dai governi dei 193 membri delle Nazioni Unite, fra gli obiettivi che si prefigge vi è quello di porre fine alle morti prevenibili di neonati e bambini sotto i 5 anni di età. In particolare viene richiesto che tutti i paesi dovranno cercare di ridurre la mortalità neonatale ad almeno 12 per ogni 1000 abitanti nati vivi. Ad oggi però sono più di 60 gli stati lontani da questo traguardo e 2.3 milioni di neonati muoiono ogni anno.
+Di questi 904 400 neonati sopravvivono solo pochi giorni a causa di complicanze alla nascita, e oltre un milione sono quelli che muoiono durante il parto. 
+La maggior parte di questi decessi sono causati dalla scarsa qualità dell’assistenza prima e durante il parto. Il miglioramento dei servizi sanitari e il potenziamento dei supporti informatici a costi accessibili,quindi, sono punti chiave per arginare queste tragedie.<br><br>
+Fatte queste premesse, non si può non considerare la cardiotografia computerizzata CTGc vista la posizione di primaria importanza che occupa nel fornire l'ausilio al monitoraggio della salute del feto. Essa infatti è stata introdotta con l’obiettivo di ridurre i falsi positivi e la soggettività dell’interpretazione poichè fornisce un’interpretazione oggettiva della
+CTG consentendo la comunicazione di numeri piuttosto che di opinioni. Negli anni infatti ci si è resi conto che i risultati pratici conseguiti dall’uso «di massa» della cardiotocografia sono stati di gran lunga inferiori alle aspettative a causa della carenza di criteri univoci di interpretazione e a scarsa preparazione degli operatori sanitari.
+
+<div style="text-align: justify;">
+
+### 2) Materiali
+<div style="text-align: justify;">
+I dati di interesse sono stati estratti dal dataset **fetal_health**,esportabile gratuitamente dal link sopracitato. Si tratta di un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* rappresentata dalle seguenti modalità: 1,2,3 che indicano rispettivamente uno stato di salute del feto Normale, Sospetto, Patologico. Per completezza di informazione segue una tabella che riporta sinteticamente la descrizione e le modalità dell variabili:
+
+<div style="text-align: justify;">
+VARIABILE     | DESCRIZIONE  | MODALITÀ 
+------------- | -------------| ---------
+baseline_value| Valore di base della frequenza cardiaca fetale (FHR) |  Bpm
+accelerations|Conteggio delle accelerazioni medie dalla FHR | Hz
+fetal_movement|Presenza media di movimenti fetali| Hz                
+uterine_contractions| Numero di contrazioni uterine| Hz
+light_decelerations|Numero di decelerazioni leggere della FHR|Hz            
+severe_decelerations|Numero di decelerazioni gravi della FHR|Hz          
+prolongued_decelerations|Numero di decelerazioni prolungate della FHR|Hz |    
+abnormal_short_term_variability|Presenza di variabilità a breve termine anormale|Binario (0 o 1)|
+mean_value_of_short_term_variability| Valore medio della variabilità a breve termine|Numerico|  
+percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anormale | Percentuale                      
+mean_value_of_long_term_variability| Valore medio della variabilità a lungo termine| Numerico   
+histogram_width| Larghezza dell'istogramma della FHR| Numerico                         
+histogram_min| Valore minimo dell'istogramma della FHR| Numerico                         
+histogram_max| Valore massimo dell'istogramma della FHR| Numerico| 
+histogram_number_of_peaks| Numero di picchi nell'istogramma della FHR| Numerico (conteggio)|
+histogram_number_of_zeroes| Numero di zeri nell'istogramma della FHR| Numerico (conteggio)|
+histogram_mode | Modalità dell'istogramma della FHR | Numerico|
+histogram_mean                                | Valore medio dell'istogramma della FHR                      | Numerico                         |
+| histogram_median                              | Mediana dell'istogramma della FHR                           | Numerico                         |
+| histogram_variance                            | Varianza dell'istogramma della FHR                          | Numerico                         |
+| histogram_tendency                            | Asimmetria dell'istogramma della FHR  | **-1**: sinistra **0**:simmetrica **1**:destra  |
+| fetal_health                                  | Salute fetale (etichetta di classe)                         |**1**: Sano **2**:Sospetto **3**:Patologico     |                      
+                 
+<div style="text-align: justify;">
+Il dataset non presenta valori mancanti. Valutando la distribuzione delle variabili abbiamo visto come quelle di conteggio naturalmente seguono una distribuzione assimilabile a quella di Poisson di conseguenza si è optato ad escluderle dalle successive analisi assieme alle variabili che dimostravano una pronunciata asimmetria. È stata esclusa anche la variabile histogram_tendency poichè fattoriale. 
+Da un'analisi preliminare dell'istogramma delle frequenze relative condizionato per classi si evince come la classe dei sani è predominante:
+<br><br>
+```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
+  mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
+levels(fetal_Health$fetal_health) <- c("Normale","Sospetto","Patologico")
+fetal_Health <- fetal_Health %>%
+  select(-c(severe_decelerations,
+            histogram_number_of_zeroes,
+            histogram_number_of_peaks,
+            histogram_variance,
+            histogram_tendency, 
+            percentage_of_time_with_abnormal_long_term_variability, 
+            accelerations, 
+            fetal_movement,
+            prolongued_decelerations))
+
+etichette<-fetal_Health$fetal_health
+
+fetal_Health %>%
+ggplot(aes(x=fetal_health,
+                y= after_stat(count)/sum(after_stat(count)))) + 
+  geom_bar(aes(fill = fetal_health), color="black") +         
+  labs(x="Condizione del feto", y="Frequenza Relativa") 
+```
+<div style="text-align: justify;">
+          
+### 3) Analisi esplorativa
+<div style="text-align: justify;">
+In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. Se ne è dedotto che "histogram_mean", "histogram_median" e "histogram_mode" sono fortemente correlate. Si nota come le variabili anche se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della MDA. Inoltre essendo dati presi da macchine, quindi "data entry",è improbabile la presenza di outliers.
+<br><br>
+```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+
+```
+Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè a quanto peso ha la singola variabile all'interno della componente principale).
+Dopodichè abbiamo fatto un ggpairs delle variabili selezionate. Dal grafico si nota che
+le ultime 2 variabili sezionate ("mean_value_of_long_term_variability" e "uterine_contractions")
+non rispettano la normalità e la simmetria in tutti i gruppi.((((ggpairs))))
+```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+n <- nrow(fetal_Health)
+#analisi delle componenti principali: 
+pca <- fetal_Health%>%
+  select(-fetal_health)%>%
+  princomp(cor=T) 
+k <- ncol(fetal_Health)
+#selezioniamo le prime 4 variabili in base ai loadings (quanto peso ha la singola 
+#variabile all'interno della componente principale)
+(load_vars <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
+
+```
+Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi così come segue:
+<br><br>
+```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+fetal_Health %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
+  geom_point()
+
+```
+è evidente come i sospetti sul grafico si collocano a destra dei sani e non tra sani e malati, difatti i cardiotogrammi dei feti sospetti sono quelli cui parametri si discostano dalla normalità e che necessitano di ulteriori approfondimenti. 
+
+<div style="text-align: justify;">
+
+
+### 4.1) Model Based Clustering
+<div style="text-align: justify;">
+Fatte le dovute analisi, per il clustering abbiamo optato per il dataset con le sole variabili selezionate tramite pca (non servono le etichette per il clustering).
+```{r}
+#dataset per model-based clustering:
+(fetal_Health_EM<-fetal_Health%>%
+  select(all_of(load_vars))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
+
+#dataset per model-based classification
+(fetal_Health_classification <-fetal_Health%>%
+  select(all_of(load_vars),fetal_health))
+
+fetal_Health_viz <- fetal_Health_classification %>%
+  gather(key = "Variable", value = "Value", -fetal_health)
+
+# Create a facetted box plot using ggplot2
+ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) +
+  geom_boxplot() +
+  facet_wrap(~Variable, scales = "free_y", ncol = 2) +
+  labs(title = "Box Plot",
+       x = "Species",
+       y = "Value",
+       fill = "Variable") +
+  theme_minimal()
+```
+a livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile "histogram_mean". Non si esclude che non vi sia corrispondenza a livello bivariato (scatterplot precedenti) o multivariato che non è verificabile con strumenti grafici.  
+Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili.
+<br><br>
+Arrivati a questo punto, implementiamo un EM di normali senza specificare il numero dei gruppi:
+```{r}
+#install.packages("mclust")
+set.seed(123) 
+health_mclust_ICL<-mclustICL(fetal_Health_EM, G=2:10) #l'algoritmo EM non riesce a stimare modelli complessi come VVV a causa della
+#bassa disponibilità di u.s. (nemmeno VVV con k=3)
+summary(health_mclust_ICL)
+```
+Essendo un dataset con un numero relativamente limitato di osservazioni l'algoritmo EM non riesce a stimare dei modelli complessi come il VVV(nemmeno VVV con k=3),mentre osserviamo che VEV,7 e EVV,3 sono molto vicini tra loro. Notiamo inoltre dal grafico ottenuto come gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia il numero di gruppi. Ipotizziamo che ciò può essere dato dal fatto che essendo dati reali è verosimile che ciascun gruppo abbia diversi sotto gruppi. Alla luce di ciò riteniamo oppurtono eseguire un MDA in fase di model-based classification.
+
+```{r,echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+plot(health_mclust_ICL,ylim=c(-33000,-29000)) 
+
+```
+Provando a valutare il BIC (non accurato come ICL, in quanto non tiene conto dell'entropia) viene restituito un modello VEV k=8.
+```{r}
+set.seed(123)
+health_mclust_BIC<-Mclust(fetal_Health_EM,G=2:10) 
+summary(health_mclust_BIC)
+```
+In definitiva possiamo dire che l'EM è molto instabile e poco robusto per cui diventa cruciale la scelta dei valori iniziali). Sia tramite ICL che con il BIC il model based clustering fornisce un numero di gruppi differente. A sto punto proviamo a specificare il numero dei gruppi:
+
+```{r}
+set.seed(123) 
+health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
+summary(health_mclust_ICL_k3) #EVV 
+str(health_mclust_ICL_k3)
+
+set.seed(123)
+health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
+summary(health_mclust_BIC_k3) #EVV
+```
+In questo caso ICL e BIC restituiscono lo stesso modello. Fossero stati diversi avremmo dato priorità al modello fornito tramite ICL. 
+```{r}
+etichette_stimate<-health_mclust_BIC_k3$classification
+precisione_EM<-classError(etichette_stimate, class=etichette)
+accuracy<-1-length(precisione_EM$misclassified)/n
+```
+Tramite la Confusion Matrix notiamo come la sensitivity è molto alta solo nella classe "Normale",
+al contrario la specificity è molto bassa.È evidente come l'EM non riesce a distinguere bene fra il patologico e il normale. Infatti 253 casi sospetti che vengono classificati come "Normali".
+```{r}
+(etichette_stimate<-as.factor(etichette_stimate))
+levels(etichette_stimate)<-c("Patologico","Normale","Sospetto")
+confusionMatrix(etichette_stimate,etichette)
+```
+
+Successivamente abbiamo plottato il grafico seguente dove in nero rappresentiamo le unità "missclassificate". Si osserva che quanto meno le u.s. facenti parte del gruppo dei malati vengono allocate correttamente.
+```{r}
+coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
+           classification=health_mclust_BIC_k3$classification,
+           col=c("dodgerblue2","green3","red2"), symbols=c(0 ,16 ,17),
+           sub="(b) Model-Based Clustering")
+points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19)
+```
+Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che segue. Più è grande il pallino, maggiore è l'incertezza.
+```{r}
+coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z)
+```
+<div style="text-align: justify;">
+### 4.2) Model Based Classification
+funzione per eseguire una suddivisione in train set e test set:
+```{r}
+train_test<-function(data,perc=0.7){
+  set.seed(123)
+  index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
+  train<-data[index=="train",]
+  test<-data[index=="test",]
+  lis<-list(data_train=train,
+            data_test=test)
+  return(lis)
+}
+#costruzione train e test set per classification:
+out<-train_test(fetal_Health_classification,0.7)
+data_train<-out$data_train
+data_test<-out$data_test
+```
+
+###EDDA (CV) 
+Alleniamo un modello EDDA
+```{r}
+set.seed(123)
+(pr<-mixmodLearn(data_train[,1:4], c(data_train$fetal_health),
+                 models=mixmodGaussianModel(family='all'),
+                 criterion=c('CV','BIC')))  
+
+summary(pr) #la parte di evaluation deve essere svolta sul test set
+```
+
+
+```{r}
+PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])   
+etichette_prediction_EDDA <- as.factor(PREDICTION@partition)
+levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
+(confmatrix <-confusionMatrix(etichette_prediction_EDDA,  data_test$fetal_health))
+```
+
+l'accuracy è elevata solo a causa
+della differenza di numerosità tra i gruppi; infatti ben61 dei casi sospetti vengono nuovamente classificati come normali
+anche (seppur in minor parte) nei casi patologici si verifica questa missclassification (osservabile tramite sia la
+confusion matrix sia tramite sensitivity e specificity)
+
+
+
+```{r}
+prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+  rowwise() %>% # operiamo riga per riga
+  mutate(incertezza = 1 - max(c_across(everything()))) 
+data_test %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
+  geom_point(size=prob.post_incertezza$incertezza*10)+
+  geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)
+```
+maggior incertezza nella sezione del grafico in cui sono presenti gli individui sospetti
+
+
+
+
+
+### MDA
+allendiamo un modello MDA
+sia dal ggpairs sia dall'algoritmo EM si evince la necessità di implementare un modello di classificazione di tipo MDA
+set.seed(123)
+mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
+
+```{r}
+set.seed(123)
+mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
+summary(mod2)
+```
+
+
+
+```{r}
+etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class 
+confusionMatrix(etichette_prediction_MDA, data_test$fetal_health)
+```
+
+rimane la classe dei sospetti la più problematica stando ai valori di 
+sensitivity (bassa in patologico) e specificity (alta in patologico)
+in ogni caso la classificazione tramite MDA risulta migliore di quella eseguita attraverso il modello EDDA
+
+
+```{r}
+prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+  rowwise() %>% # operiamo riga per riga
+  mutate(incertezza = 1 - max(c_across(everything()))) 
+
+data_test %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
+  geom_point(size=prob.post_incertezza$incertezza*10)+
+  geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10) #
+```
+in nero la u.s. missclassified maggior incertezza nella sezione del grafico in cui sono presenti gli individui sospetti
+
+riesce a predirre un 85 %
+la sensitivity del caso patologico è inferiore rispetto ad un valore soddisfacente, si può ipotizzare un oversampling
+
+
+###MDA (CV) 
+```{r}
+accuracy<-function(g,mod,nCV=5,data,etichette){
+  set.seed(123)
+  mod_mda<-MclustDA(data,class=etichette,G=as.list(g),modelName=mod)
+  return(1-cvMclustDA(mod_mda,nfold=nCV)$ce)
+}
+
+#funzione che valuta il miglior modello mda tramite cross validation con nfold=4 e restituisce il più accurato:
+modello_MDA_k3<-function(data,etichette){
+  g1<-g2<-g3<-c(1,2,3,4,5)
+  g1<-as.data.frame(g1)
+  g2<-as.data.frame(g2)
+  g3<-as.data.frame(g3)
+  join<-cross_join(cross_join(g1,g2),g3)
+  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
+  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
+  out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=data,etichette=etichette))
+  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)]) #questa accuracy non è valida siccome è stimata sullo stesso dataset usato
+  #per allenaere il modello (fuori dalla funzione viene valutato su un test set)
+  return(lis)
+}
+
+
+(out<-modello_MDA_k3(data_train[,1:4],as.factor(data_train$fetal_health))) #G=(5,4,5)
+#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy e la confusion matrix
+
+set.seed(123)
+mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
+etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
+confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) 
+
+```
+fatica in "Sospetto" e "Patologico"
+abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del caso "patologico"
+
+
+###MDA classificare sospetti come sani o malati -----------------------------------------------------------------
+
+implementare un MDA con lo scopo di classificare gli individui "sospetti" in una delle altre 2 classi funzione per un modello mda con soli 2 gruppi:
+
+```{r}
+modello_MDA_k2<-function(data,etichette){
+  g1<-g2<-c(1,2,3,4,5)
+  g1<-as.data.frame(g1)
+  g2<-as.data.frame(g2)
+  join<-cross_join(g1,g2)
+  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
+  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
+  out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:2],mod=pos[3],nCV=4,data=data,etichette=etichette))
+  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
+  return(lis)
+}
+
+
+(fetal_Health_no_sospetti<-fetal_Health_classification%>%
+  filter(fetal_health!="Sospetto"))
+
+
+(etichette_k2<-as.factor(fetal_Health_no_sospetti$fetal_health))
+levels(etichette_k2)<-c("Normale","Normale","Patologico")
+modello_MDA_k2(fetal_Health_no_sospetti[,1:4],etichette_k2)
+set.seed(123)
+mod_mda_k2<-MclustDA(fetal_Health_no_sospetti[,1:4],etichette_k2,G=4,modelNames="VII") #G=(4,4)
+summary(mod_mda_k2)
+```
+
+
+
+```{r}
+(fetal_Healt_sospetti<-fetal_Health_classification%>%
+  filter(fetal_health=="Sospetto"))
+
+table(predict(mod_mda_k2,fetal_Healt_sospetti[,1:4])$class)/nrow(fetal_Healt_sospetti)
+```
+stando ai dati si evince che nella gran parte dei casi "sospetti" apparterrebbero alla classe normale
+
+
+### MDA under/oversampling
+
+idea del modello: basandosi sull'analisi precedente nel quale 7 individui su 8 della classe dei sospetti sono classificati nella normali, non avendo certezze scientifiche
+sul futuro del feto essendo dati anomali ma sul quale la ricerca in campo medico non è sufficientemente approfondita; vista la difficoltà dei modelli nel classificare la 
+classe dei sospetti (sensitivity troppo bassa) costruiamo un modello solo con lo scopo di classificare un feto come patologico o no...senza suddividere i dati in 
+normale e sospetto
+
+
+```{r}
+install.packages("grid")
+install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
+install.packages("DMwR")
+install.packages("ROCR")
+
+library(lattice)
+library(grid)
+library(DMwR)
+(train2<-data_train %>% 
+  as.data.frame())
+table(train2$fetal_health)
+levels(train2$fetal_health) <- c("Normale","Normale","Patologico") # i sospetti vengono considerati normali (vedi definizione patologici)
+table(train2$fetal_health)
+```
+
+
+```{r}
+new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117)
+table(new_train$fetal_health)
+```
+
+SMOTE è un algoritmo di bilanciamento dei dati utilizzato per affrontare
+il problema dei dataset sbilanciati. Genera sinteticamente nuovi esempi per
+la classe minoritaria, identificando vicini prossimi e creando combinazioni
+lineari tra le istanze esistenti. Questo processo migliora la rappresentazione
+della classe meno frequente nel dataset, aiutando i modelli di machine learning a
+generalizzare meglio durante l'addestramento. La corretta regolazione dei parametri,
+come il numero di vicini, è essenziale per evitare eccessiva generazione di dati sintetici. In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
+
+ + perc.over/100 % is the number of cases generated (in questo caso 1/3 sono reali)
+
+
+if 200 new examples were generated for the minority class, a value of perc.under of 100 will randomly select exactly
+200 cases belonging to the majority classes from the original data set to belong to the final data set. Values above 100 will select more examples from the majority classes.
+in questo caso prendiamo (+ perc.over/100 %) * ncasi * perc.under
+
+
+
+
+```{r}
+mm <-mixmodGaussianModel(family = "all",
+                                        free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
+#di oversampling e undersampling                                      
+modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
+                        criterion = "CV")
+modsmote@bestResult
+summary(modsmote) 
+```
+
+
+```{r}
+PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
+PREDICTION@classificationRule
+
+(real_labels <- as.factor(data_test$fetal_health)) #etichette vere
+levels(real_labels) <- c("Normale","Normale","Patologico")
+
+(etichette_prediction_oversampling<-as.factor(PREDICTION@partition))
+levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
+
+confusionMatrix(etichette_prediction_oversampling,real_labels) 
+```
+aumento della sensitivity del caso patologico (significa che siamo pèiù accurati nell'identificare un caso patologico) da 0.7 a 0.83
+qui la sensitivity del caso patologico è indicata dalla specificity del caso normale
+tende il modello ad essere pessimista sui casi normali preferendo una classificazione come patologici
+cioè se Ho: caso patologico allora in generale abbiamo un basso errore di primo tipo (classificare i patologici come normali) ma
+un errore di secondo tipo necessariamente più alto (preferribile avere errore di secondo tipo alto e di primo tipo basso)
+errore di primo tipo: classificare malati come sani
+errore di secondo tipo: classificare sani come malati
+
+
+
+
+
+```{r}
+prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+  rowwise() %>% # operiamo riga per riga
+  mutate(incertezza = 1 - max(c_across(everything()))) 
+
+
+data_test %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = real_labels)) +
+  geom_point(size=prob.post_incertezza$incertezza*5)+
+  geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*5)
+```
+si può notare che le etichette dei malati sono ben evidenziate anche se poste lontane dal baricentro del gruppo dei malati
+
+
+
+
+
