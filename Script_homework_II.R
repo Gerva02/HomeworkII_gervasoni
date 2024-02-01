@@ -74,7 +74,8 @@ fetal_Health%>%
 
 #ha senso vedere se ci sono outliers o cose del genere nelle variabili selezionate???
 
-#qualche outliers......
+#qualche outliers...... non ha senso ragionare sugli outliers ma ci sta fare dei boxplot suddivisi per etichetta e selezionare se c'è qualche variabile 
+#molto rilevante per classification
 boxplot(fetal_Health[,-c(2,3,5,6,13)])
 boxplot(fetal_Health[,6])
 boxplot(fetal_Health[,c(2,3)])
@@ -112,6 +113,15 @@ fetal_Health%>%
   select(all_of(main_comp))%>%
   ggpairs(mapping = aes(color = fetal_Health$fetal_health))
 
+#scatterplot con le prime 2 variabili più significative a seguito della pca
+fetal_Health %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
+  geom_point()
+  #strano che i dubbiosi si collochino a destra dei sani e non tra sani e malati
+
+
+(fetal_Health <- fetal_Health %>% 
+    rowid_to_column("id"))
 
 
 
@@ -128,7 +138,7 @@ fetal_Health%>%
 #install.packages("mclust")
 library(mclust)
 (fetal_Health_EM<-fetal_Health%>%
-  select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca
+  select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
 
 set.seed(123) #col set.seed stima con k=3 (siccome facilmente sbaglia....probabilmente la scelta degli initial values è cruciale...
 #da specificare nell'homework)>>>>>CON IL SEED PRECEDENTE NON RISULTAVA K=3
@@ -166,7 +176,6 @@ summary(health_mclust_BIC_k3) #EVV
 
 #megliobasarsi sull'ICL ma in questo caso si ppssono prendere le etichette dal BIC senza problemi perchè i 2 modelli coincidono
 
-(etichette<-fetal_Health$fetal_health)
 (etichette_stimate<-health_mclust_BIC_k3$classification)
 
 
@@ -221,15 +230,6 @@ adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
 
 #normal
 
-#scatterplot con le prime 2 variabili più significative a seguito della pca
-fetal_Health %>%
-  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
-  geom_point()
-  #strano che i dubbiosi si collochino a destra dei sani e non tra sani e malati
-
-
-(fetal_Health <- fetal_Health %>% 
-    rowid_to_column("id"))
 
 set.seed(123)
 
