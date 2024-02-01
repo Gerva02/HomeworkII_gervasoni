@@ -2,11 +2,13 @@
 #ovviamente senza mostrare lo script `echo = FALSE`
 #install.packages("Rmixmod")
 #install.packages("caret")
+rm(list=ls())
 library(tidyverse)
 library(mclust)
 library(Rmixmod)
 library(GGally)
 library(caret)
+
 # Fetal health ------------------------------------------------------------
 
 # data exploration  -------------------------------------------------------
@@ -27,6 +29,7 @@ fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
 
 levels(fetal_Health$fetal_health) <- c("Normale","Sospetto","Patologico")
 
+#istogrammi da non includere nel markdown ma da riportare le osservazioni/motivazioni per cui non sono utilizzate
 sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values are 0 
 hist(fetal_Health$histogram_number_of_zeroes) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_number_of_peaks) # è un conteggio dunque probabilmente si distribuisce come poisson
@@ -34,9 +37,9 @@ hist(fetal_Health$histogram_variance) # questo sembra distribuirsi come gamma
 fetal_Health$histogram_tendency # questo è un factor (-1/0/1)
 fetal_Health$percentage_of_time_with_abnormal_long_term_variability # non è distribuito come normale
 
-hist(fetal_Health$accelerations )
-hist(fetal_Health$fetal_movement)
-hist(fetal_Health$prolongued_decelerations)
+hist(fetal_Health$accelerations ) #fortemente asimmetrica
+hist(fetal_Health$fetal_movement) #fortemente asimmetrica
+hist(fetal_Health$prolongued_decelerations) #fortemente asimmetrica
 
 #variabile sospetta fetal_Health$mean_value_of_long_term_variability, fetal_Health$mean_value_of_short_term_variability
 #hanno un lower bound di 0 >>>>>le possiamo accettare
@@ -51,6 +54,7 @@ fetal_Health <- fetal_Health %>%
             accelerations, 
             fetal_movement,
             prolongued_decelerations))
+
 (etichette<-fetal_Health$fetal_health)
 
 
@@ -59,92 +63,71 @@ fetal_Health %>%
 ggplot(aes(x=fetal_health,
                 y= after_stat(count)/sum(after_stat(count)))) + 
   geom_bar(aes(fill = fetal_health), color="black") +         
-  labs(x="Condizione del feto", y="Frequenza Relativa", title="Salute del feto")
+  labs(x="Condizione del feto", y="Frequenza Relativa", title="Salute del feto") #dati sbilanciati nelle frequenze relative:
+#grande maggioranza di persone sane
+
 
 fetal_Health%>% 
   select(-fetal_health)%>%
   ggpairs(mapping = aes(color = fetal_Health$fetal_health))
 # nome variabili distinte
-#histogram_mean and median (molto correlate) e mode
+#histogram_mean, histogram_median e histogram_mode sono (ovviamente) fortemente correlate
 
 
-# commento che si può fare è che evidente anche in casi unidensionali si può vedere che le variabili (anche se distinte per fetal health)
+# commento che si può fare: è evidente (anche in casi unidensionali) che le variabili (anche se distinte per fetal health)
 #SONO MULTIMODALI (perforza andrà usato un MDA)
 
-#alcune variabili sono già evidenti tipo le ultime 3 in basso che una delle categorie siu distingue benone
 
-#SEGNARE ULTIME 3 VARIABILI DEL ggpairs
-
-#ha senso vedere se ci sono outliers o cose del genere nelle variabili selezionate???
-
-#qualche outliers...... non ha senso ragionare sugli outliers ma ci sta fare dei boxplot suddivisi per etichetta e selezionare se c'è qualche variabile 
-#molto rilevante per classification
-boxplot(fetal_Health[,-c(2,3,5,6,13)])
-boxplot(fetal_Health[,6])
-boxplot(fetal_Health[,c(2,3)])
-boxplot(fetal_Health[,5])
-boxplot(fetal_Health[,13])
-colnames(fetal_Health)
-
-boxplot(fetal_Health$baseline.value~fetal_Health$fetal_health) #dubbiosi diversi dagli altri 2
-boxplot(fetal_Health$uterine_contractions~fetal_Health$fetal_health) #NAH
-boxplot(fetal_Health$light_decelerations~fetal_Health$fetal_health) # 3 abbastanza diverse
-boxplot(fetal_Health$abnormal_short_term_variability~fetal_Health$fetal_health) #sani diversi
-boxplot(fetal_Health$mean_value_of_short_term_variability~fetal_Health$fetal_health) # dubbiosi un po' diversi
-boxplot(fetal_Health$mean_value_of_long_term_variability~fetal_Health$fetal_health) # malati leggermente diversi
-boxplot(fetal_Health$histogram_width~fetal_Health$fetal_health) #sempre dubbiosi un po' diversi
-boxplot(fetal_Health$histogram_min~fetal_Health$fetal_health) #sempre dubbiosi un po' diversi
-boxplot(fetal_Health$histogram_max~fetal_Health$fetal_health) #identiche
-boxplot(fetal_Health$histogram_mode~fetal_Health$fetal_health) #malato un po' diverso
-boxplot(fetal_Health$histogram_mean~fetal_Health$fetal_health) #malato un po' diverso
-boxplot(fetal_Health$histogram_median~fetal_Health$fetal_health) #malato un po' diverso
-
-#PRIMA DI FARE ALTRO BISOGNA CAPIRE CHE VARIABILI TENERE E CHE VARIABILI SCARTARE
-#ho tolto queste variabili tutte se ne volete togliere altre fatelo UNA volta da qui
+#essendo dati presi da macchine è improbabile la presenza di outliers dovuto a "data entry"
 
 
-#se escludiamo tutte queste come vediamo dal grafico non va bene però ALCUNE D
-#di queste sono più problematiche, bisogna vedere 1 ad 1 
-#sembrano essere severe deceleration histogram number of zeros e histogram variance
-# mentre le altre potrebbero essere reinserite
 
 sum(is.na(fetal_Health)) #no NAs
 n <- nrow(fetal_Health)
 
-#analisi delle componenti principali
+#analisi delle componenti principali: 
 pca <- fetal_Health%>%
   select(-fetal_health)%>%
   princomp(cor=T) 
-pca$loadings
 
-#è necessario standardizzare siccome le variabili sono su ordini di grandezza differenti
-#altrimenti l'80% della variabilità sarebbe gestita unicamente da una variabile (variabile o componente?????? RIVEDERE)
+
+#è necessario standardizzare usando "cor=T" siccome le variabili sono su ordini di grandezza differenti
+#altrimenti l'80% della variabilità sarebbe coperta unicamente da una variabile 
+
 k <- ncol(fetal_Health)
 pca$sdev 
-cumsum(pca$sdev^2/k) < 0.80 #4 componenti
+cumsum(pca$sdev^2/k) < 0.80 #4 componenti per coprire l'80% della variabilità 
 
-#selezioniamo le prime d variabili che sono normali e unite coprono il 60 o 70 % della variabilità
-(main_comp <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
-# da fare meglio
+
+#selezioniamo le prime 4 variabili in base ai loadings (quanto peso ha la singola variabile all'interno della componente principale)
+(load_vars <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
+
 
 fetal_Health%>% 
-  select(all_of(main_comp))%>%
-  ggpairs(mapping = aes(color = fetal_Health$fetal_health))
+  select(all_of(load_vars))%>%
+  ggpairs(mapping = aes(color = fetal_Health$fetal_health)) #si può notare che
+#le ultime 2 variabili sezionate (mean_value_of_long_term_variability e uterine_contractions)
+#non rispettano la normalità e la simmetria in tutti i gruppi
 
-#scatterplot con le prime 2 variabili più significative a seguito della pca
+#inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi: 
 fetal_Health %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point()
-  #strano che i dubbiosi si collochino a destra dei sani e non tra sani e malati
+
+#i sospetti si collocano a destra dei sani e non tra sani e malati>>>>motivazione:
+#gli individui sospetti sono semplicemente dei casi sul quale la ricerca in campo medico non ha svolto analisi approfondite; 
+#infatti sono individui in cui i dati raccolti sono molto diversi sia dagli individui sani sia dagli individui malati
+
+#ASH CONTROLLA SE QUESTA COSA CORRISPONDE ALLA REALTà!!!!!!!!!!!!!!
 
 
-#dataset per model-based clustering
+#dataset per model-based clustering:
 (fetal_Health_EM<-fetal_Health%>%
-  select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
+  select(all_of(load_vars))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
 
 #dataset per model-based classification
 (fetal_Health_classification <-fetal_Health%>%
-  select(all_of(main_comp),fetal_health))
+  select(all_of(load_vars),fetal_health))
 
 fetal_Health_viz <- fetal_Health_classification %>%
   gather(key = "Variable", value = "Value", -fetal_health)
@@ -158,6 +141,11 @@ ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) 
        y = "Value",
        fill = "Variable") +
   theme_minimal()
+#a livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile "histogram_mean"
+#non significa che non vi sia corrispondenza a livello bivariato (scatterplot precdenti) o multivariato (non visibile con strumenti grafici)  
+# a sostegno delle osservazioni precdenti sul gruppo dei sospetti in generale sono individui più simili al gruppo dei sani ma questo
+#non vale per ogni variabile (3 su 4)
+
 
 # clustering --------------------------------------------------------------
 
