@@ -136,9 +136,6 @@ fetal_Health %>%
   #strano che i dubbiosi si collochino a destra dei sani e non tra sani e malati
 
 
-(fetal_Health <- fetal_Health %>% 
-    rowid_to_column("id"))
-
 #dataset per model-based clustering
 (fetal_Health_EM<-fetal_Health%>%
   select(all_of(main_comp))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
@@ -263,21 +260,6 @@ train_test<-function(data,perc=0.7){
 
 #costruzione train e test set per classification:
 
-train <- fetal_Health %>% 
-  sample_frac(.70) # prendo il .70 percento e lo uso come training set 
-
-data_train <- train %>% # tenere train NON fetal_Health
-  #select(-c(id, fetal_health)) %>%# rimuovo variabili problematiche e i labels
-  select(all_of(main_comp))
-  
-label_train <- train %>%
-  select(fetal_health)   #  prendo i labels
-
-
-test<- anti_join(fetal_Health, train, by = 'id')%>%
-#  select(-c(id)) # estraggo le osservazioni non presenti nel data set train 
-# e le uso come test set
-  select(all_of(main_comp),fetal_health)
 
 
 out<-train_test(fetal_Health_classification,0.7)
