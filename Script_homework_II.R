@@ -351,17 +351,56 @@ modello_MDA_k3<-function(data,etichette){
   return(lis)
 }
 
+#PROVARE CON EEE OPPURE FATTO GIà SOPRA?????? IN TEORIA COINCIDE CON EDDA...?????????
 
+#CI METTE QUALCHE MINUTINO
+(out<-modello_MDA_k3(data_train[,1:4],as.factor(data_train$fetal_health)))
+#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy
 
-
-
+mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
+etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
+mean(etichette_prediction_MDA_cv== data_test$fetal_health) #84%
+(confusion_matrix <- table(data_test$fetal_health,etichette_prediction_MDA_cv)) #confusion matrix
+#fatica sulla etichetta "dubbiosi"
+#da calcolare tutte le specificity ecc...
 
 
 
 # MDA classificare dubbiosi come sani o malati -----------------------------------------------------------------
 
 
+#funzione per un modello mda con soli 2 gruppi:
+modello_MDA_k2<-function(data,etichette){
+  g1<-g2<-c(1,2,3,4,5)
+  g1<-as.data.frame(g1)
+  g2<-as.data.frame(g2)
+  join<-cross_join(g1,g2)
+  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
+  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
+  out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:2],mod=pos[3],nCV=4,data=data,etichette=etichette))
+  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
+  return(lis)
+}
 
+
+(fetal_Health_no_dubbiosi<-fetal_Health_classification%>%
+  filter(fetal_health!=2))
+
+
+(etichette_k2<-as.factor(fetal_Health_no_dubbiosi$fetal_health))
+levels(etichette_k2)<-c("1","1","3")
+etichette_k2
+modello_MDA_k2(fetal_Health_no_dubbiosi[,1:4],etichette_k2)
+#set.seed() serve?????
+mod_mda_k2<-MclustDA(fetal_Health_no_dubbiosi[,1:4],etichette_k2,G=4,modelNames="VII")
+summary(mod_mda_k2)
+
+(fetal_Healt_dubbiosi<-fetal_Health_classification%>%
+  filter(fetal_health==2))
+
+table(predict(mod_mda_k2,fetal_Healt_dubbiosi[,1:4])$class)/nrow(fetal_Healt_dubbiosi)
+
+#7 dubbiosi su 8 classificati come sani
 
 
 
@@ -461,62 +500,19 @@ confusion_matrix <- table(data_test$fetal_health, etichette_prediction_oversampl
 
 
 
-#MDA con MER e suddivisione train evaluation e test
-
-
-
-
-
-#CI METTE QUALCHE MINUTINO
-(out<-modello_MDA_k3(data_train,as.factor(label_train$fetal_health)))
-#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy
-
-mod_mda_k3<-MclustDA(data_train,label_train$fetal_health,G=c(5,2,2),modelNames="VII")
-mean(c(predict(mod_mda_k3, select(test,-fetal_health))$class) == pull(test,fetal_health)) #83.4%
-table((predict(mod_mda_k3, select(test,-fetal_health))$class),pull(test,fetal_health)) #confusion matrix
-#fatica sulla etichetta "dubbiosi"
-#da calcolare tutte le specificity ecc...
-
-
-#funzione per un modello mda con soli 2 gruppi:
-modello_MDA_k2<-function(data,etichette){
-  g1<-g2<-c(1,2,3,4,5)
-  g1<-as.data.frame(g1)
-  g2<-as.data.frame(g2)
-  join<-cross_join(g1,g2)
-  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
-  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
-  out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:2],mod=pos[3],nCV=4,data=data,etichette=etichette))
-  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
-  return(lis)
-}
-
-(fetal_Health_no_dubbiosi<-fetal_Health%>%
-  select(all_of(main_comp),fetal_health)%>%
-  filter(fetal_health!=2))
-
-
-(etichette_k2<-as.factor(fetal_Health_no_dubbiosi$fetal_health))
-levels(etichette_k2)<-c("1","1","3")
-etichette_k2
-modello_MDA_k2(fetal_Health_no_dubbiosi[,1:4],etichette_k2)
-#set.seed() serve?????
-mod_mda_k2<-MclustDA(fetal_Health_no_dubbiosi[,1:4],etichette_k2,G=4,modelNames="VII")
-summary(mod_mda_k2)
-
-(fetal_Healt_dubbiosi<-fetal_Health%>%
-  filter(fetal_health==2)%>%
-  select(all_of(main_comp)))
-
-table(predict(mod_mda_k2,fetal_Healt_dubbiosi)$class)
-
-#PROVARE CON EEE OPPURE FATTO GIà SOPRA?????? IN TEORIA COINCIDE CON EDDA...?????????
 
 
 
 
 
 
+
+
+
+
+
+
+#provare il daatset con oversampling in un MDA CV
 
 UOsampling<-train_test(new_train,gruppi="fetal_health",0.8)
 str(UOsampling)
