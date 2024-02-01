@@ -104,14 +104,14 @@ ggplot(aes(x=fetal_health,
           
 ### 3) Analisi esplorativa
 <div style="text-align: justify;">
-In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. Se ne è dedotto che histogram_mean, histogram_median e histogram_mode sono fortemente correlate. Si nota come le variabili anche se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della MDA. Inoltre essendo dati presi da macchine, quindi "data entry",è improbabile la presenza di outliers.
+In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. Se ne è dedotto che "histogram_mean", "histogram_median" e "histogram_mode" sono fortemente correlate. Si nota come le variabili anche se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della MDA. Inoltre essendo dati presi da macchine, quindi "data entry",è improbabile la presenza di outliers.
 <br><br>
 ```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
 
 ```
-Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè quanto peso ha la singola variabile all'interno della componente principale).
+Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè a quanto peso ha la singola variabile all'interno della componente principale).
 Dopodichè abbiamo fatto un ggpairs delle variabili selezionate. Dal grafico si nota che
-le ultime 2 variabili sezionate (mean_value_of_long_term_variability e uterine_contractions)
+le ultime 2 variabili sezionate ("mean_value_of_long_term_variability" e "uterine_contractions")
 non rispettano la normalità e la simmetria in tutti i gruppi.((((ggpairs))))
 ```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
 n <- nrow(fetal_Health)
@@ -180,15 +180,13 @@ Essendo un dataset con un numero relativamente limitato di osservazioni l'algori
 plot(health_mclust_ICL,ylim=c(-33000,-29000)) 
 
 ```
-Provando a valutare il BIC (non accurato come ICL, in quanto non tiene conto dell'entropia) risulta k=8 e modello VEV
+Provando a valutare il BIC (non accurato come ICL, in quanto non tiene conto dell'entropia) viene restituito un modello VEV k=8 
 ```{r}
 set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM,G=2:10) 
 summary(health_mclust_BIC)
 ```
-
-
-è un EM molto variabile/instabile e poco robusto (tutte caratteristiche che rendono cruciale la scelta dei valori iniziali)
+In definitiva possiamo dire che l'EM è molto instabile e poco robusto per cui diventa cruciale la scelta dei valori iniziali). Sia tramite ICL che con il BIC il model based clustering fornisce 
 
 
 SIA TRAMITE ICL SIA TRAMITE BIC IL MODEL BASED CLUSTERING FORNISCE UN NUMERO DI GRUPPI DIFFERENTE....PROVIAMO A SPECIFICARE IL NUMERO DI GRUPPI:
@@ -430,8 +428,8 @@ normale e sospetto
 
 
 ```{r}
-install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
 install.packages("grid")
+install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
 install.packages("DMwR")
 install.packages("ROCR")
 
