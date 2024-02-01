@@ -249,7 +249,7 @@ adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
 
 #normal
 
-train_test<-function(data,gruppi,perc=0.7){
+train_test<-function(data,perc=0.7){
   #gruppi è il nome della variabile con le etichette
   set.seed(123)
   index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
@@ -280,14 +280,15 @@ test<- anti_join(fetal_Health, train, by = 'id')%>%
   select(all_of(main_comp),fetal_health)
 
 
+out<-train_test(fetal_Health_classification,0.7)
+data_train<-out$data_train
+data_test<-out$data_test
 
-
-
-# EDDA BIC ????? -------------------------------------------------------------------------------------
-# EDDA fatta comunque con evaluation su test set???????
+# EDDA -------------------------------------------------------------------------------------
 
 #dobbiamo provare altri modelli ovviamente 
-(pr<-mixmodLearn(data_train, c(label_train$fetal_health),
+set.seed(123)
+(pr<-mixmodLearn(data_train[,1:4], c(data_train$fetal_health),
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC')))  
 #fino alla colonna 7 il mio pc funziona dopo crusha 
@@ -298,33 +299,38 @@ test<- anti_join(fetal_Health, train, by = 'id')%>%
 summary(pr) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
 str(pr)
 
-PREDICTION<- mixmodPredict(data = select(test,-fetal_health), classificationRule=pr["bestResult"])
+PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])
 str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
 
 
-mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
+mean(PREDICTION@partition == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
-confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 82% confirmed
+confusion_matrix <- table(data_test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
 
 
 # MDA BIC --------------------------------------------------------------------------------------------
 
-set.seed(869)
-mod2 <- MclustDA(data_train, label_train$fetal_health) #, modelNames = "VVV", G = 4
+set.seed(123)
+mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
+
+#COMMENTO DA CONTROLLARE
+#, modelNames = "VVV", G = 4
 #bisogna capire come mai non mi specifica i modelli se non metto niente in model names e
 #se lascio g senza niente (perchè devo specificare che modello e quanti g non dovrebbe farlo da solo????)
 # Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 str(mod2) 
-predict(mod2, select(test,-fetal_health))$class #  questo sono le prediction del MDA
-mean(c(predict(mod2, select(test,-fetal_health))$class) == pull(test,fetal_health)) #pull estrae un vettore da un db
-# a quanto pare riesce a predirre un 83 % 
+predict(mod2, select(data_test,-fetal_health))$class #  questo sono le prediction del MDA
+mean(c(predict(mod2, select(data_test,-fetal_health))$class) == data_test$fetal_health) 
+# a quanto pare riesce a predirre un 85 % 
 #quindi bisogna fare oversampling
+#da fare confusion matrix specificity sensitivity ecc... (ha senso fare una funzione in cui gli diamo: etichette previste ed etichette reali (sul test set) e
+#ci restituisce tutto....)
 
 # MDA CV -------------------------------------------------------------------------------------------------------
 
