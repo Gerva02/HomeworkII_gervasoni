@@ -147,7 +147,6 @@ fetal_Health %>%
   select(all_of(main_comp),fetal_health))
 
 fetal_Health_viz <- fetal_Health_classification %>%
-  
   gather(key = "Variable", value = "Value", -fetal_health)
 
 # Create a facetted box plot using ggplot2
@@ -312,17 +311,18 @@ PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partit
 
 confmatrix <-confusionMatrix(etichette_prediction_EDDA,  data_test$fetal_health) #qua c'è sia confusion matrix che tutto
 confmatrix
-?confusionMatrix  
+
   
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
 
+
 data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point(size=prob.post_incertezza$incertezza*10)+
-  geom_point(alpha=0.3, filter(etichette_prediction_EDDA != fetal_health))
-?geom_point
+  geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)
 
 # MDA (BIC) --------------------------------------------------------------------------------------------
 
@@ -346,7 +346,11 @@ prob.post_incertezza<- tibble(PREDICTION@proba) %>%
 
 data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
-  geom_point(size=prob.post_incertezza$incertezza*10)
+  geom_point(size=prob.post_incertezza$incertezza*10)+
+  geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)
+
+
 # a quanto pare riesce a predirre un 85 % 
 #quindi bisogna fare oversampling
 #da fare confusion matrix specificity sensitivity ecc... (ha senso fare una funzione in cui gli diamo: etichette previste ed etichette reali (sul test set) e
@@ -387,7 +391,6 @@ mean(etichette_prediction_MDA_cv== data_test$fetal_health) #84%
 confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) #confusion matrix
 #fatica sulla etichetta "dubbiosi"
 #da calcolare tutte le specificity ecc...
-
 
 
 # MDA classificare dubbiosi come sani o malati -----------------------------------------------------------------
@@ -489,11 +492,13 @@ table(new_train$fetal_health) #PAREGGIARE LE U.S. NEI 2 GRUPPI NON è ECCESSIVO?
 
 
 mm <-mixmodGaussianModel(family = "all",
-                                        free.proportions = F, equal.proportions = TRUE)
-                  
+                                        free.proportions = F)
+
+?mixmodGaussianModel
 modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
                         criterion = "CV")
 
+modsmote@bestResult
 new_train
 #TUTTA STA PARTE DA RICONTROLLARE PERCHè CI SONO I NOMI DEI DATASET SBAGLIATI
 
@@ -506,6 +511,7 @@ str(modsmote)
 
 PREDICTION<- mixmodPredict(data = select(test_no_sospetti,-fetal_health), classificationRule=modsmote["bestResult"])
 str(PREDICTION)
+PREDICTION@classificationRule
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
 
@@ -521,6 +527,41 @@ PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partit
 confusionMatrix(etichette_prediction_oversampling,real_labels)  #non prendiamo bene gli ammalati molto male!
 #questo è un 88% dato da un oversampling su un modello EDDA (credo) ?????
 
+
+
+PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
+str(PREDICTION)
+PREDICTION@classificationRule
+#fino alla colonna 7 il mio pc funziona dopo crusha 
+#capire perchè
+
+(real_labels <- as.factor(data_test$fetal_health)) #etichette vere
+levels(real_labels) <- c("Normale","Normale","Patologico")
+
+(etichette_prediction_oversampling<-as.factor(PREDICTION@partition))
+levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
+mean(etichette_prediction_oversampling == real_labels) # bisogna andare a vedere la specificity dei malati 3
+PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
+
+#c'è un modo migliore di fare la confusion matrix? 
+confusionMatrix(etichette_prediction_oversampling,real_labels) 
+
+
+prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+  rowwise() %>% # operiamo riga per riga
+  mutate(incertezza = 1 - max(c_across(everything()))) 
+
+
+data_test %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = real_labels)) +
+  geom_point(size=prob.post_incertezza$incertezza*5)+
+  geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*5)
+
+data_test%>%
+  select(-fetal_health)%>%
+  ggpairs(aes(colour = ifelse(etichette_prediction_oversampling != real_labels,real_labels, "black"), alpha = 1)) 
+ 
 #ora lo provo su MDA
 
  
@@ -554,3 +595,4 @@ modello_MDA_k2_UOsampling<-MclustDA(new_train[,1:4],as.factor(new_train$fetal_he
 confusionMatrix(etichette_prediction_MDA_oversampling_k2,real_labels)
 #solito 91%....
 #..io proverei a non mettere le etichette 2 come etichette 1......
+
