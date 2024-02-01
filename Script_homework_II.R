@@ -207,7 +207,6 @@ summary(health_mclust_BIC_k3) #EVV
 
 (etichette_stimate<-health_mclust_BIC_k3$classification)
 
-
 precisione_EM<-classError(etichette_stimate, class=etichette)
 1-precisione_EM$errorRate   #76%
 
@@ -299,7 +298,6 @@ str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
 
-etichette_prediction_EDDA<-PREDICTION@partition
 mean(etichette_prediction_EDDA == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
@@ -389,6 +387,12 @@ mean(etichette_prediction_MDA_cv== data_test$fetal_health) #84%
 
 
 #funzione per un modello mda con soli 2 gruppi:
+accuracy<-function(g,mod,nCV=5,data,etichette){
+  set.seed(123)
+  mod_mda<-MclustDA(data,class=etichette,G=as.list(g),modelName=mod)
+  return(1-cvMclustDA(mod_mda,nfold=nCV)$ce)
+}
+
 modello_MDA_k2<-function(data,etichette){
   g1<-g2<-c(1,2,3,4,5)
   g1<-as.data.frame(g1)
