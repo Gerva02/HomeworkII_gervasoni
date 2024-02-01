@@ -62,10 +62,12 @@ histogram_max| Valore massimo dell'istogramma della FHR| Numerico
 | histogram_mean                                | Valore medio dell'istogramma della FHR                      | Numerico                         |
 | histogram_median                              | Mediana dell'istogramma della FHR                           | Numerico                         |
 | histogram_variance                            | Varianza dell'istogramma della FHR                          | Numerico                         |
-| histogram_tendency                            | Tendenza dell'istogramma della FHR (simmetrica, a sinistra o a destra) | Categorica (normale o anomala)  |
+| histogram_tendency                            | Asimmetria dell'istogramma della FHR  | **-1**: sinistra **0**:simmetrica **1**:destra  |
 | fetal_health                                  | Salute fetale (etichetta di classe)                         |**1**: Sano **2**:Sospetto **3**:Patologico     |                      
                  
-
+<div style="text-align: justify;">
+Il dataset non presenta valori mancanti. In prima analisi è stata valutata la distribuzione delle variabili. Le variabili di conteggio come naturalmente previsto seguono una distribuzione assimilabile a quella di Poisson di conseguenza si è optato ad escluderle dalle successive analisi assieme alle variabili che dimostravano una pronunciata asimmetria. È stata esclusa anche la variabile histogram_tendency poichè fattoriale
+<div style="text-align: justify;">
           
 
 ### 3) Analisi esplorativa
