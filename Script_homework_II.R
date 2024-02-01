@@ -50,6 +50,7 @@ fetal_Health <- fetal_Health %>%
 (etichette<-fetal_Health$fetal_health)
 
 
+
 fetal_Health %>%
 ggplot(aes(x=fetal_health,
                 y= ..count../sum(..count..))) + 
@@ -76,12 +77,26 @@ fetal_Health%>%
 
 #qualche outliers...... non ha senso ragionare sugli outliers ma ci sta fare dei boxplot suddivisi per etichetta e selezionare se c'è qualche variabile 
 #molto rilevante per classification
-boxplot(fetal_Health[,-c(2,3,5,6,13,14)])
+boxplot(fetal_Health[,-c(2,3,5,6,13)])
 boxplot(fetal_Health[,6])
 boxplot(fetal_Health[,c(2,3)])
 boxplot(fetal_Health[,5])
 boxplot(fetal_Health[,13])
 colnames(fetal_Health)
+
+boxplot(fetal_Health$baseline.value~fetal_Health$fetal_health)
+boxplot(fetal_Health$uterine_contractions~fetal_Health$fetal_health)
+boxplot(fetal_Health$light_decelerations~fetal_Health$fetal_health)
+boxplot(fetal_Health$abnormal_short_term_variability~fetal_Health$fetal_health)
+boxplot(fetal_Health$mean_value_of_short_term_variability~fetal_Health$fetal_health)
+boxplot(fetal_Health$mean_value_of_long_term_variability.value~fetal_Health$fetal_health)
+boxplot(fetal_Health$histogram_width.value~fetal_Health$fetal_health)
+boxplot(fetal_Health$histogram_min~fetal_Health$fetal_health)
+boxplot(fetal_Health$histogram_max~fetal_Health$fetal_health)
+boxplot(fetal_Health$histogram_mode~fetal_Health$fetal_health)
+boxplot(fetal_Health$histogram_mean~fetal_Health$fetal_health)
+boxplot(fetal_Health$histogram_median~fetal_Health$fetal_health)
+
 #PRIMA DI FARE ALTRO BISOGNA CAPIRE CHE VARIABILI TENERE E CHE VARIABILI SCARTARE
 #ho tolto queste variabili tutte se ne volete togliere altre fatelo UNA volta da qui
 
