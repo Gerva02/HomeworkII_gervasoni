@@ -28,7 +28,7 @@ Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Cla
 
 ### 1) Introduzione
 <div style="text-align: justify;">
-La riduzione della mortalità neonatale fa parte dei principi cardine dell'Agenda 2030 per lo sviluppo sostenibile. Sottoscritta nel 2015 dai governi dei 193 membri delle Nazioni Unite, si prefigge come obiettivo quello di porre fine alle morti prevenibili di neonati e bambini sotto i 5 anni di età. In particolare tutti i paesi dovranno cercare di ridurre la mortalità neonatale ad almeno 12 per ogni 1000 abitanti nati vivi. Ad oggi però sono più di 60 gli stati lontani da questo traguardo e 2.3 milioni di neonati muoiono ogni anno.
+La riduzione della mortalità neonatale fa parte dei principi cardine dell'Agenda 2030 per lo sviluppo sostenibile. Sottoscritta nel 2015 dai governi dei 193 membri delle Nazioni Unite, fra gli obiettivi che si prefigge vi è quello di porre fine alle morti prevenibili di neonati e bambini sotto i 5 anni di età. In particolare viene richiesto che tutti i paesi dovranno cercare di ridurre la mortalità neonatale ad almeno 12 per ogni 1000 abitanti nati vivi. Ad oggi però sono più di 60 gli stati lontani da questo traguardo e 2.3 milioni di neonati muoiono ogni anno.
 <div style="text-align: justify;">
 
 ### 2) Materiali
@@ -42,12 +42,12 @@ I dati di interesse sono stati estratti dal dataset **fetal_health**,esportabile
 (((Analisi esplorativa dei dati)))
 <div style="text-align: justify;">
 
-#### 4.1) Model Based Clustering
+### 4.1) Model Based Clustering
 <div style="text-align: justify;">
 ((((((()))))))
 <div style="text-align: justify;">
 
-#### 4.2) Model Based Classification
+### 4.2) Model Based Classification
 <div style="text-align: justify;">
 ((((((((()))))))))
 <div style="text-align: justify;">
