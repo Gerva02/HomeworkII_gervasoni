@@ -220,15 +220,17 @@ coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            sub="(b) Model-Based Clustering")
 points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19)
 ```
-Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che segue. Più è grande il pallino, maggiore è l'incertezza.
+Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che segue. Più è grande il pallino nero, maggiore è l'incertezza.
 ```{r}
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z)
 ```
 <div style="text-align: justify;">
 ### 4.2) Model Based Classification
-funzione per eseguire una suddivisione in train set e test set:
-```{r}
+Il primo step dell’analisi è stato quello di dividere il dataset in training e test set. In particolare,abbiamo suddiviso, in modo casuale, il 70% delle osservazioni del dataset al training set e il restante 30% al test set. Questa fase è essenziale nel momento in cui si vanno ad applicare approcci
+di tipo supervisionato, il cui scopo è quello di fare generalizzazione e prevedere nuove istanze per la
+variabile target.
+```{r,ech}
 train_test<-function(data,perc=0.7){
   set.seed(123)
   index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
@@ -244,8 +246,8 @@ data_train<-out$data_train
 data_test<-out$data_test
 ```
 
-###EDDA (CV) 
-Alleniamo un modello EDDA
+####4.2.1)EDDA (CV) 
+Ora che abbiamo ottenuto il traning set alleniamo un modello EDDA: 
 ```{r}
 set.seed(123)
 (pr<-mixmodLearn(data_train[,1:4], c(data_train$fetal_health),
