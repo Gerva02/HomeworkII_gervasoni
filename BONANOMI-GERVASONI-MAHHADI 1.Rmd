@@ -5,10 +5,17 @@ date: <center> 16 Gennaio 2024 <center>
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-<br><br>
+```{r warning=FALSE, message= FALSE }
+library(tidyverse)
+library(mclust)
+library(Rmixmod)
+library(GGally)
+library(caret)
+```
 
 <center> 
 #### *Abstract*
@@ -38,7 +45,6 @@ CTG consentendo la comunicazione di numeri piuttosto che di opinioni. Negli anni
 
 ### 2) Materiali
 <div style="text-align: justify;">
-(((Descrizione di come è fatto il dataset e spiegazione variabili, forse anche il link al dataset ci starebbe qua boh)))
 I dati di interesse sono stati estratti dal dataset **fetal_health**,esportabile gratuitamente dal link sopracitato. Si tratta di un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* rappresentata dalle seguenti modalità: 1,2,3 che indicano rispettivamente uno stato di salute del feto Normale, Sospetto, Patologico. Per completezza di informazione segue una tabella che riporta sinteticamente la descrizione e le modalità dell variabili:
 
 <div style="text-align: justify;">
@@ -58,7 +64,7 @@ mean_value_of_long_term_variability| Valore medio della variabilità a lungo ter
 histogram_width| Larghezza dell'istogramma della FHR| Numerico                         
 histogram_min| Valore minimo dell'istogramma della FHR| Numerico                         
 histogram_max| Valore massimo dell'istogramma della FHR| Numerico| 
-histogram_number_of_peaks| Numero di picchi nell'istogramma della FHR| Numerico (conteggio) |
+histogram_number_of_peaks| Numero di picchi nell'istogramma della FHR| Numerico (conteggio)|
 histogram_number_of_zeroes| Numero di zeri nell'istogramma della FHR| Numerico (conteggio)|
 histogram_mode | Modalità dell'istogramma della FHR | Numerico|
 histogram_mean                                | Valore medio dell'istogramma della FHR                      | Numerico                         |
@@ -68,7 +74,32 @@ histogram_mean                                | Valore medio dell'istogramma del
 | fetal_health                                  | Salute fetale (etichetta di classe)                         |**1**: Sano **2**:Sospetto **3**:Patologico     |                      
                  
 <div style="text-align: justify;">
-Il dataset non presenta valori mancanti. In prima analisi è stata valutata la distribuzione delle variabili. Le variabili di conteggio come naturalmente previsto seguono una distribuzione assimilabile a quella di Poisson di conseguenza si è optato ad escluderle dalle successive analisi assieme alle variabili che dimostravano una pronunciata asimmetria. È stata esclusa anche la variabile histogram_tendency poichè fattoriale.
+Il dataset non presenta valori mancanti. In prima analisi è stata valutata la distribuzione delle variabili. Le variabili di conteggio come naturalmente previsto seguono una distribuzione assimilabile a quella di Poisson di conseguenza si è optato ad escluderle dalle successive analisi assieme alle variabili che dimostravano una pronunciata asimmetria. È stata esclusa anche la variabile histogram_tendency poichè fattoriale. 
+Da un'analisi preliminare dell'istogramma condizionato per classi si evince che le 3 classi 
+<br><br>
+```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
+  mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
+levels(fetal_Health$fetal_health) <- c("Normale","Sospetto","Patologico")
+fetal_Health <- fetal_Health %>%
+  select(-c(severe_decelerations,
+            histogram_number_of_zeroes,
+            histogram_number_of_peaks,
+            histogram_variance,
+            histogram_tendency, 
+            percentage_of_time_with_abnormal_long_term_variability, 
+            accelerations, 
+            fetal_movement,
+            prolongued_decelerations))
+
+etichette<-fetal_Health$fetal_health
+
+fetal_Health %>%
+ggplot(aes(x=fetal_health,
+                y= after_stat(count)/sum(after_stat(count)))) + 
+  geom_bar(aes(fill = fetal_health), color="black") +         
+  labs(x="Condizione del feto", y="Frequenza Relativa") 
+```
 <div style="text-align: justify;">
           
 
