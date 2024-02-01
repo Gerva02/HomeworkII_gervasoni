@@ -286,12 +286,12 @@ str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
 
-
-mean(PREDICTION@partition == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
+etichette_prediction_EDDA<-PREDICTION@partition
+mean(etichette_prediction_EDDA == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
-confusion_matrix <- table(data_test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
+(confusion_matrix <- table(data_test$fetal_health, etichette_prediction_EDDA)) #non prendiamo bene gli ammalati molto male (DA COMMENTARE)
 (accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # confirmed 84% confirmed
 
 
@@ -307,14 +307,17 @@ mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health)
 # Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 str(mod2) 
-predict(mod2, select(data_test,-fetal_health))$class #  questo sono le prediction del MDA
-mean(c(predict(mod2, select(data_test,-fetal_health))$class) == data_test$fetal_health) 
+etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class #  questo sono le prediction del MDA
+mean(etichette_prediction == data_test$fetal_health) 
+(confusion_matrix <- table(data_test$fetal_health,etichette_prediction_MDA)) #(DA COMMENTARE)
 # a quanto pare riesce a predirre un 85 % 
 #quindi bisogna fare oversampling
 #da fare confusion matrix specificity sensitivity ecc... (ha senso fare una funzione in cui gli diamo: etichette previste ed etichette reali (sul test set) e
 #ci restituisce tutto....)
 
 # MDA CV -------------------------------------------------------------------------------------------------------
+
+
 
 
 
