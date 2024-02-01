@@ -386,9 +386,8 @@ library(lattice)
 library(grid)
 library(DMwR)
 
-train2<-train %>%
-  select(all_of(main_comp), fetal_health) %>% 
-  as.data.frame()
+(train2<-data_train %>% 
+  as.data.frame())
 table(train2$fetal_health)
 
 levels(train2$fetal_health) <- c(1,1,3) # ho messo tutti della classe 2 nella classe 1 (DA RIVEDERE)
@@ -431,19 +430,20 @@ modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
 summary(modsmote) #ma quindi error rate MAP=0% significa che se eseguiamo sul train set stesso la classificazione è perfetta???? è razionale
 str(modsmote)
 
-PREDICTION<- mixmodPredict(data = select(test,-fetal_health), classificationRule=modsmote["bestResult"])
+PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
 str(PREDICTION)
 #fino alla colonna 7 il mio pc funziona dopo crusha 
 #capire perchè
-real_labels <- pull(test,fetal_health) #etichette vere
+real_labels <- data_test$fetal_health #etichette vere
 levels(real_labels) <- c(1,1,3)
 
-mean(PREDICTION@partition == test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
+etichette_prediction_oversampling<-PREDICTION@partition
+mean(etichette_prediction_oversampling == data_test$fetal_health) # bisogna andare a vedere la specificity dei malati 3
 PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
 
 #c'è un modo migliore di fare la confusion matrix? 
-confusion_matrix <- table(test$fetal_health, PREDICTION@partition)  #non prendiamo bene gli ammalati molto male
-(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # ESCE 68% OCCHIO!!!
+confusion_matrix <- table(data_test$fetal_health, etichette_prediction_oversampling)  #non prendiamo bene gli ammalati molto male
+(accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)) # ESCE 73% OCCHIO!!!
 
 
  
