@@ -23,6 +23,8 @@ library(GGally)
 fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
   mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
 
+levels(fetal_Health$fetal_health) <- c("Normale","Sospetto","Patologico")
+
 sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values are 0 
 hist(fetal_Health$histogram_number_of_zeroes) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_number_of_peaks) # è un conteggio dunque probabilmente si distribuisce come poisson
@@ -332,6 +334,14 @@ str(mod2)
 etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class #  questo sono le prediction del MDA
 mean(etichette_prediction == data_test$fetal_health) 
 (confusion_matrix <- table(data_test$fetal_health,etichette_prediction_MDA)) #(DA COMMENTARE)
+
+prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+  rowwise() %>% # operiamo riga per riga
+  mutate(incertezza = 1 - max(c_across(everything()))) 
+
+data_test %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
+  geom_point(size=prob.post_incertezza$incertezza*10)
 # a quanto pare riesce a predirre un 85 % 
 #quindi bisogna fare oversampling
 #da fare confusion matrix specificity sensitivity ecc... (ha senso fare una funzione in cui gli diamo: etichette previste ed etichette reali (sul test set) e
