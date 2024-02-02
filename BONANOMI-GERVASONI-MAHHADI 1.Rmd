@@ -343,35 +343,35 @@ la sensitivity del caso patologico è inferiore rispetto ad un valore soddisface
 
 ###MDA (CV) 
 ```{r}
-accuracy<-function(g,mod,nCV=5,data,etichette){
-  set.seed(123)
-  mod_mda<-MclustDA(data,class=etichette,G=as.list(g),modelName=mod)
-  return(1-cvMclustDA(mod_mda,nfold=nCV)$ce)
-}
-
-#funzione che valuta il miglior modello mda tramite cross validation con nfold=4 e restituisce il più accurato:
-modello_MDA_k3<-function(data,etichette){
-  g1<-g2<-g3<-c(1,2,3,4,5)
-  g1<-as.data.frame(g1)
-  g2<-as.data.frame(g2)
-  g3<-as.data.frame(g3)
-  join<-cross_join(cross_join(g1,g2),g3)
-  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
-  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
-  out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=data,etichette=etichette))
-  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)]) #questa accuracy non è valida siccome è stimata sullo stesso dataset usato
-  #per allenaere il modello (fuori dalla funzione viene valutato su un test set)
-  return(lis)
-}
-
-
-(out<-modello_MDA_k3(data_train[,1:4],as.factor(data_train$fetal_health))) #G=(5,4,5)
-#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy e la confusion matrix
-
-set.seed(123)
-mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
-etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
-confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) 
+# accuracy<-function(g,mod,nCV=5,data,etichette){
+#   set.seed(123)
+#   mod_mda<-MclustDA(data,class=etichette,G=as.list(g),modelName=mod)
+#   return(1-cvMclustDA(mod_mda,nfold=nCV)$ce)
+# }
+# 
+# #funzione che valuta il miglior modello mda tramite cross validation con nfold=4 e restituisce il più accurato:
+# modello_MDA_k3<-function(data,etichette){
+#   g1<-g2<-g3<-c(1,2,3,4,5)
+#   g1<-as.data.frame(g1)
+#   g2<-as.data.frame(g2)
+#   g3<-as.data.frame(g3)
+#   join<-cross_join(cross_join(g1,g2),g3)
+#   join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
+#   #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
+#   out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:3],mod=pos[4],nCV=4,data=data,etichette=etichette))
+#   lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)]) #questa accuracy non è valida siccome è stimata sullo stesso dataset usato
+#   #per allenaere il modello (fuori dalla funzione viene valutato su un test set)
+#   return(lis)
+# }
+# 
+# 
+# (out<-modello_MDA_k3(data_train[,1:4],as.factor(data_train$fetal_health))) #G=(5,4,5)
+# #stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy e la confusion matrix
+# 
+# set.seed(123)
+# mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
+# etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
+# confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) 
 
 ```
 fatica in "Sospetto" e "Patologico"
@@ -383,29 +383,29 @@ abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del ca
 implementare un MDA con lo scopo di classificare gli individui "sospetti" in una delle altre 2 classi funzione per un modello mda con soli 2 gruppi:
 
 ```{r}
-modello_MDA_k2<-function(data,etichette){
-  g1<-g2<-c(1,2,3,4,5)
-  g1<-as.data.frame(g1)
-  g2<-as.data.frame(g2)
-  join<-cross_join(g1,g2)
-  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
-  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
-  out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:2],mod=pos[3],nCV=4,data=data,etichette=etichette))
-  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
-  return(lis)
-}
-
-
-(fetal_Health_no_sospetti<-fetal_Health_classification%>%
-  filter(fetal_health!="Sospetto"))
-
-
-(etichette_k2<-as.factor(fetal_Health_no_sospetti$fetal_health))
-levels(etichette_k2)<-c("Normale","Normale","Patologico")
-modello_MDA_k2(fetal_Health_no_sospetti[,1:4],etichette_k2)
-set.seed(123)
-mod_mda_k2<-MclustDA(fetal_Health_no_sospetti[,1:4],etichette_k2,G=4,modelNames="VII") #G=(4,4)
-summary(mod_mda_k2)
+# modello_MDA_k2<-function(data,etichette){
+#   g1<-g2<-c(1,2,3,4,5)
+#   g1<-as.data.frame(g1)
+#   g2<-as.data.frame(g2)
+#   join<-cross_join(g1,g2)
+#   join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
+#   #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
+#   out<-apply(join,MARGIN=1,function(pos) accuracy(g=pos[1:2],mod=pos[3],nCV=4,data=data,etichette=etichette))
+#   lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)])
+#   return(lis)
+# }
+# 
+# 
+# (fetal_Health_no_sospetti<-fetal_Health_classification%>%
+#   filter(fetal_health!="Sospetto"))
+# 
+# 
+# (etichette_k2<-as.factor(fetal_Health_no_sospetti$fetal_health))
+# levels(etichette_k2)<-c("Normale","Normale","Patologico")
+# modello_MDA_k2(fetal_Health_no_sospetti[,1:4],etichette_k2)
+# set.seed(123)
+# mod_mda_k2<-MclustDA(fetal_Health_no_sospetti[,1:4],etichette_k2,G=4,modelNames="VII") #G=(4,4)
+# summary(mod_mda_k2)
 ```
 
 
@@ -428,10 +428,10 @@ normale e sospetto
 
 
 ```{r}
-install.packages("grid")
-install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
-install.packages("DMwR")
-install.packages("ROCR")
+# install.packages("grid")
+# install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
+# install.packages("DMwR")
+# install.packages("ROCR")
 
 library(lattice)
 library(grid)
