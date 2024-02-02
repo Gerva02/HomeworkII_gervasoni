@@ -306,15 +306,16 @@ confusionMatrix(etichette_prediction_MDA, data_test$fetal_health) #rimane la cla
 #sensitivity (bassa in patologico) e specificity (alta in patologico)
 # in ogni caso la classificazione tramite MDA risulta migliore di quella eseguita attraverso il modello EDDA
 
-prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+str(predict(mod2, select(data_test,-fetal_health)))
+prob.post_incertezza<- tibble(predict(mod2, select(data_test,-fetal_health))$z) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
 
 data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point(size=prob.post_incertezza$incertezza*10)+
-  geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
-             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10) #in nero la u.s. missclassified
+  geom_point(data = filter(data_test,etichette_prediction_MDA != data_test$fetal_health ), 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_MDA != data_test$fetal_health]*10) #in nero la u.s. missclassified
 #maggior incertezza nella sezione del grafico in cui sono presenti gli individui sospetti
 
 #riesce a predirre un 85 % 
