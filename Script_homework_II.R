@@ -216,9 +216,26 @@ points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19) #rappresentaz
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z) #più questa che vogliamo implementare
 
+(pj<-health_mclust_BIC_k3$parameters$pro)
+(zij<-health_mclust_BIC_k3$z)
+
+(entropia_relativa<-(-1)*sum(rowSums(zij*log(zij)))/n/log(3)) #non male
 
 
-#(da aggiungere R2, Entropia e KLs)
+
+(mu1<-health_mclust_BIC_k3$parameters$mean[,1])
+(mu2<-health_mclust_BIC_k3$parameters$mean[,2])
+(mu3<-health_mclust_BIC_k3$parameters$mean[,3])
+(mu<-mu1*pj[1]+mu2*pj[2]+mu3*pj[3])
+
+(sigma1<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[1:16],nrow=4,ncol=4,byrow=T))
+(sigma2<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[17:32],nrow=4,ncol=4,byrow=T))
+(sigma3<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[33:48],nrow=4,ncol=4,byrow=T))
+
+(var_within<-pj[1]*sigma1+pj[2]*sigma2+pj[3]*sigma3)
+(var_between<-pj[1]*(mu1-mu)%*%t(mu1-mu)+pj[2]*(mu2-mu)%*%t(mu2-mu)+pj[3]*(mu3-mu)%*%t(mu3-mu))
+
+(R2_det<-1-det(var_within)/det(var_between+var_within))
 
 #pessima clusterizzazione (ipotesi prima di calcolare i suddetti indicatori)
 
@@ -494,6 +511,3 @@ data_test %>%
 #si può notare che le etichette dei malati sono ben evidenziate anche se poste lontane dal baricentro del gruppo dei malati
 
 
-
-
-#per markdown confronto tra grafico iniziale e finale (migliore vs peggiore)
