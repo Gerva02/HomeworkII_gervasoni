@@ -455,31 +455,10 @@ modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
                         criterion = "CV")
 
 modsmote@bestResult
-
+?mixmodGaussianModel
 summary(modsmote) 
 
 
-
-
-(test_no_sospetti<-data_test%>%filter(fetal_health!="Sospetto"))
-
-PREDICTION<- mixmodPredict(data = select(test_no_sospetti,-fetal_health), classificationRule=modsmote["bestResult"])
-str(PREDICTION)
-PREDICTION@classificationRule
-#fino alla colonna 7 il mio pc funziona dopo crusha 
-#capire perchè
-
-(real_labels <- as.factor(test_no_sospetti$fetal_health)) #etichette vere
-levels(real_labels) <- c("Normale","Normale","Patologico")
-
-(etichette_prediction_oversampling<-as.factor(PREDICTION@partition))
-levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
-mean(etichette_prediction_oversampling == real_labels) # bisogna andare a vedere la specificity dei malati 3
-PREDICTION@proba[1:30,] #se no ci mette anni a plottare tutto (PREDICTION@partition non ci interessa visualizzarlo)
-
-#c'è un modo migliore di fare la confusion matrix? 
-confusionMatrix(etichette_prediction_oversampling,real_labels)  #non prendiamo bene gli ammalati molto male!
-#questo è un 88% dato da un oversampling su un modello EDDA (credo) ?????
 
 
 
