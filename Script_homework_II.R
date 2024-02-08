@@ -511,3 +511,6 @@ data_test %>%
 #si può notare che le etichette dei malati sono ben evidenziate anche se poste lontane dal baricentro del gruppo dei malati
 
 
+
+
+
