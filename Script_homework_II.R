@@ -125,7 +125,7 @@ fetal_Health %>%
 (fetal_Health_EM<-fetal_Health%>%
   select(all_of(load_vars))) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
 
-#dataset per model-based classification
+#dataset per model-based classification:
 (fetal_Health_classification <-fetal_Health%>%
   select(all_of(load_vars),fetal_health))
 
@@ -190,15 +190,22 @@ summary(health_mclust_BIC_k3) #EVV
 
 
 (etichette_stimate<-health_mclust_BIC_k3$classification)
+table(etichette)
+table(etichette_stimate) #probabilmente il gruppo 2 corrisponde ai "Normali" e si può ipotizzare che il gruppo 3 siano i "Sospetti" ed 
+#il gruppo 1 i "Patologici" (stando alle numerosità) ma siccome l'EM rislta poco robusto non è sicuro: VEDI GRAFICO
 
 (precisione_EM<-classError(etichette_stimate, class=etichette))
-(accuracy<-1-length(precisione_EM$misclassified)/n)
+(CER<-precisione_EM$errorRate) #potremmo definirlo CER??????? 
+(accuracy<-1-CER)
 #76% di accuracy
 
 adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
 
 (etichette_stimate<-as.factor(etichette_stimate))
-levels(etichette_stimate)<-c("Patologico","Normale","Sospetto")
+levels(etichette_stimate)<-c("Patologico","Normale","Sospetto") #sembra la classificazione più coerente con le numerosità e con l'output di "classError" 
+#(considera l'abbinamento più adeguato tra i possibili delle etichette originaliu con quelle stimate)
+
+#LA ACCCURACY NON TORNA...DA RICONTROLLARE 
 confusionMatrix(etichette_stimate,etichette) #la sensitivity è molto alta solo nella classe "Normale"
 #al contrario la specificity è molto bassa (significa che tra patologico e normale non riesce ad ottenere una buonma divisione)
 # in generale si può dire che i gruppi "Sospetto" e "Patologico" non sono rilevati correttamente dall'EM
@@ -215,12 +222,19 @@ points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19) #rappresentaz
 #questo grafico rappresenta l'incertezza delle u.s.:
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z) #più questa che vogliamo implementare
+#da questo grafico si vede subito come (ok siamo nel bidimensionale che non è veritiero come nel multidimensionale (d=4)) l'EM fatichi a riconoscere
+#gli individui sospetti
+#Infatti vie è una sostanziale differenza tra i cluster iniziali con le etichette note e quelli conb le etichette stimate
+#il gruppo iniziale dei sospetti si fonde a quello dei normali e il gruppo dei normnali viene scisso in 2 sotto gruppi (uno molto grande che include anche gran parte 
+#dei sospetti ed uno più piccolo che si pone a metà tra i malati ed i normali) (stando a questo grafico tutte le assosciazioni con la confusion matrix le distanze l'incertezza ecc
+#non hanno senso e sono da ricontrollare IMPORTANTE)>>>>>soprattutto le conflusioni sulla matrice delle distanze KLs
+#il gruppo dei malati si distingue comunque abbastanza bene ma l'EM non riconosce (ovviamente) quel gruppo di individui malati che nel grafico iniziale erano molto distandi dal
+#baricentro degli individui malati (in basso a destra....) DA RICONTROLLARE
 
 (pj<-health_mclust_BIC_k3$parameters$pro)
 (zij<-health_mclust_BIC_k3$z)
 
 (entropia_relativa<-(-1)*sum(rowSums(zij*log(zij)))/n/log(3)) #non male
-
 
 
 (mu1<-health_mclust_BIC_k3$parameters$mean[,1])
@@ -234,11 +248,44 @@ coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty
 
 (var_within<-pj[1]*sigma1+pj[2]*sigma2+pj[3]*sigma3)
 (var_between<-pj[1]*(mu1-mu)%*%t(mu1-mu)+pj[2]*(mu2-mu)%*%t(mu2-mu)+pj[3]*(mu3-mu)%*%t(mu3-mu))
+(var_mixture<-var_within+var_between)
 
-(R2_det<-1-det(var_within)/det(var_between+var_within))
+(R2_tr<-1-sum(diag(var_within))/sum(diag(var_mixture))) #0.27 (male)
+(R2_det<-1-det(var_within)/det(var_mixture)) #0.73 (non così male)
 
-#pessima clusterizzazione (ipotesi prima di calcolare i suddetti indicatori)
+(post_prob<-apply(zij,1,max))
+(incertezza<-1-post_prob)
+(unita_incerte<-tibble(index=1:n,incertezza=incertezza)%>%
+  arrange(desc(incertezza))%>%
+  print(n=10))
+unita_incerte[1:10,]
+fetal_Health$fetal_health[unita_incerte$index[1:10]] #molto strano che siano tutte del gruppo normali (ha senso stando alle stime dei gruppi che l'algoritmo
+#EM ha fatto.....pessime.....da vedere nel grafico ma ha senso che siano u.s. molto dubbiose tra malati e sani o all'interno del gruppo dei sani che è stato "spezzato")
 
+
+
+
+#DA PROVARE UN EM SENZA I SOSPETTI
+
+
+
+
+#funzione che risteituisce la distanza/divergenza di kullback-leibler simmetrizzata:           CORRETTO "DISTANZA"??????
+KLs<-function(mu1,mu2,sigma1,sigma2) {
+  return(0.5*t(mu1-mu2)%*%(solve(sigma1)+solve(sigma2))%*%(mu1-mu2)+0.5*sum(diag(sigma1%*%solve(sigma2)+solve(sigma1)%*%sigma2))-length(mu1)) #gervi dimmi se è giusta...
+  }
+
+KLs_matrix<-matrix(0,nrow=3,ncol=3)
+KLs_matrix[1,2]<-KLs_matrix[2,1]<-KLs(mu1,mu2,sigma1,sigma2)
+KLs_matrix[1,3]<-KLs_matrix[3,1]<-KLs(mu1,mu3,sigma1,sigma3)
+KLs_matrix[3,2]<-KLs_matrix[2,3]<-KLs(mu3,mu2,sigma3,sigma2)
+KLs_matrix
+det(KLs_matrix) #non credo abbia senso....ma forse per sintetizzare le KLs.......DA CONTROLLARE LE KLs PER 3 O PIù CLUSTER.....
+
+
+
+
+#pessima clusterizzazione 
 
 
 
