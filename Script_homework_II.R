@@ -180,13 +180,14 @@ summary(health_mclust_BIC) #secondo il BIC (non accurato come ICL, in quanto non
 set.seed(123) 
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
 summary(health_mclust_ICL_k3) #EVV 
-str(health_mclust_ICL_k3)
 
 set.seed(123)
 health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
 summary(health_mclust_BIC_k3) #EVV
 
+
 #in questo caso ICL e BIC restituiscono lo stesso modello (se fossero diversi sarebbe opportuno dare piorità al modello fornito tramite ICL)
+#credo che i parametri siano gli stessi ????
 
 
 (etichette_stimate<-health_mclust_BIC_k3$classification)
@@ -218,12 +219,16 @@ coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            sub="(b) Model-Based Clustering")
 points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19) #rappresentazione in nero delle u.s. missclassified
 #si osserva che quanto meno le u.s. facenti parte del gruppo dei malati vengono allocate correttamente
+#MODIFICA: FARE points SOLO CON LE 10/20 U.S. CON MAGGIOR INCERTEZZ APER VEDERE DOVE L'ALGORITMO HA MAGGIOR DIFFICOLTà 
 
 #questo grafico rappresenta l'incertezza delle u.s.:
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z) #più questa che vogliamo implementare
-#da questo grafico si vede subito come (ok siamo nel bidimensionale che non è veritiero come nel multidimensionale (d=4)) l'EM fatichi a riconoscere
-#gli individui sospetti
+
+#DA CONTROLLARE:
+#(da questi grafici si vede subito come (ok siamo nel bidimensionale che non è veritiero come nel multidimensionale (d=4)) l'EM fatichi a riconoscere
+#gli individui sospetti )
+
 #Infatti vie è una sostanziale differenza tra i cluster iniziali con le etichette note e quelli conb le etichette stimate
 #il gruppo iniziale dei sospetti si fonde a quello dei normali e il gruppo dei normnali viene scisso in 2 sotto gruppi (uno molto grande che include anche gran parte 
 #dei sospetti ed uno più piccolo che si pone a metà tra i malati ed i normali) (stando a questo grafico tutte le assosciazioni con la confusion matrix le distanze l'incertezza ecc
@@ -232,34 +237,35 @@ coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty
 #baricentro degli individui malati (in basso a destra....) DA RICONTROLLARE
 
 (pj<-health_mclust_BIC_k3$parameters$pro)
-(zij<-health_mclust_BIC_k3$z)
+zij<-health_mclust_BIC_k3$z
 
-(entropia_relativa<-(-1)*sum(rowSums(zij*log(zij)))/n/log(3)) #non male
+(entropia<-(-1)*sum(rowSums(zij*log(zij))))
+(entropia_relativa<-entropia/n/log(3))  #non male
 
-
-(mu1<-health_mclust_BIC_k3$parameters$mean[,1])
-(mu2<-health_mclust_BIC_k3$parameters$mean[,2])
-(mu3<-health_mclust_BIC_k3$parameters$mean[,3])
+mu1<-health_mclust_BIC_k3$parameters$mean[,1]
+mu2<-health_mclust_BIC_k3$parameters$mean[,2]
+mu3<-health_mclust_BIC_k3$parameters$mean[,3]
 (mu<-mu1*pj[1]+mu2*pj[2]+mu3*pj[3])
 
-(sigma1<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[1:16],nrow=4,ncol=4,byrow=T))
-(sigma2<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[17:32],nrow=4,ncol=4,byrow=T))
-(sigma3<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[33:48],nrow=4,ncol=4,byrow=T))
+sigma1<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[1:16],nrow=4,ncol=4,byrow=T)
+sigma2<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[17:32],nrow=4,ncol=4,byrow=T)
+sigma3<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[33:48],nrow=4,ncol=4,byrow=T)
 
-(var_within<-pj[1]*sigma1+pj[2]*sigma2+pj[3]*sigma3)
-(var_between<-pj[1]*(mu1-mu)%*%t(mu1-mu)+pj[2]*(mu2-mu)%*%t(mu2-mu)+pj[3]*(mu3-mu)%*%t(mu3-mu))
+var_within<-pj[1]*sigma1+pj[2]*sigma2+pj[3]*sigma3
+var_between<-pj[1]*(mu1-mu)%*%t(mu1-mu)+pj[2]*(mu2-mu)%*%t(mu2-mu)+pj[3]*(mu3-mu)%*%t(mu3-mu)
 (var_mixture<-var_within+var_between)
 
 (R2_tr<-1-sum(diag(var_within))/sum(diag(var_mixture))) #0.27 (male)
 (R2_det<-1-det(var_within)/det(var_mixture)) #0.73 (non così male)
 
-(post_prob<-apply(zij,1,max))
-(incertezza<-1-post_prob)
+post_prob<-apply(zij,1,max)
+incertezza<-1-post_prob
 (unita_incerte<-tibble(index=1:n,incertezza=incertezza)%>%
   arrange(desc(incertezza))%>%
   print(n=10))
-unita_incerte[1:10,]
-fetal_Health$fetal_health[unita_incerte$index[1:10]] #molto strano che siano tutte del gruppo normali (ha senso stando alle stime dei gruppi che l'algoritmo
+
+fetal_Health$fetal_health[unita_incerte$index[1:10]] #molto strano che siano tutte del gruppo normali 
+#(ha senso stando alle stime dei gruppi che l'algoritmo
 #EM ha fatto.....pessime.....da vedere nel grafico ma ha senso che siano u.s. molto dubbiose tra malati e sani o all'interno del gruppo dei sani che è stato "spezzato")
 
 
@@ -279,7 +285,7 @@ KLs_matrix<-matrix(0,nrow=3,ncol=3)
 KLs_matrix[1,2]<-KLs_matrix[2,1]<-KLs(mu1,mu2,sigma1,sigma2)
 KLs_matrix[1,3]<-KLs_matrix[3,1]<-KLs(mu1,mu3,sigma1,sigma3)
 KLs_matrix[3,2]<-KLs_matrix[2,3]<-KLs(mu3,mu2,sigma3,sigma2)
-KLs_matrix
+KLs_matrix #non  ha nulla a che vedere coi i gruppi reali....
 det(KLs_matrix) #non credo abbia senso....ma forse per sintetizzare le KLs.......DA CONTROLLARE LE KLs PER 3 O PIù CLUSTER.....
 
 
