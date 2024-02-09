@@ -78,7 +78,7 @@ histogram_tendency| Asimmetria dell'istogramma della FHR  | **-1**: sinistra **0
 Il dataset non presenta valori mancanti. Valutando la distribuzione delle variabili abbiamo visto come quelle di conteggio naturalmente seguono una distribuzione assimilabile a quella di Poisson di conseguenza si è optato per escluderle dalle successive analisi assieme alle variabili che dimostravano una pronunciata asimmetria. È stata esclusa anche la variabile histogram_tendency poichè fattoriale. 
 Da un'analisi preliminare dell'istogramma delle frequenze relative condizionato per classi si evince come la classe dei sani è predominante:
 <br><br>
-```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
 fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
   mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
 levels(fetal_Health$fetal_health) <- c("Normale","Sospetto","Patologico")
@@ -101,20 +101,21 @@ ggplot(aes(x=fetal_health,
   geom_bar(aes(fill = fetal_health), color="black") +         
   labs(x="Condizione del feto", y="Frequenza Relativa") 
 ```
+<br><br>
 <div style="text-align: justify;">
 Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Classification-Kaggle](https://www.kaggle.com/datasets/andrewmvd/fetal-health-classification/data>)          
 ### 3) Analisi esplorativa
 <div style="text-align: justify;">
 In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. Se ne è dedotto che "histogram_mean", "histogram_median" e "histogram_mode" sono fortemente correlate. Si nota come le variabili anche se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della MDA. Inoltre essendo dati presi da macchine, quindi "data entry",è improbabile la presenza di outliers.
 <br><br>
-```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
 
 ```
 Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè a quanto peso ha la singola variabile all'interno della componente principale).
 Dopodichè abbiamo fatto un ggpairs delle variabili selezionate. Dal grafico si nota che
 le ultime 2 variabili sezionate ("mean_value_of_long_term_variability" e "uterine_contractions")
 non rispettano la normalità e la simmetria in tutti i gruppi.
-```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
 n <- nrow(fetal_Health)
 #analisi delle componenti principali: 
 pca <- fetal_Health%>%
@@ -128,7 +129,7 @@ k <- ncol(fetal_Health)
 ```
 Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi così come segue:
 <br><br>
-```{r, echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
 fetal_Health %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point()
@@ -178,7 +179,7 @@ summary(health_mclust_ICL)
 ```
 Essendo un dataset con un numero relativamente limitato di osservazioni l'algoritmo EM non riesce a stimare dei modelli complessi come il VVV(nemmeno VVV con k=3),mentre osserviamo che VEV,7 e EVV,3 sono molto vicini tra loro. Notiamo inoltre dal grafico ottenuto come gran parte dei modelli in base all'ICL risultano della stessa precisione qualunque sia il numero di gruppi. Ipotizziamo che ciò può essere dato dal fatto che essendo dati reali è verosimile che ciascun gruppo abbia diversi sotto gruppi. Alla luce di ciò riteniamo oppurtono eseguire un MDA in fase di model-based classification.
 
-```{r,echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
 plot(health_mclust_ICL,ylim=c(-33000,-29000)) 
 
 ```
@@ -214,7 +215,7 @@ levels(etichette_stimate)<-c("Patologico","Normale","Sospetto")
 confusionMatrix(etichette_stimate,etichette)
 ```
 Successivamente abbiamo plottato il grafico seguente dove in nero rappresentiamo le unità "missclassificate". Si osserva che quanto meno le u.s. facenti parte del gruppo dei malati vengono allocate correttamente.
-```{r,echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
 coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            classification=health_mclust_BIC_k3$classification,
            col=c("dodgerblue2","green3","red2"), symbols=c(0 ,16 ,17),
@@ -265,17 +266,23 @@ etichette_prediction_EDDA <- as.factor(PREDICTION@partition)
 levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
 
 ```
-<br><br>
----------|**Reference**|-----------------
- **Prediction**  | Normale  | Sospetto | Patologico
-Normale| 494| 61|26
-Sospetto|1| 20|9
-Patologico| 0|1|19
+
++-------------+-------------+--------------+------------+
+|             |             | **PREDICTED**|            | 
++-------------+-------------+--------------+------------+
+|**CLASS**    | Normale     | Sospetto     | Patologico | 
++-------------+-------------+--------------+------------+
+| Normale     | 494         | 61           | 26         | 
++-------------+-------------+--------------+------------+
+| Sospetto    |  1          | 20           | 9          | 
++-------------+-------------+--------------+------------+
+| Patologico  | 0           | 1            | 19         | 
++-------------+-------------+--------------+------------+
 
 L'accuracy è elevata solo a causa della differenza di numerosità tra i gruppi; infatti ben 61 dei casi sospetti vengono nuovamente classificati come normali. Notiamo questa "missclassification",seppur in minor parte, anche nei casi patologici (osservabile sia tramite la
 confusion matrix che mediante sensitivity e specificity). Plottando il grafico notiamo maggior incertezza nella sezione in cui sono presenti gli individui sospetti.
 
-```{r,echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
+```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
@@ -294,12 +301,18 @@ set.seed(123)
 mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
 summary(mod2)
 ```
-<br><br>
----------|**Reference**|-----------------
-**Prediction**  | Normale  | Sospetto | Patologico
-Normale| 1088| 44|28
-Sospetto|104| 102|7
-Patologico| 27|14|81
+
++-------------+-------------+--------------+------------+
+|             |             | **PREDICTED**|            | 
++-------------+-------------+--------------+------------+
+|**CLASS**    | Normale     | Sospetto     | Patologico | 
++-------------+-------------+--------------+------------+
+| Normale     | 1088        | 44           | 28         | 
++-------------+-------------+--------------+------------+
+| Sospetto    | 104         | 102          | 7          | 
++-------------+-------------+--------------+------------+
+| Patologico  | 27          | 14           | 81         | 
++-------------+-------------+--------------+------------+
 
 ```{r,echo=FALSE}
 etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class 
@@ -347,13 +360,19 @@ in ogni caso la classificazione tramite MDA risulta migliore di quella eseguita 
 
 ```
 Abbiamo implementato una funzione che valuta il miglior modello mda tramite cross validation con nfold uguale a 4 e restituisce il più accurato:
-<br><br>
----------|**Reference**|-----------------
-**Prediction**|Normale |Sospetto|Patologico|
-Normale| 453| 37|12
-Sospetto|34| 43|8
-Patologico|8|2|34
-<br><br>
+
++-------------+-------------+--------------+------------+
+|             |             | **PREDICTED**|            | 
++-------------+-------------+--------------+------------+
+|**CLASS**    | Normale     | Sospetto     | Patologico | 
++-------------+-------------+--------------+------------+
+| Normale     | 453         | 37           | 12         | 
++-------------+-------------+--------------+------------+
+| Sospetto    | 34          | 43           | 8          | 
++-------------+-------------+--------------+------------+
+| Patologico  | 8           | 2            | 34         | 
++-------------+-------------+--------------+------------+
+
 Il modello trova difficoltà nel distinguere fra "Sospetto" e "Patologico"
 abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del caso "patologico"
 
@@ -450,11 +469,16 @@ levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
 
 confusionMatrix(etichette_prediction_oversampling,real_labels) 
 ```
-<br><br>
----------|**Reference**|-----------------
-**Prediction**|Normale |Patologico
-Normale| 503| 9|
-Sospetto|74| 45|
+
++--------------+---------------+--------------+
+|              | **PREDICTED** |              |            
++--------------+---------------+--------------+
+| **CLASS**    | Normale       | Patologico   |   
++--------------+---------------+--------------+
+| Normale      | 503           | 9            |    
++--------------+---------------+--------------+
+| Patologico   | 74            | 45           |     
++--------------+---------------+--------------+
 
 Notiamo un aumento della sensitivity del caso patologico(che corrisponde alla specificity del caso normale) da 0.7 a 0.83, per cui è evidente che siamo più accurati nell'identificare un caso patologico.
 Supponendo H0 caso patologico, l'errore di primo tipo che consiste nel classificare un caso patologico come sano è diminuito notevolmente a discapito dell'errore di secondo tipo (classificare un caso sano come patologico).
