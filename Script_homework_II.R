@@ -264,7 +264,7 @@ incertezza<-1-post_prob
   arrange(desc(incertezza))%>%
   print(n=10))
 
-fetal_Health$fetal_health[unita_incerte$index[1:10]] #molto strano che siano tutte del gruppo normali 
+fetal_Health$fetal_health[unita_incerte$index[1:20]] #molto strano che siano tutte del gruppo normali 
 #(ha senso stando alle stime dei gruppi che l'algoritmo
 #EM ha fatto.....pessime.....da vedere nel grafico ma ha senso che siano u.s. molto dubbiose tra malati e sani o all'interno del gruppo dei sani che è stato "spezzato")
 
