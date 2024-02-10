@@ -1662,7 +1662,7 @@ modalità dell variabili:</p>
 <tr class="even">
 <td>histogram_mean</td>
 <td>Valore medio dell’istogramma della FHR</td>
-<td>Numerico histogram_median</td>
+<td>Numerico</td>
 </tr>
 <tr class="odd">
 <td>histogram_tendency</td>
@@ -1856,13 +1856,47 @@ evince la necessità di implementare un modello di classificazione di
 tipo MDA con selezione tramite BIC e successiva valutazione sul test
 set. Si ottiene un’accuracy dello 0.85.</p>
 <center>
-da vedere se mettere +————-+————-+————–+————+ | | |
-<strong>PREDICTED</strong>| | +————-+————-+————–+————+
-|<strong>CLASS</strong> | Normale | Sospetto | Patologico |
-+————-+————-+————–+————+ | Normale | 1088 | 44 | 28 |
-+————-+————-+————–+————+ | Sospetto | 104 | 102 | 7 |
-+————-+————-+————–+————+ | Patologico | 27 | 14 | 81 |
-+————-+————-+————–+————+
+<p>da vedere se mettere</p>
+<table style="width:78%;">
+<colgroup>
+<col width="19%" />
+<col width="19%" />
+<col width="20%" />
+<col width="18%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td></td>
+<td></td>
+<td><strong>PREDICTED</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>CLASS</strong></td>
+<td>Normale</td>
+<td>Sospetto</td>
+<td>Patologico</td>
+</tr>
+<tr class="odd">
+<td>Normale</td>
+<td>1088</td>
+<td>44</td>
+<td>28</td>
+</tr>
+<tr class="even">
+<td>Sospetto</td>
+<td>104</td>
+<td>102</td>
+<td>7</td>
+</tr>
+<tr class="odd">
+<td>Patologico</td>
+<td>27</td>
+<td>14</td>
+<td>81</td>
+</tr>
+</tbody>
+</table>
 </center>
 <p>La classe dei sospetti rimane la più problematica stando ai valori di
 sensitivity (che risulta bassa in patologico) e specificity (alta in
