@@ -1,7 +1,7 @@
 ---
-title: <center> **Classificazione della salute del feto** <center>
-author: <center> Bonanomi Gervasoni Mahhadi <center>
-date: <center> 16 Gennaio 2024 <center>
+title: <center> **Classificazione della salute del feto** </center>
+author: <center> Bonanomi Gervasoni Mahhadi </center>
+date: <center> 16 Gennaio 2024 </center>
 output: 
   html_document:
     self_contained : TRUE
@@ -20,6 +20,7 @@ library(Rmixmod)
 library(GGally)
 library(caret)
 ```
+<br><br>
 <center> 
 #### *Abstract*
 </center>
@@ -355,7 +356,7 @@ Abbiamo implementato una funzione che valuta il miglior modello mda tramite cros
 Il modello trova difficoltà nel distinguere fra "Sospetto" e "Patologico"
 abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del caso "patologico"
 
-#### 5.3.3)MDA classificazione sospetti come sani o malati
+#### 5.3.2)MDA classificazione sospetti come sani o malati
 
 Implementiamo un MDA con lo scopo di classificare gli individui "sospetti" in una delle altre 2 classi funzione per un modello mda con soli 2 gruppi:
 
@@ -395,7 +396,7 @@ Implementiamo un MDA con lo scopo di classificare gli individui "sospetti" in un
 ```
 Stando ai dati si evince che nella gran parte dei casi "sospetti" apparterrebbero alla classe normale
 
-#### 5.3.4)MDA under/oversampling
+#### 5.3.3)MDA under/oversampling
 Dalle precedenti analisi abbiamo visto che i modelli faticano a classificare la classe dei sospetti(sensitivity troppo bassa) e tendono a inserire i casi sospetti nella classe dei normali(7 su 8). Questo è dato che i casi sospetti mostrano valori anomali che necessitano di ulteriori analisi. Alla luce delle sopraindicate difficoltà, servendoci unicamente delle variabili a nostra disposizione, abbiamo deciso di costruire un modello con il solo scopo di classificare un feto come patologico o non patologico senza suddividere i dati in normale e sospetto.
 ```{r,echo=FALSE}
 # install.packages("grid")
@@ -462,7 +463,7 @@ confusionMatrix(etichette_prediction_oversampling,real_labels)
 Notiamo un aumento della sensitivity del caso patologico(che corrisponde alla specificity del caso normale) da 0.7 a 0.83, per cui è evidente che siamo più accurati nell'identificare un caso patologico.
 Supponendo H0 caso patologico, l'errore di primo tipo che consiste nel classificare un caso patologico come sano è diminuito notevolmente a discapito dell'errore di secondo tipo (classificare un caso sano come patologico).
 
-```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
+```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
