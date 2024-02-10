@@ -172,7 +172,6 @@ health_mclust_BIC<-Mclust(fetal_Health_EM,G=2:10)
 summary(health_mclust_BIC)
 ```
 In definitiva possiamo dire che l'EM è molto instabile e poco robusto per cui diventa cruciale la scelta dei valori iniziali). Difatti sia tramite ICL che con il BIC il model based clustering fornisce un numero di gruppi differente. A sto punto proviamo a specificare il numero dei gruppi:
-
 ```{r,echo=FALSE}
 set.seed(123) 
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
@@ -209,6 +208,7 @@ Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che seg
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z)
 ```
+
 ### 5.1) Model Based Classification
 Il primo step dell’analisi è stato quello di dividere il dataset in training e test set. In particolare,abbiamo assegnato, in modo casuale, il 70% delle osservazioni del dataset al training set e il restante 30% al test set. Questa fase è essenziale nel momento in cui si vanno ad applicare approcci
 di tipo supervisionato, il cui scopo è quello di fare generalizzazione e prevedere nuove istanze per la
@@ -273,8 +273,7 @@ data_test %>%
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)
 ```
 
-
-#### 5.3.1) MDA
+#### 5.3.1)MDA
 Come visto in precedenza sia dal ggpairs che dall'algoritmo EM si evince la necessità di implementare un modello di classificazione di tipo MDA con selezione tramite BIC e successiva valutazione sul test set. Si ottiene un'accuracy dello 0.85.
 ```{r,echo=FALSE}
 set.seed(123)
