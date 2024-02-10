@@ -169,18 +169,18 @@ Provando a valutare il BIC (non accurato come ICL, in quanto non tiene conto del
 ```{r,echo=FALSE}
 set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM,G=2:10) 
-summary(health_mclust_BIC)
+#summary(health_mclust_BIC) # qua niente summary giusto
 ```
 In definitiva possiamo dire che l'EM è molto instabile e poco robusto per cui diventa cruciale la scelta dei valori iniziali). Difatti sia tramite ICL che con il BIC il model based clustering fornisce un numero di gruppi differente. A sto punto proviamo a specificare il numero dei gruppi:
 ```{r,echo=FALSE}
 set.seed(123) 
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
-summary(health_mclust_ICL_k3) #EVV 
+#summary(health_mclust_ICL_k3) #EVV 
 
 
 set.seed(123)
 health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
-summary(health_mclust_BIC_k3) #EVV
+#summary(health_mclust_BIC_k3) #EVV
 ```
 In questo caso ICL e BIC restituiscono lo stesso modello. Fossero stati diversi avremmo dato priorità al modello fornito tramite ICL. 
 ```{r,echo=FALSE}
@@ -193,7 +193,8 @@ al contrario la specificity è molto bassa.È evidente come l'EM non riesce a di
 ```{r,echo=FALSE, warning= FALSE}
 etichette_stimate<-as.factor(etichette_stimate)
 levels(etichette_stimate)<-c("Patologico","Normale","Sospetto")
-confusionMatrix(etichette_stimate,etichette)
+prova <- confusionMatrix(etichette_stimate,etichette)
+prova$table
 ```
 Successivamente abbiamo plottato il grafico seguente dove in nero rappresentiamo le unità "missclassificate". Si osserva che quanto meno le u.s. facenti parte del gruppo dei malati vengono allocate correttamente.
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
@@ -236,7 +237,7 @@ set.seed(123)
 pr<-mixmodLearn(data_train[,1:4], c(data_train$fetal_health),
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC'))
-summary(pr) #la parte di evaluation deve essere svolta sul test set
+#summary(pr) #la parte di evaluation deve essere svolta sul test set
 ```
 Il modello allenato ci restituisce il modello VEV che valutiamo sul test set. Otteniamo la confusion matrix con un valore dell'accuracy dello 0.8447.
 
@@ -244,7 +245,8 @@ Il modello allenato ci restituisce il modello VEV che valutiamo sul test set. Ot
 PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])   
 etichette_prediction_EDDA <- as.factor(PREDICTION@partition)
 levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
-
+EDDA_Confusion <- confusionMatrix(etichette_prediction_EDDA,as_factor(pull(data_test,fetal_health)))
+EDDA_Confusion$table
 ```
 <center>
 +-------------+-------------+--------------+------------+
@@ -259,6 +261,8 @@ levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
 | Patologico  | 0           | 1            | 19         | 
 +-------------+-------------+--------------+------------+
 </center>
+
+IL primo è il mio il secondo è di ash.
 L'accuracy è elevata solo a causa della differenza di numerosità tra i gruppi; infatti ben 61 dei casi sospetti vengono nuovamente classificati come normali. Notiamo questa "missclassification",seppur in minor parte, anche nei casi patologici (osservabile sia tramite la
 confusion matrix che mediante sensitivity e specificity). Plottando il grafico notiamo maggior incertezza nella sezione in cui sono presenti gli individui sospetti.
 
@@ -278,9 +282,10 @@ Come visto in precedenza sia dal ggpairs che dall'algoritmo EM si evince la nece
 ```{r,echo=FALSE}
 set.seed(123)
 mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
-summary(mod2)
+#summary(mod2)
 ```
 <center>
+da vedere se mettere
 +-------------+-------------+--------------+------------+
 |             |             | **PREDICTED**|            | 
 +-------------+-------------+--------------+------------+
@@ -293,9 +298,6 @@ summary(mod2)
 | Patologico  | 27          | 14           | 81         | 
 +-------------+-------------+--------------+------------+
 </center>
-```{r,echo=FALSE}
-etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class 
-```
 La classe dei sospetti rimane la più problematica stando ai valori di 
 sensitivity (che risulta bassa in patologico) e specificity (alta in patologico)
 in ogni caso la classificazione tramite MDA risulta migliore di quella eseguita attraverso il modello EDDA.
@@ -339,6 +341,11 @@ in ogni caso la classificazione tramite MDA risulta migliore di quella eseguita 
 
 ```
 Abbiamo implementato una funzione che valuta il miglior modello mda tramite cross validation con nfold uguale a 4 e restituisce il più accurato:
+```{r,echo=FALSE}
+etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class
+MDA_Confusion <- confusionMatrix(etichette_prediction_MDA,as_factor(pull(data_test,fetal_health)))
+MDA_Confusion$table
+```
 
 <center>
 +-------------+-------------+--------------+------------+
@@ -409,9 +416,9 @@ library(grid)
 library(DMwR)
 train2<-data_train %>% 
   as.data.frame()
-table(train2$fetal_health)
+#table(train2$fetal_health)
 levels(train2$fetal_health) <- c("Normale","Normale","Patologico") # i sospetti vengono considerati normali (vedi definizione patologici)
-table(train2$fetal_health)
+#table(train2$fetal_health)
 ```
 
 
@@ -434,7 +441,7 @@ mm <-mixmodGaussianModel(family = "all",
 #di oversampling e undersampling                                      
 modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
                         criterion = "CV")
-summary(modsmote) 
+#summary(modsmote) 
 ```
 
 
@@ -447,7 +454,8 @@ levels(real_labels) <- c("Normale","Normale","Patologico")
 etichette_prediction_oversampling<-as.factor(PREDICTION@partition)
 levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
 
-confusionMatrix(etichette_prediction_oversampling,real_labels) 
+SMOTE_confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
+SMOTE_confusion$table
 ```
 <center>
 +--------------+---------------+--------------+
