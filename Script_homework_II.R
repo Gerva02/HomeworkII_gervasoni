@@ -591,8 +591,8 @@ library(scutr)
 
 dt <- as.data.frame(data_train)
 table(data_train$fetal_health)
-data_new_patologici  <-oversample_smote(dt, "Patologico" , cls_col = "fetal_health", m = 1160)
-data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health", m = 1160)
+data_new_patologici  <-oversample_smote(dt, "Patologico" , cls_col = "fetal_health", m = 600)
+data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health", m = 600)
 
 new_train<-data_train %>%
   filter(fetal_health == "Normale") %>%
