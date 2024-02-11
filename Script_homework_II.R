@@ -567,3 +567,53 @@ data_test %>%
 
 
 
+
+
+
+# smote fatto meglio ------------------------------------------------------
+
+install.packages("scutr")
+library(scutr)
+
+# data <- data.frame(
+#   x <- 1:100,
+#   y <- x**2,
+#   z <- c(rep("maybe",2), rep("YES",8), rep("No",90))
+# )
+# colnames(data) <- c("x","y","z")
+# data_new <- SMOTE( ~ )
+# 
+# data_new<-oversample_smote(data, c("maybe", "YES"), cls_col = "z" , m = 200)
+# data_new_YES<- oversample_smote(data, "YES", cls_col = "z" , m = 200)
+# 
+# table(data_new$z)
+
+dt <- as.data.frame(data_train)
+table(data_train$fetal_health)
+data_new_patologici  <-oversample_smote(dt, "Patologico" , cls_col = "fetal_health", m = 1160)
+data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health", m = 1160)
+
+new_train<-data_train %>%
+  filter(fetal_health == "Normale") %>%
+  rbind(tibble(data_new_patologici),tibble(data_new_sospetto) ) %>%
+  as.data.frame()
+
+mm <-mixmodGaussianModel(family = "all",
+                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
+#di oversampling e undersampling                                      
+modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
+                        criterion = "CV")
+
+
+
+PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
+
+real_labels <- as.factor(data_test$fetal_health) #etichette vere
+levels(real_labels) <- c("Normale","Sospetto","Patologico")
+
+etichette_prediction_oversampling<-as.factor(PREDICTION@partition)
+levels(etichette_prediction_oversampling)<-c("Normale","Sospetto","Patologico")
+
+SMOTE_confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
+SMOTE_confusion$table
+SMOTE_confusion
