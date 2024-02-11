@@ -618,3 +618,14 @@ levels(etichette_prediction_oversampling)<-c("Normale","Sospetto","Patologico")
 SMOTE_confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
 SMOTE_confusion$table
 SMOTE_confusion
+
+
+prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+  rowwise() %>% # operiamo riga per riga
+  mutate(incertezza = 1 - max(c_across(everything()))) 
+
+data_test %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = real_labels)) +
+  geom_point(size=prob.post_incertezza$incertezza*4)+
+  geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*4)
