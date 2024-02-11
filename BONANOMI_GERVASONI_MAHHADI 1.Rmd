@@ -207,7 +207,7 @@ points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19)
 Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che segue. Più è grande il pallino nero, maggiore è l'incertezza.
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
-           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, cex = 0.6)
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165))
 ```
 
 ### 5.1) Model Based Classification
