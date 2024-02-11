@@ -223,7 +223,8 @@ points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19) #rappresentaz
 
 #questo grafico rappresenta l'incertezza delle u.s.:
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
-           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z) #più questa che vogliamo implementare
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, xlim=c(90,165),
+           ylim=c(130,211)) #più questa che vogliamo implementare
 
 #DA CONTROLLARE:
 #(da questi grafici si vede subito come (ok siamo nel bidimensionale che non è veritiero come nel multidimensionale (d=4)) l'EM fatichi a riconoscere
