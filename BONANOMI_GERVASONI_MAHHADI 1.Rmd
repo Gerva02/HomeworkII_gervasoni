@@ -102,7 +102,7 @@ In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. 
 ```
 Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè a quanto peso ha la singola variabile all'interno della componente principale).
 Dopodichè abbiamo fatto un ggpairs delle variabili selezionate. Dal grafico si nota che
-le ultime 2 variabili sezionate ("mean_value_of_long_term_variability" e "uterine_contractions")
+le ultime 2 variabili selezionate ("mean_value_of_long_term_variability" e "uterine_contractions")
 non rispettano la normalità e la simmetria in tutti i gruppi.
 ```{r, echo=FALSE}
 n <- nrow(fetal_Health)
@@ -116,7 +116,7 @@ k <- ncol(fetal_Health)
 (load_vars <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
 
 ```
-Fatte le dovute analisi, per il clustering abbiamo optato per il dataset con le sole variabili selezionate tramite pca (non servono le etichette per il clustering).
+Fatte le dovute analisi, per il clustering abbiamo optato per il dataset con le sole variabili selezionate tramite pca (non servono le etichette per il clustering).###DA COMMENTARE####
 ```{r,echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
 #dataset per model-based clustering:
 fetal_Health_EM<-fetal_Health%>%
