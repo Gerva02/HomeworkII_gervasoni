@@ -207,7 +207,9 @@ points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19)
 Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che segue. Più è grande il pallino nero, maggiore è l'incertezza.
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
-           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165))
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165))+
+labs( title = "Incertezza clusterizzazione")
+
 ```
 
 ### 5.1) Model Based Classification
@@ -274,7 +276,9 @@ data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point(size=prob.post_incertezza$incertezza*10)+
   geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
-             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)+
+labs( title = "Incertezza classificazione EDDA")
+
 ```
 
 #### 5.3.1)MDA
@@ -405,9 +409,17 @@ Implementiamo un MDA con lo scopo di classificare gli individui "sospetti" in un
 Stando ai dati si evince che nella gran parte dei casi "sospetti" apparterrebbero alla classe normale
 
 #### Smote 2.0 
-da installare il pacchetto scutr
+Ci serviamo di SMOTE, un algoritmo di bilanciamento dei dati utilizzato per affrontare
+il problema dei dataset sbilanciati. Esso genera sinteticamente nuovi esempi per
+la classe minoritaria, identificando vicini prossimi e creando combinazioni
+lineari tra le istanze esistenti. Questo processo migliora la rappresentazione
+della classe meno frequente nel dataset, aiutando i modelli di machine learning a
+generalizzare meglio durante l'addestramento. La corretta regolazione dei parametri,
+come il numero di vicini, è essenziale per evitare eccessiva generazione di dati sintetici. In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
+Nel nostro caso in particolare generiamo 7 dati sintetici per ogni reale e teniamo il numero di k di default.
 
-```{r}
+
+```{r , echo = F}
 #install.packages("scutr")
 library(scutr)
 
@@ -440,6 +452,15 @@ SMOTE_confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels)
 SMOTE_confusion$table
 ```
 
+```{r,  echo = F}
+SMOTE_confusion$byClass[,1:2]
+
+```
+
+
+Notiamo un aumento della sensitivity del caso patologico(che corrisponde alla specificity del caso normale) da 0.7 a 0.83, per cui è evidente che siamo più accurati nell'identificare un caso patologico.
+Supponendo H0 caso patologico, l'errore di primo tipo che consiste nel classificare un caso patologico come sano è diminuito notevolmente a discapito dell'errore di secondo tipo (classificare un caso sano come patologico).
+non dice tutta la storia perchè solo 3/51 vengono miss classificati di malati vengono miss classificati per sani
 
 
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
@@ -451,91 +472,11 @@ data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = real_labels)) +
   geom_point(size=prob.post_incertezza$incertezza*4)+
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
-             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*4)
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*4) + 
+  labs( title = "Classificazione tramite smote")
 ```
-
-
-#### 5.3.3)MDA under/oversampling
-Dalle precedenti analisi abbiamo visto che i modelli faticano a classificare la classe dei sospetti(sensitivity troppo bassa) e tendono a inserire i casi sospetti nella classe dei normali(7 su 8). Questo è dato che i casi sospetti mostrano valori anomali che necessitano di ulteriori analisi. Alla luce delle sopraindicate difficoltà, servendoci unicamente delle variabili a nostra disposizione, abbiamo deciso di costruire un modello con il solo scopo di classificare un feto come patologico o non patologico senza suddividere i dati in normale e sospetto.
-```{r,echo=FALSE}
-# install.packages("grid")
-# install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
-# install.packages("DMwR")
-# install.packages("ROCR")
-
-library(lattice)
-library(grid)
-library(DMwR)
-train2<-data_train %>% 
-  as.data.frame()
-#table(train2$fetal_health)
-levels(train2$fetal_health) <- c("Normale","Normale","Patologico") # i sospetti vengono considerati normali (vedi definizione patologici)
-#table(train2$fetal_health)
-```
-
-
-```{r,echo=FALSE}
-new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117)
-#table(new_train$fetal_health)
-```
-Ci serviamo di SMOTE, un algoritmo di bilanciamento dei dati utilizzato per affrontare
-il problema dei dataset sbilanciati. Esso genera sinteticamente nuovi esempi per
-la classe minoritaria, identificando vicini prossimi e creando combinazioni
-lineari tra le istanze esistenti. Questo processo migliora la rappresentazione
-della classe meno frequente nel dataset, aiutando i modelli di machine learning a
-generalizzare meglio durante l'addestramento. La corretta regolazione dei parametri,
-come il numero di vicini, è essenziale per evitare eccessiva generazione di dati sintetici. In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
-Nel nostro caso in particolare generiamo 7 dati sintetici per ogni reale e teniamo il numero di k di default.
-
-```{r,echo=FALSE}
-mm <-mixmodGaussianModel(family = "all",
-                                        free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
-#di oversampling e undersampling                                      
-modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
-                        criterion = "CV")
-#summary(modsmote) 
-```
-
-
-```{r,echo=FALSE}
-PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
-
-real_labels <- as.factor(data_test$fetal_health) #etichette vere
-levels(real_labels) <- c("Normale","Normale","Patologico")
-
-etichette_prediction_oversampling<-as.factor(PREDICTION@partition)
-levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
-
-SMOTE_confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
-SMOTE_confusion$table
-```
-<center>
-+--------------+---------------+--------------+
-|              | **PREDICTED** |              |            
-+--------------+---------------+--------------+
-| **CLASS**    | Normale       | Patologico   |   
-+--------------+---------------+--------------+
-| Normale      | 503           | 9            |    
-+--------------+---------------+--------------+
-| Patologico   | 74            | 45           |     
-+--------------+---------------+--------------+
-</center>
-Notiamo un aumento della sensitivity del caso patologico(che corrisponde alla specificity del caso normale) da 0.7 a 0.83, per cui è evidente che siamo più accurati nell'identificare un caso patologico.
-Supponendo H0 caso patologico, l'errore di primo tipo che consiste nel classificare un caso patologico come sano è diminuito notevolmente a discapito dell'errore di secondo tipo (classificare un caso sano come patologico).
-
-```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
-prob.post_incertezza<- tibble(PREDICTION@proba) %>%
-  rowwise() %>% # operiamo riga per riga
-  mutate(incertezza = 1 - max(c_across(everything()))) 
-
-data_test %>%
-  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = real_labels)) +
-  geom_point(size=prob.post_incertezza$incertezza*5)+
-  geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
-             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*5)
-```
-
 Dal grafico vediamo come le unità statistiche patologiche son ben distinguibili anche se distanti dal baricentro della classe contenente i casi patologici. 
+
 
 ### 6) Discussione finale
 In definitva si può affermare che la classe dei casi sospetti è molto difficile da definire sia nei modelli di clustering che nei modelli di classification. 
