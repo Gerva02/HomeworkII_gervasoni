@@ -212,6 +212,57 @@ labs( title = "Incertezza clusterizzazione")
 
 ```
 
+
+```{r , echo = F}
+(pj<-health_mclust_BIC_k3$parameters$pro)
+zij<-health_mclust_BIC_k3$z
+
+(entropia<-(-1)*sum(rowSums(zij*log(zij))))
+(entropia_relativa<-entropia/n/log(3))  #non male
+
+mu1<-health_mclust_BIC_k3$parameters$mean[,1]
+mu2<-health_mclust_BIC_k3$parameters$mean[,2]
+mu3<-health_mclust_BIC_k3$parameters$mean[,3]
+(mu<-mu1*pj[1]+mu2*pj[2]+mu3*pj[3])
+
+sigma1<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[1:16],nrow=4,ncol=4,byrow=T)
+sigma2<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[17:32],nrow=4,ncol=4,byrow=T)
+sigma3<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[33:48],nrow=4,ncol=4,byrow=T)
+
+var_within<-pj[1]*sigma1+pj[2]*sigma2+pj[3]*sigma3
+var_between<-pj[1]*(mu1-mu)%*%t(mu1-mu)+pj[2]*(mu2-mu)%*%t(mu2-mu)+pj[3]*(mu3-mu)%*%t(mu3-mu)
+(var_mixture<-var_within+var_between)
+
+(R2_tr<-1-sum(diag(var_within))/sum(diag(var_mixture))) #0.27 (male)
+(R2_det<-1-det(var_within)/det(var_mixture)) #0.73 (non così male)
+
+post_prob<-apply(zij,1,max)
+incertezza<-1-post_prob
+(unita_incerte<-tibble(index=1:n,incertezza=incertezza)%>%
+  arrange(desc(incertezza))%>%
+  print(n=10))
+
+fetal_Health$fetal_health[unita_incerte$index[1:20]] 
+```
+
+
+```{r , echo=FALSE}
+KLs<-function(mu1,mu2,sigma1,sigma2) {
+  return(0.5*t(mu1-mu2)%*%(solve(sigma1)+solve(sigma2))%*%(mu1-mu2)+0.5*sum(diag(sigma1%*%solve(sigma2)+solve(sigma1)%*%sigma2))-length(mu1)) #gervi dimmi se è giusta...
+  }
+
+KLs_matrix<-matrix(0,nrow=3,ncol=3)
+KLs_matrix[1,2]<-KLs_matrix[2,1]<-KLs(mu1,mu2,sigma1,sigma2)
+KLs_matrix[1,3]<-KLs_matrix[3,1]<-KLs(mu1,mu3,sigma1,sigma3)
+KLs_matrix[3,2]<-KLs_matrix[2,3]<-KLs(mu3,mu2,sigma3,sigma2)
+KLs_matrix #non  ha nulla a che vedere coi i gruppi reali....
+```
+
+
+
+
+
+
 ### 5.1) Model Based Classification
 Il primo step dell’analisi è stato quello di dividere il dataset in training e test set. In particolare,abbiamo assegnato, in modo casuale, il 70% delle osservazioni del dataset al training set e il restante 30% al test set. Questa fase è essenziale nel momento in cui si vanno ad applicare approcci
 di tipo supervisionato, il cui scopo è quello di fare generalizzazione e prevedere nuove istanze per la
