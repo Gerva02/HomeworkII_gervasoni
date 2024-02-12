@@ -307,19 +307,6 @@ levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
 EDDA_Confusion <- confusionMatrix(etichette_prediction_EDDA,as_factor(pull(data_test,fetal_health)))
 EDDA_Confusion$table
 ```
-<center>
-+-------------+-------------+--------------+------------+
-|             |             | **PREDICTED**|            | 
-+-------------+-------------+--------------+------------+
-|**CLASS**    | Normale     | Sospetto     | Patologico | 
-+-------------+-------------+--------------+------------+
-| Normale     | 494         | 61           | 26         | 
-+-------------+-------------+--------------+------------+
-| Sospetto    |  1          | 20           | 9          | 
-+-------------+-------------+--------------+------------+
-| Patologico  | 0           | 1            | 19         | 
-+-------------+-------------+--------------+------------+
-</center>
 
 IL primo è il mio il secondo è di ash.
 L'accuracy è elevata solo a causa della differenza di numerosità tra i gruppi; infatti ben 61 dei casi sospetti vengono nuovamente classificati come normali. Notiamo questa "missclassification",seppur in minor parte, anche nei casi patologici (osservabile sia tramite la
@@ -346,21 +333,7 @@ set.seed(123)
 mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
 #summary(mod2)
 ```
-<center>
-da vedere se mettere
 
-+-------------+-------------+--------------+------------+
-|             |             | **PREDICTED**|            | 
-+-------------+-------------+--------------+------------+
-|**CLASS**    | Normale     | Sospetto     | Patologico | 
-+-------------+-------------+--------------+------------+
-| Normale     | 1088        | 44           | 28         | 
-+-------------+-------------+--------------+------------+
-| Sospetto    | 104         | 102          | 7          | 
-+-------------+-------------+--------------+------------+
-| Patologico  | 27          | 14           | 81         | 
-+-------------+-------------+--------------+------------+
-</center>
 La classe dei sospetti rimane la più problematica stando ai valori di 
 sensitivity (che risulta bassa in patologico) e specificity (alta in patologico)
 in ogni caso la classificazione tramite MDA risulta migliore di quella eseguita attraverso il modello EDDA.
@@ -410,19 +383,6 @@ MDA_Confusion <- confusionMatrix(etichette_prediction_MDA,as_factor(pull(data_te
 MDA_Confusion$table
 ```
 
-<center>
-+-------------+-------------+--------------+------------+
-|             |             | **PREDICTED**|            | 
-+-------------+-------------+--------------+------------+
-|**CLASS**    | Normale     | Sospetto     | Patologico | 
-+-------------+-------------+--------------+------------+
-| Normale     | 453         | 37           | 12         | 
-+-------------+-------------+--------------+------------+
-| Sospetto    | 34          | 43           | 8          | 
-+-------------+-------------+--------------+------------+
-| Patologico  | 8           | 2            | 34         | 
-+-------------+-------------+--------------+------------+
-</center>
 Il modello trova difficoltà nel distinguere fra "Sospetto" e "Patologico"
 abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del caso "patologico"
 
@@ -469,13 +429,13 @@ Stando ai dati si evince che nella gran parte dei casi "sospetti" apparterrebber
 #### Smote 2.0 
 Ci serviamo di SMOTE, un algoritmo di bilanciamento dei dati utilizzato per affrontare
 il problema dei dataset sbilanciati. Esso genera sinteticamente nuovi esempi per
-la classe minoritaria, identificando vicini prossimi e creando combinazioni
-lineari tra le istanze esistenti. Questo processo migliora la rappresentazione
-della classe meno frequente nel dataset, aiutando i modelli di machine learning a
-generalizzare meglio durante l'addestramento. La corretta regolazione dei parametri,
-come il numero di vicini, è essenziale per evitare eccessiva generazione di dati sintetici. In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
-Nel nostro caso in particolare generiamo 7 dati sintetici per ogni reale e teniamo il numero di k di default.
+le classi minoritarie, identificando vicini prossimi e creando combinazioni
+lineari tra le osservazioni esistenti. Questo processo migliora la rappresentazione
+della classe meno frequente nel dataset, aiutando i modelli di classificazione a
+generalizzare meglio durante l'addestramento. 
+In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
 
+Nel nostro caso applichiamo l'algoritmo smote per ottenere un totale di 600 osservazioni tra dati sintetici e reali, per ogni classe minoritaria. Inoltre utilizziamo il default di 
 
 ```{r , echo = F}
 #install.packages("scutr")
