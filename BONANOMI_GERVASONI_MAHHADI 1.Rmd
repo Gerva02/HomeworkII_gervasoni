@@ -92,7 +92,7 @@ ggplot(aes(x=fetal_health,
                 y= after_stat(count)/sum(after_stat(count)))) + 
   geom_bar(aes(fill = fetal_health), color="black") +         
   labs(x="Condizione del feto", y="Frequenza Relativa") +
-  scale_fill_manual(values = c("Normale" = "#66FF66", "Sospetto" = "#00008B", "Patologico" = "red"))
+  scale_fill_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
 ```
 Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Classification-Kaggle](https://www.kaggle.com/datasets/andrewmvd/fetal-health-classification/data>) 
 
@@ -138,7 +138,7 @@ ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) 
        y = "Value",
        fill = "Variable") +
   theme_minimal() +
-  scale_fill_manual(values = c("Normale" = "#66FF66", "Sospetto" = "#00008B", "Patologico" = "red"))
+  scale_fill_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
 ```
 A livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile "histogram_mean". Non si esclude che non vi sia corrispondenza a livello bivariato (scatterplot precedenti) o multivariato che non è verificabile con strumenti grafici.  
 Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili.
@@ -149,7 +149,7 @@ Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzion
 fetal_Health %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point() +
-  scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "#00008B", "Patologico" = "red"))
+  scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
 
 ```
 è evidente come i sospetti sul grafico si collocano a destra dei sani e non tra sani e malati, difatti i cardiotogrammi dei feti sospetti sono quelli cui parametri si discostano dalla normalità e che necessitano di ulteriori approfondimenti. 
@@ -206,7 +206,7 @@ Successivamente abbiamo plottato il grafico seguente dove in nero rappresentiamo
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
 grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            classification=health_mclust_BIC_k3$classification,
-           col=c("red","#00008B","#66FF66"), symbols=c(0 ,16 ,17),
+           col=c("red","dodgerblue3","#66FF66"), symbols=c(0 ,16 ,17),
            sub="(b) Model-Based Clustering") +
   title("Grafico della clusterizzazione EVV")
 
@@ -214,7 +214,7 @@ grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classi
 Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che segue. Più è grande il pallino nero, maggiore è l'incertezza.
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
 grafico2<-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
-           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165),colors=c("red","#00008B","#66FF66")) + title("Grafico incertezze")
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165),colors=c("red","dodgerblue3","#66FF66")) + title("Grafico incertezze")
 
 ```
 
@@ -322,7 +322,7 @@ data_test %>%
   geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)+
 labs( title = "Incertezza classificazione EDDA")+
-  scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "#00008B", "Patologico" = "red"))
+  scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
 
 ```
 
@@ -492,7 +492,7 @@ data_test %>%
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*4) + 
   labs( title = "Classificazione tramite smote")+
-  scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "#00008B", "Patologico" = "red"))
+  scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
 ```
 Dal grafico vediamo come le unità statistiche patologiche son ben distinguibili anche se distanti dal baricentro della classe contenente i casi patologici. 
 
