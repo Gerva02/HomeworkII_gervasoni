@@ -465,13 +465,13 @@ Stando ai dati si evince che nella gran parte dei casi "sospetti" apparterrebber
 #### Smote 2.0 
 Ci serviamo di SMOTE, un algoritmo di bilanciamento dei dati utilizzato per affrontare
 il problema dei dataset sbilanciati. Esso genera sinteticamente nuovi esempi per
-la classe minoritaria, identificando vicini prossimi e creando combinazioni
-lineari tra le istanze esistenti. Questo processo migliora la rappresentazione
-della classe meno frequente nel dataset, aiutando i modelli di machine learning a
-generalizzare meglio durante l'addestramento. La corretta regolazione dei parametri,
-come il numero di vicini, è essenziale per evitare eccessiva generazione di dati sintetici. In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
-Nel nostro caso in particolare generiamo 7 dati sintetici per ogni reale e teniamo il numero di k di default.
+le classi minoritarie, identificando vicini prossimi e creando combinazioni
+lineari tra le osservazioni esistenti. Questo processo migliora la rappresentazione
+della classe meno frequente nel dataset, aiutando i modelli di classificazione a
+generalizzare meglio durante l'addestramento. 
+In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
 
+Nel nostro caso applichiamo l'algoritmo smote per ottenere un totale di 600 osservazioni tra dati sintetici e reali, per ogni classe minoritaria. Inoltre utilizziamo il default di 
 
 ```{r , echo = F}
 #install.packages("scutr")
