@@ -12,6 +12,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(comment = NA)
+
 ```
 ```{r warning=FALSE, message= FALSE,echo=FALSE }
 library(tidyverse)
@@ -114,18 +116,6 @@ k <- ncol(fetal_Health)
 (load_vars <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
 
 ```
-Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi così come segue:
-<br><br>
-```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
-fetal_Health %>%
-  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
-  geom_point()
-
-```
-è evidente come i sospetti sul grafico si collocano a destra dei sani e non tra sani e malati, difatti i cardiotogrammi dei feti sospetti sono quelli cui parametri si discostano dalla normalità e che necessitano di ulteriori approfondimenti. 
-
-
-### 4.1) Model Based Clustering
 Fatte le dovute analisi, per il clustering abbiamo optato per il dataset con le sole variabili selezionate tramite pca (non servono le etichette per il clustering).
 ```{r,echo=FALSE,fig.align='center', fig.width=6,fig.height=4}
 #dataset per model-based clustering:
@@ -150,6 +140,19 @@ ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) 
 ```
 A livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile "histogram_mean". Non si esclude che non vi sia corrispondenza a livello bivariato (scatterplot precedenti) o multivariato che non è verificabile con strumenti grafici.  
 Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili.
+
+Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi così come segue:
+<br><br>
+```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
+fetal_Health %>%
+  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
+  geom_point()
+
+```
+è evidente come i sospetti sul grafico si collocano a destra dei sani e non tra sani e malati, difatti i cardiotogrammi dei feti sospetti sono quelli cui parametri si discostano dalla normalità e che necessitano di ulteriori approfondimenti. 
+
+
+### 4.1) Model Based Clustering
 
 Arrivati a questo punto, implementiamo un EM di normali senza specificare il numero dei gruppi:
 ```{r,echo=FALSE}
@@ -201,14 +204,14 @@ Successivamente abbiamo plottato il grafico seguente dove in nero rappresentiamo
 coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            classification=health_mclust_BIC_k3$classification,
            col=c("dodgerblue2","green3","red2"), symbols=c(0 ,16 ,17),
-           sub="(b) Model-Based Clustering")
-points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19)
+           sub="(b) Model-Based Clustering") +
+  title("Grafico della clusterizzazione EVV")
+
 ```
 Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che segue. Più è grande il pallino nero, maggiore è l'incertezza.
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
-           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165))+
-labs( title = "Incertezza clusterizzazione")
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165)) + title("Grafico incertezze")
 
 ```
 
