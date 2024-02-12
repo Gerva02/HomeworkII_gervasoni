@@ -201,7 +201,7 @@ prova$table
 ```
 Successivamente abbiamo plottato il grafico seguente dove in nero rappresentiamo le unità "missclassificate". Si osserva che quanto meno le u.s. facenti parte del gruppo dei malati vengono allocate correttamente.
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
+grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            classification=health_mclust_BIC_k3$classification,
            col=c("dodgerblue2","green3","red2"), symbols=c(0 ,16 ,17),
            sub="(b) Model-Based Clustering") +
@@ -210,7 +210,7 @@ coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
 ```
 Ai fini di visualizzare meglio l'incertezza ci siamo serviti del grafico che segue. Più è grande il pallino nero, maggiore è l'incertezza.
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
+grafico2<-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165)) + title("Grafico incertezze")
 
 ```
