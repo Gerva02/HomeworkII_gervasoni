@@ -573,7 +573,7 @@ data_test %>%
 
 # smote fatto meglio ------------------------------------------------------
 
-install.packages("scutr")
+#install.packages("scutr")
 library(scutr)
 
 # data <- data.frame(
