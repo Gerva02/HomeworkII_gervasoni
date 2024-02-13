@@ -443,7 +443,7 @@ SMOTE_Confusion$table
 Vediamo dalla confusion matrix che il numero di casi patologici e dubbiosi classificati male si è ridotto e soprattuto il rateo di patologici classificato come normali è calato drasticamente (espandere anche perchè è meglio ) (da espandere il fatto che è meglio miss classifcare un normale e dire che è patologico , rispetto fare il contrario ). 
 
 ```{r,  echo = F}
-SMOTE_confusion$byClass[,1:2]
+SMOTE_Confusion$byClass[,1:2]
 ```
 Notiamo un aumento della sensitivity del caso patologico da 0.7 a 0.77 e un aumento della sensitivity del caso sospetto da 0.45 a 0.84, per cui è evidente che siamo più accurati nell'identificare un caso abnormali, altresì marcato è una diminuzione della sensitivity dei casi normali.
 
