@@ -247,19 +247,6 @@ tibble(index=1:n,incertezza_k7=incertezza_best)%>%
 ```
 
 
-```{r , echo=FALSE}
-KLs<-function(mu1,mu2,sigma1,sigma2) {
-  return(0.5*t(mu1-mu2)%*%(solve(sigma1)+solve(sigma2))%*%(mu1-mu2)+0.5*sum(diag(sigma1%*%solve(sigma2)+solve(sigma1)%*%sigma2))-length(mu1)) #gervi dimmi se è giusta...
-  }
-
-KLs_matrix<-matrix(0,nrow=3,ncol=3)
-KLs_matrix[1,2]<-KLs_matrix[2,1]<-KLs(mu1,mu2,sigma1,sigma2)
-KLs_matrix[1,3]<-KLs_matrix[3,1]<-KLs(mu1,mu3,sigma1,sigma3)
-KLs_matrix[3,2]<-KLs_matrix[2,3]<-KLs(mu3,mu2,sigma3,sigma2)
-KLs_matrix #non  ha nulla a che vedere coi i gruppi reali....
-```
-
-
 
 
 
