@@ -73,6 +73,11 @@ fetal_Health%>%
 # nome variabili distinte
 #histogram_mean, histogram_median e histogram_mode sono (ovviamente) fortemente correlate
 
+colnames(fetal_Health)
+fetal_Health%>%select(-fetal_health)%>%ggpairs() #ggpairs senza etichette: osservazioni/conclusioni per clustering
+#non sono presewnti (soprattutto nelle 4 pca selezionate) molte distribuzioni con multimodalità ma
+#è normale siccome siamo su datoi reali e siccome la clusterizzazione è improbabile che sia evidente a livello 
+#univariato 
 
 # commento che si può fare: è evidente (anche in casi unidensionali) che le variabili (anche se distinte per fetal health)
 #SONO MULTIMODALI (perforza andrà usato un MDA)
