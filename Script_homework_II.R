@@ -604,11 +604,13 @@ new_train<-data_train %>%
   rbind(tibble(data_new_patologici),tibble(data_new_sospetto) ) %>%
   as.data.frame()
 
+table(new_train$fetal_health)
+
 mm <-mixmodGaussianModel(family = "all",
-                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
+                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a 0.5 0.25 e 0.25 (circa) grazie all'azione
 #di oversampling e undersampling                                      
 modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
-                        criterion = "CV")
+                        criterion = "CV") 
 
 
 
@@ -622,7 +624,7 @@ levels(etichette_prediction_oversampling)<-c("Normale","Sospetto","Patologico")
 
 SMOTE_confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
 SMOTE_confusion$table
-SMOTE_confusion
+SMOTE_confusion #perdiamo accuracy ma guadagniamo in sensitivity e specificity
 
 
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
@@ -634,3 +636,4 @@ data_test %>%
   geom_point(size=prob.post_incertezza$incertezza*4)+
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*4)
+#non sembra bellissimo come grafico
