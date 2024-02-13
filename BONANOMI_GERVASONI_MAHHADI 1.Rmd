@@ -271,7 +271,7 @@ data_train<-out$data_train
 data_test<-out$data_test
 ```
 
-#### 5.2)EDDA (Valutato tramite Cross validation) 
+#### 5.2) EDDA (Valutato tramite Cross validation) 
 Ora che abbiamo ottenuto il traning set alleniamo un modello EDDA: 
 ```{r,echo=FALSE}
 set.seed(123)
@@ -309,7 +309,7 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
           # margin Imposta i margini intorno al grafico
 ```
 
-#### 5.3.1)MDA
+#### 5.3) MDA
 Come visto in precedenza sia dal ggpairs che dall'algoritmo EM si evince la necessità di implementare un modello di classificazione di tipo MDA con selezione tramite BIC e successiva valutazione sul test set. Si ottiene un'accuracy dello 0.85.
 ```{r,echo=FALSE}
 set.seed(123)
@@ -369,7 +369,7 @@ MDA_Confusion$table
 Il modello trova difficoltà nel distinguere fra "Sospetto" e "Patologico"
 abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del caso "patologico"
 
-#### Smote 2.0 
+#### 5.4) Smote 2.0 
 Ci serviamo di SMOTE, un algoritmo di bilanciamento dei dati utilizzato per affrontare
 il problema del dataset sbilanciatio. Esso genera sinteticamente nuovi esempi per
 le classi minoritarie, identificando i K-nearest neighbors (K-vicini prossimi) e creando combinazioni
