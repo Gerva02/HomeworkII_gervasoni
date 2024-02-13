@@ -397,17 +397,16 @@ MDA_Confusion$table
 Il modello trova difficoltà nel distinguere fra "Sospetto" e "Patologico"
 abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del caso "patologico"
 
-
 #### Smote 2.0 
 Ci serviamo di SMOTE, un algoritmo di bilanciamento dei dati utilizzato per affrontare
 il problema del dataset sbilanciatio. Esso genera sinteticamente nuovi esempi per
-le classi minoritarie, identificando vicini prossimi e creando combinazioni
+le classi minoritarie, identificando i K-nearest neighbors (K-vicini prossimi) e creando combinazioni
 lineari tra le osservazioni esistenti. Questo processo migliora la rappresentazione
 della classe meno frequente nel dataset, aiutando i modelli di classificazione
 esponendoli a più esempi di classi meno rappresentate. 
 In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
 
-Nel nostro caso applichiamo l'algoritmo smote per allenare il modello con 600 osservazioni per la classe dei patologici (quella di nostro interesse) 300 per la classe dei "dubbiosi" e facciamo undersampling in modo che il classificatore venga allenato su 300 "Normali", per ogni classe minoritaria. Inoltre utilizziamo il default di vicini prossimi (nearest neighbor) che è `k = 5`
+Nel nostro caso applichiamo l'algoritmo smote per allenare il modello con 600 osservazioni per la classe dei patologici (quella di nostro interesse) 300 per la classe dei "dubbiosi" e facciamo undersampling in modo che il classificatore venga allenato su 300 "Normali". Inoltre utilizziamo il numero di "nearest neighbor" di default che è `k = 5`
 
 ```{r , echo = F}
 #install.packages("scutr")
@@ -445,12 +444,8 @@ Vediamo dalla confusion matrix che il numero di casi patologici e dubbiosi class
 
 ```{r,  echo = F}
 SMOTE_confusion$byClass[,1:2]
-MDA_Confusion$byClass[,1:2]
 ```
 Notiamo un aumento della sensitivity del caso patologico da 0.7 a 0.77 e un aumento della sensitivity del caso sospetto da 0.45 a 0.84, per cui è evidente che siamo più accurati nell'identificare un caso abnormali, altresì marcato è una diminuzione della sensitivity dei casi normali.
-
-Dunque il nostro classificatore risulta utile a dare i
-
 
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
@@ -473,6 +468,4 @@ Dal grafico vediamo come le unità statistiche patologiche son ben distinguibili
 ### 6) Discussione finale
 In definitva si può affermare che la classe dei casi sospetti è molto difficile da definire sia nei modelli di clustering che nei modelli di classification. 
 Abbiamo anche osservato come i modelli di tipo MDA sono più accurati dei modelli EDDA probabilmente a causa della presenza di sottogruppi in ciascuna classe. 
-Restringendo l'analisi alla sola identificazione dei casi patologici, la classificazione di quest'ultimi risulta molto più precisa e accurata anche grazie alle tecniche di oversampling e undersampling di cui ci siamo serviti per bilanciare le numerosità all'interno delle classi.
-
-
+Tramite l'utilizzo di SMOTE e undersampling otteniamo un risultato migliore per classi minoritarie, ma risulta ovvio che lo scarso numero di dati utilizzati e l'accuratezza comunque relativamente bassa rendano il nostro classificatore non adatto ad usi medici, ma potrebbe diventarlo tramite metodi di classificazione più sofisticata che possono permettere di altri tipi di dati.
