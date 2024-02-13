@@ -248,9 +248,9 @@ zij<-health_mclust_BIC_k3$z
 (entropia<-(-1)*sum(rowSums(zij*log(zij))))
 (entropia_relativa<-entropia/n/log(3))  #non male
 
-mu1<-health_mclust_BIC_k3$parameters$mean[,1]
-mu2<-health_mclust_BIC_k3$parameters$mean[,2]
-mu3<-health_mclust_BIC_k3$parameters$mean[,3]
+(mu1<-health_mclust_BIC_k3$parameters$mean[,1]) #questi sono i patologici e sono l'unica cosa che ha senso confrontsare a livello di sensitivity (NON a livello di specificity)
+(mu2<-health_mclust_BIC_k3$parameters$mean[,2])
+(mu3<-health_mclust_BIC_k3$parameters$mean[,3])
 (mu<-mu1*pj[1]+mu2*pj[2]+mu3*pj[3])
 
 sigma1<-matrix(health_mclust_BIC_k3$parameters$variance$sigma[1:16],nrow=4,ncol=4,byrow=T)
@@ -276,12 +276,6 @@ fetal_Health$fetal_health[unita_incerte$index[1:20]] #molto strano che siano tut
 
 
 
-
-#DA PROVARE UN EM SENZA I SOSPETTI
-
-
-
-
 #funzione che risteituisce la distanza/divergenza di kullback-leibler simmetrizzata:           CORRETTO "DISTANZA"??????
 KLs<-function(mu1,mu2,sigma1,sigma2) {
   return(0.5*t(mu1-mu2)%*%(solve(sigma1)+solve(sigma2))%*%(mu1-mu2)+0.5*sum(diag(sigma1%*%solve(sigma2)+solve(sigma1)%*%sigma2))-length(mu1)) #gervi dimmi se è giusta...
@@ -295,11 +289,48 @@ KLs_matrix #non  ha nulla a che vedere coi i gruppi reali....
 det(KLs_matrix) #non credo abbia senso....ma forse per sintetizzare le KLs.......DA CONTROLLARE LE KLs PER 3 O PIù CLUSTER.....
 
 
-
-
 #pessima clusterizzazione 
 
 
+#DA PROVARE UN EM CON IL MODELLO TOP SENZA K SPECIFICATO
+summary(health_mclust_ICL)
+health_mclust_best<-Mclust(fetal_Health_EM,G=7,"VEV")
+summary(health_mclust_best)
+
+(zij_best<-health_mclust_best$z)
+dim(zij_best)
+(entropia_best<-(-1)*sum(rowSums(zij_best*log(zij_best)),na.rm=T)) #entropia molto più alta
+entropia_best/n/log(7) #idem entropia relativa
+
+#ha senso un R2 
+mu<-matrix(NA,nrow=4,ncol=7)
+for (i in 1:7){
+  mu[,i]<-health_mclust_best$parameters$mean[,i]
+}
+p<-health_mclust_best$parameters$pro
+sigma<-list()
+for (i in 1:7){
+  sigma[[i]]<-matrix(health_mclust_best$parameters$variance$sigma[(i*16-16+1):(i*16)],nrow=4,ncol=4,byrow=T)
+}
+
+(mu_best<-apply(mu, MARGIN=1, function(x) t(x)%*%p))
+
+var_within_best<-0
+for (i in 1:7){
+  var_within_best<-var_within_best+sigma[[i]]*p[i]
+}
+
+var_between_best<-0
+for(i in 1:7){
+  var_between_best<-var_between_best+p[i]*((mu[,i]-mu_best)%*%t(mu[,i]-mu_best))
+}
+
+(R2_det_best<-1-det(var_within_best)/det(var_between_best+var_within_best)) #a livello di R2 risulta meglio il modello con 7 gruppi (opposto rispetto all'entropia...ha senso
+#essendo un numero di gruppi decisamente maggiore all'interno dello stesso grafico...comunque l'entropia viene già considerata tramite l'ICL)
+(R2_tr_best<-1-sum(diag(var_within_best))/sum(diag(var_between_best+var_within_best))) #migliora anche questo
+
+(incertezza_best<-apply(zij_best,1,function(x) 1-max(x)))
+sort(incertezza_best)
 
 
 
