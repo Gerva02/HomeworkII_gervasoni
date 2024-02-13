@@ -424,18 +424,22 @@ new_train<-data_train %>%
 
 mm <-mixmodGaussianModel(family = "all",
                          free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
-#di oversampling e undersampling                                      
-modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
-                        criterion = "CV")
+#di oversampling e undersampling    
+mod = MclustDA(new_train[,-5],
+               new_train$fetal_health ,G=1:5,
+               models=mm )
 
 
+etichette_prediction_oversampling <- predict(mod, select(data_test,-fetal_health))$class
 
-PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
-
+# modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
+#                         criterion = "CV")
+# 
+# PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
 real_labels <- as.factor(data_test$fetal_health)
 
-etichette_prediction_oversampling<-as.factor(PREDICTION@partition)
-levels(etichette_prediction_oversampling)<-c("Normale","Sospetto","Patologico")
+#etichette_prediction_oversampling<-as.factor(PREDICTION@partition)
+#levels(etichette_prediction_oversampling)<-c("Normale","Sospetto","Patologico")
 
 SMOTE_Confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
 SMOTE_Confusion$table
