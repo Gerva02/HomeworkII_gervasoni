@@ -609,62 +609,46 @@ data_test %>%
 
 # smote fatto meglio ------------------------------------------------------
 
-#install.packages("scutr")
-library(scutr)
-
-# data <- data.frame(
-#   x <- 1:100,
-#   y <- x**2,
-#   z <- c(rep("maybe",2), rep("YES",8), rep("No",90))
-# )
-# colnames(data) <- c("x","y","z")
-# data_new <- SMOTE( ~ )
-# 
-# data_new<-oversample_smote(data, c("maybe", "YES"), cls_col = "z" , m = 200)
-# data_new_YES<- oversample_smote(data, "YES", cls_col = "z" , m = 200)
-# 
-# table(data_new$z)
 
 dt <- as.data.frame(data_train)
-table(data_train$fetal_health)
 data_new_patologici  <-oversample_smote(dt, "Patologico" , cls_col = "fetal_health", m = 600)
-data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health", m = 600)
+data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health", m = 300)
 
 new_train<-data_train %>%
   filter(fetal_health == "Normale") %>%
+  sample_n(size=300) %>%
   rbind(tibble(data_new_patologici),tibble(data_new_sospetto) ) %>%
   as.data.frame()
 
-table(new_train$fetal_health)
-
 mm <-mixmodGaussianModel(family = "all",
-                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a 0.5 0.25 e 0.25 (circa) grazie all'azione
-#di oversampling e undersampling                                      
-modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
-                        criterion = "CV") 
+                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
+#di oversampling e undersampling    
+mod = MclustDA(new_train[,-5],
+               new_train$fetal_health ,G=1:5,
+               models=mm )
 
 
+etichette_prediction_oversampling <- predict(mod, select(data_test,-fetal_health))$class
 
-PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
+# modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
+#                         criterion = "CV")
+# 
+# PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
+real_labels <- as.factor(data_test$fetal_health)
 
-real_labels <- as.factor(data_test$fetal_health) #etichette vere
-levels(real_labels) <- c("Normale","Sospetto","Patologico")
+#etichette_prediction_oversampling<-as.factor(PREDICTION@partition)
+#levels(etichette_prediction_oversampling)<-c("Normale","Sospetto","Patologico")
 
-etichette_prediction_oversampling<-as.factor(PREDICTION@partition)
-levels(etichette_prediction_oversampling)<-c("Normale","Sospetto","Patologico")
+SMOTE_Confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
+SMOTE_Confusion$table
 
-SMOTE_confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
-SMOTE_confusion$table
-SMOTE_confusion #perdiamo accuracy ma guadagniamo in sensitivity e specificity
-
-
-prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+prob.post_incertezza<- tibble(predict(mod, select(data_test,-fetal_health))$z) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
 
 data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = real_labels)) +
-  geom_point(size=prob.post_incertezza$incertezza*4)+
+  geom_point(size=prob.post_incertezza$incertezza*7)+
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
-             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*4)
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*7)
 #non sembra bellissimo come grafico

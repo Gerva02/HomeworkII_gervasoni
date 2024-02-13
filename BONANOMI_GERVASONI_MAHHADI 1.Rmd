@@ -437,15 +437,15 @@ SMOTE_Confusion$byClass[,1:2]
 Notiamo un aumento della sensitivity del caso patologico da 0.7 a 0.77 e un aumento della sensitivity del caso sospetto da 0.45 a 0.84, per cui è evidente che siamo più accurati nell'identificare un caso abnormali, altresì marcato è una diminuzione della sensitivity dei casi normali.
 
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
-prob.post_incertezza<- tibble(PREDICTION@proba) %>%
+prob.post_incertezza<- tibble(predict(mod, select(data_test,-fetal_health))$z) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
 
 data_test %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = real_labels)) +
-  geom_point(size=prob.post_incertezza$incertezza*4)+
+  geom_point(size=prob.post_incertezza$incertezza*7)+
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
-             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*4) + 
+             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*7) + 
   labs( title = "Classificazione tramite smote")+
   scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))+
 theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = margin(10, 0, 20, 0)))  # hjust Imposta l'allineamento orizzontale al centro
