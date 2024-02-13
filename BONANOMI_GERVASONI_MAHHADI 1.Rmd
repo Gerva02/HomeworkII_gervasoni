@@ -406,7 +406,7 @@ della classe meno frequente nel dataset, aiutando i modelli di classificazione
 esponendoli a più esempi di classi meno rappresentate. 
 In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
 
-Nel nostro caso applichiamo l'algoritmo smote per allenare il modello con 600 osservazioni per la classe dei patologici (quella di nostro interesse) 300 per la classe dei "dubbiosi" e facciamo undersampling in modo che il classificatore venga allenato su 300 "Normali". Inoltre utilizziamo il numero di "nearest neighbor" di default che è `k = 5`
+Nel nostro caso applichiamo l'algoritmo smote per allenare il modello con 600 osservazioni per la classe dei patologici (quella di nostro interesse) 300 per la classe dei "dubbiosi" e facciamo undersampling in modo che il classificatore venga allenato su 300 "Normali". Inoltre utilizziamo il numero di "nearest neighbor" di default che è `k = 5`.
 
 ```{r , echo = F}
 #install.packages("scutr")
