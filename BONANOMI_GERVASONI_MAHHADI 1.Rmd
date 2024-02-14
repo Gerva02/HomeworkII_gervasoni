@@ -153,7 +153,7 @@ Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzion
 ```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
 fetal_Health %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
-  geom_point() +
+  geom_point(alpha=0.4) +
 labs( title = "Clusterizzazione esperti")+
 theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = margin(10, 0, 20, 0)))+  # hjust Imposta l'allineamento orizzontale al centro
           # margin Imposta i margini intorno al grafico
