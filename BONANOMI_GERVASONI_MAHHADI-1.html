@@ -1576,58 +1576,58 @@ modalità dell variabili:</p>
 <tbody>
 <tr class="odd">
 <td>baseline_value</td>
-<td>Valore di base della frequenza cardiaca fetale (FHR)</td>
+<td>Frequenza cardiaca fetale di base (FHR)</td>
 <td>Bpm</td>
 </tr>
 <tr class="even">
 <td>accelerations</td>
-<td>Conteggio delle accelerazioni medie dalla FHR</td>
+<td>Numero di accelerazioni cardiache al secondo</td>
 <td>Hz</td>
 </tr>
 <tr class="odd">
 <td>fetal_movement</td>
-<td>Presenza media di movimenti fetali</td>
+<td>Numero di accelerazioni fetali al secondo</td>
 <td>Hz</td>
 </tr>
 <tr class="even">
 <td>uterine_contractions</td>
-<td>Numero di contrazioni uterine</td>
+<td>Numero di contrazioni uterine al secondo</td>
 <td>Hz</td>
 </tr>
 <tr class="odd">
 <td>light_decelerations</td>
-<td>Numero di decelerazioni leggere della FHR</td>
+<td>Numero di decelerazioni leggere al secondo</td>
 <td>Hz</td>
 </tr>
 <tr class="even">
 <td>severe_decelerations</td>
-<td>Numero di decelerazioni gravi della FHR</td>
+<td>Numero di decelerazioni gravi al secondo</td>
 <td>Hz</td>
 </tr>
 <tr class="odd">
 <td>prolongued_decelerations</td>
-<td>Numero di decelerazioni prolungate della FHR</td>
+<td>Numero di decelerazioni prolungate al secondo</td>
 <td>Hz</td>
 </tr>
 <tr class="even">
 <td>abnormal_short_term_variability</td>
-<td>Presenza di variabilità a breve termine anormale</td>
-<td>Binario (0 o 1)</td>
+<td>Percentuale di tempo con variabilità a breve termine anomala</td>
+<td>Percentuale</td>
 </tr>
 <tr class="odd">
 <td>mean_value_of_short_term_variability</td>
-<td>Valore medio della variabilità a breve termine</td>
-<td>Numerico</td>
+<td>Media della variabilità a breve termine</td>
+<td>Millisecondi</td>
 </tr>
 <tr class="even">
 <td>percentage_of_time_with_abnormal_long_term…</td>
-<td>Percentuale di tempo con variabilità a lungo termine anormale</td>
+<td>Percentuale di tempo con variabilità a lungo termine anomala</td>
 <td>Percentuale</td>
 </tr>
 <tr class="odd">
 <td>mean_value_of_long_term_variability</td>
-<td>Valore medio della variabilità a lungo termine</td>
-<td>Numerico</td>
+<td>Media della variabilità a lungo termine</td>
+<td>Millisecondi</td>
 </tr>
 <tr class="even">
 <td>histogram_width</td>
@@ -1662,6 +1662,16 @@ modalità dell variabili:</p>
 <tr class="even">
 <td>histogram_mean</td>
 <td>Valore medio dell’istogramma della FHR</td>
+<td>Numerico</td>
+</tr>
+<tr class="odd">
+<td>histogram_median</td>
+<td>Mediana dell’istogramma della FHR</td>
+<td>Numerico</td>
+</tr>
+<tr class="even">
+<td>histogram_variance</td>
+<td>Varianza dell’istogramma della FHR</td>
 <td>Numerico</td>
 </tr>
 <tr class="odd">
@@ -1752,7 +1762,7 @@ MDA in fase di model-based classification.</p>
 Provando a valutare il BIC (non accurato come ICL, in quanto non tiene
 conto dell’entropia) viene restituito un modello VEV k=8.</p>
 <p>In definitiva possiamo dire che l’EM è molto instabile e poco robusto
-per cui diventa cruciale la scelta dei valori iniziali). Difatti sia
+per cui diventa cruciale la scelta dei valori iniziali. Difatti sia
 tramite ICL che con il BIC il model based clustering fornisce un numero
 di gruppi differente. A sto punto proviamo a specificare il numero dei
 gruppi:</p>
