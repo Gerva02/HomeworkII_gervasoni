@@ -706,3 +706,7 @@ confusionMatrix(etichette_prediction_MDA_cv_over, data_test$fetal_health)
 #SAPENDO CHE CROSS VALIDATION è UN METODO DI VALUTAZIONE SUPERIORE ALLA SELEZIONE TRAMITE BIC PROBABILMENTE
 #POTENDO CONFRONTARE TUTTI I 14 POSSINBILI MODELLI ALL'INTERNO DI CIASCUNA ETICHETTA RISULTEREBBE UN RISULTATO MIGLIORE DELLA SELEZIONE 
 #TRAMITE BIC A CAUSA DEL NUMERO DI VINCOLI DECISAMENTE INFERIORI MA è UN PROCEDIMENTO TROPPO DISPENDIOSO PER LA POTENZA COMPUTAZIONALE DEL QUALE DISPONIAMO
+
+#la selezione del numero di u.s. date da over/undersampling è volta a minimizzare l'errore di primo tipo (sia con 600 300 600 sia con 300 300 e 600 (malati) è uguale)
+#di conseguenza massimizziamo la potenza (stat2) (ovvero 1-errore di secondo tipo) cioè il classificare patologici i normali o sospetti 
+#(in genere 7 sospetti su 8 stando ai dati sono normali ma non so quanto coerente con la scienza....e quanto ha senso come analisi statistica...roba già detta) 
