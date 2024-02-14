@@ -47,26 +47,25 @@ Grazie a queste rilevazioni si è ottenuto un dataset con 2126 osservazioni di c
 
 VARIABILE     | DESCRIZIONE  | MODALITÀ 
 ------------- | -------------| ---------
-baseline_value| Frequenza cardiaca fetale di base (FHR) |  Bpm
-accelerations|Numero di accelerazioni cardiache al secondo | Hz
-fetal_movement|Numero di accelerazioni fetali al secondo| Hz                
-uterine_contractions| Numero di contrazioni uterine al secondo| Hz
-light_decelerations|Numero di decelerazioni leggere al secondo|Hz            
-severe_decelerations|Numero di decelerazioni gravi al secondo|Hz          
-prolongued_decelerations|Numero di decelerazioni prolungate al secondo|Hz |    
-abnormal_short_term_variability|Percentuale di tempo con variabilità a breve termine anomala|Percentuale|
-mean_value_of_short_term_variability| Media della variabilità a breve termine|Millisecondi|  
-percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anomala | Percentuale|                      
-mean_value_of_long_term_variability| Media della variabilità a lungo termine| Millisecondi|   
-histogram_width| Larghezza dell'istogramma della FHR| Bpm|                       
-histogram_min| Valore minimo dell'istogramma della FHR| Bpm|                      
-histogram_max| Valore massimo dell'istogramma della FHR| Bpm| 
-histogram_number_of_peaks| Numero di picchi nell'istogramma della FHR| Numerico (conteggio)|
-histogram_number_of_zeroes| Numero di zeri nell'istogramma della FHR| Numerico (conteggio)|
-histogram_mode | Moda dell'istogramma della FHR | Bpm|
-histogram_mean| Valore medio dell'istogramma della FHR| Bpm|             
-histogram_median| Mediana dell'istogramma della FHR| Bpm |               
-histogram_variance| Varianza dell'istogramma della FHR| Bpm^2|
+baseline_value| Frequenza cardiaca fetale di base (FHR) | Valore in Bpm
+accelerations|Numero di accelerazioni cardiache al secondo | Valore in Hz
+fetal_movement|Numero di accelerazioni fetali al secondo| Valore in Hz                
+uterine_contractions| Numero di contrazioni uterine al secondo| Valore in Hz
+light_decelerations|Numero di decelerazioni leggere al secondo| Valore in Hz            
+severe_decelerations|Numero di decelerazioni gravi al secondo| Valore in Hz          
+prolongued_decelerations|Numero di decelerazioni prolungate al secondo|Valore in Hz | abnormal_short_term_variability|Percentuale di tempo con variabilità a breve termine anomala|Valore in Percentuale|
+mean_value_of_short_term_variability| Media della variabilità a breve termine|Valore in Millisecondi|  
+percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anomala |Valore in Percentuale|                      
+mean_value_of_long_term_variability| Media della variabilità a lungo termine| Valore in Millisecondi|   
+histogram_width| Larghezza dell'istogramma della FHR| Valore in Bpm|                       
+histogram_min| Valore minimo dell'istogramma della FHR| Valore in Bpm|                      
+histogram_max| Valore massimo dell'istogramma della FHR|Valore in Bpm| 
+histogram_number_of_peaks| Numero di picchi nell'istogramma della FHR| Valore numerico (conteggio)|
+histogram_number_of_zeroes| Numero di zeri nell'istogramma della FHR| Valore numerico (conteggio)|
+histogram_mode | Moda dell'istogramma della FHR |Valore in Bpm|
+histogram_mean| Valore medio dell'istogramma della FHR| Valore in Bpm|             
+histogram_median| Mediana dell'istogramma della FHR| Valore in Bpm |               
+histogram_variance| Varianza dell'istogramma della FHR| Valore in Bpm^2|
 histogram_tendency| Asimmetria dell'istogramma della FHR  | **-1**:sinistra **0**:simmetrica **1**:destra |
 fetal_health| Salute fetale (etichetta di classe)|**1**:Sano **2**:Sospetto **3**:Patologico |                     
                  
