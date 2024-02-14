@@ -42,8 +42,13 @@ Grazie alla cardiotografia computerizzata,invece, non solo si riesce ad ottenere
 Nel progetto seguente ci siamo cimentati nel svilupparne alcuni coi quali identificare con maggior precisione quali sono i parametri che più di altri caratterizzano la salute del feto oltrechè prevedere con minore margine di errore i quadri clinici che richiedono un particolare occhio di riguardo. <br><br>
 
 ### 2) Materiali
-I dati di interesse provengono dal dataset **fetal_health**, esportabile gratuitamente dal link citato a fine paragrafo. La raccolta di questi dati è stata fatta mediante SisPorto, un programma di analisi automatizzata del tracciato cardiotografico che individua e calcola una serie di metriche che vengono valutate durante il monitoraggio cardiotografico del feto, così come indicato dalla FIGO (Federazione Internazionale di Ginecologia e Ostetricia).
-Grazie a queste rilevazioni si è ottenuto un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* rappresentata dalle seguenti modalità: 1,2,3 che indicano rispettivamente uno stato di salute del feto Normale, Sospetto, Patologico. Per completezza di informazione segue una tabella che riporta sinteticamente la descrizione e le modalità dell variabili:
+I dati di interesse provengono dal dataset **fetal_health**, esportabile gratuitamente dal link citato a fine paragrafo. La raccolta di questi dati è stata fatta mediante SisPorto, un programma di analisi automatizzata del tracciato cardiotografico che registra e riporta graficamente l'attività elettrica del cuore e delle contrazioni uterine. Su queste calcola poi una serie di metriche che vengono valutate durante il monitoraggio cardiotografico del feto, così come indicato dalla FIGO (Federazione Internazionale di Ginecologia e Ostetricia).
+Tramite queste rilevazioni si è ottenuto un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* rappresentata dalle seguenti modalità: 1,2,3 che indicano rispettivamente uno stato di salute del feto Normale, Sospetto, Patologico. 
+
+
+
+
+Per completezza di informazione segue una tabella che riporta sinteticamente la descrizione e le modalità dell variabili:
 
 
 VARIABILE     | DESCRIZIONE  | MODALITÀ 
