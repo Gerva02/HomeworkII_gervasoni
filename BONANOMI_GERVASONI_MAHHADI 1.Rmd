@@ -401,7 +401,7 @@ mm <-mixmodGaussianModel(family = "all",
 #di oversampling e undersampling    
 mod = MclustDA(new_train[,-5],
                new_train$fetal_health ,G=1:5,
-               models=mm )
+               models=mm , verbose = F)
 
 
 etichette_prediction_oversampling <- predict(mod, select(data_test,-fetal_health))$class
@@ -423,7 +423,7 @@ Vediamo dalla confusion matrix che il numero di casi patologici e dubbiosi class
 ```{r,  echo = F}
 SMOTE_Confusion$byClass[,1:2]
 ```
-Notiamo un aumento della sensitivity del caso patologico da 0.7 a 0.77 e un aumento della sensitivity del caso sospetto da 0.45 a 0.84, per cui è evidente che siamo più accurati nell'identificare un caso abnormali, altresì marcato è una diminuzione della sensitivity dei casi normali.
+Notiamo un aumento della sensitivity del caso patologico da 0.7 a 0.8 e un aumento della sensitivity del caso sospetto da 0.45 a 0.68, per cui è evidente che siamo più accurati nell'identificare un caso abnormali, altresì marcato è una diminuzione della sensitivity dei casi normali.
 
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
 prob.post_incertezza<- tibble(predict(mod, select(data_test,-fetal_health))$z) %>%
