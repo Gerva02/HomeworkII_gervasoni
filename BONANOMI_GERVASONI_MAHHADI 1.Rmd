@@ -38,15 +38,19 @@ La riduzione della mortalità neonatale fa parte dei principi cardine dell'Agend
 Di questi 904 400 neonati sopravvivono solo pochi giorni a causa di complicanze alla nascita, e oltre un milione sono quelli che muoiono durante il parto. 
 La maggior parte di questi decessi sono causati dalla scarsa qualità dell’assistenza prima e durante il parto. Il miglioramento dei servizi sanitari e il potenziamento dei supporti informatici a costi accessibili,quindi, sono punti chiave per arginare queste tragedie.<br><br>
 Fatte queste premesse, non si può non considerare la cardiotografia computerizzata CTGc vista la posizione di primaria importanza che occupa nel fornire un ausilio al monitoraggio della salute del feto. Essa infatti è stata introdotta con l’obiettivo di ridurre i falsi positivi e la soggettività dell’interpretazione poichè fornisce un’interpretazione oggettiva della CTG consentendo la comunicazione di numeri piuttosto che di opinioni. Negli anni infatti ci si è resi conto che i risultati pratici conseguiti dall’uso «di massa» della cardiotocografia sono stati di gran lunga inferiori alle aspettative a causa della carenza di criteri univoci di interpretazione e alla scarsa preparazione degli operatori sanitari. <br><br>
-Grazie alla cardiotografia computerizzata,invece, non solo si riesce ad ottenere una migliore interpretazione del cardiotogramma, ma sfruttando la grande mole di dati raccolti, si è diffusa la sperimentazione di numerosi algoritmi di machine learning.
-Nel progetto seguente ci siamo cimentati nel svilupparne alcuni coi quali identificare con maggior precisione quali sono i parametri che più di altri caratterizzano la salute del feto oltrechè prevedere con minore margine di errore i quadri clinici che richiedono un particolare occhio di riguardo. <br><br>
+Grazie alla cardiotografia computerizzata,invece, non solo si riesce ad ottenere una migliore interpretazione del cardiotogramma, ma sfruttando la grande mole di dati raccolti, si è diffusa la sperimentazione di numerosi algoritmi di machine learning. Chiaramente l'introduzione di queste nuove tecniche fornisce risultati utili che però van sempre valutati congiuntamente all'intero quadro clinico, senza quindi prestese di esaustività.
+Nel progetto seguente ci siamo cimentati nel sviluppare alcuni modelli coi quali identificare con maggior precisione quali sono i parametri che più di altri caratterizzano la salute del feto oltrechè prevedere con minore margine i casi che richiedono l'intervento ostetrico.  <br><br>
 
 ### 2) Materiali
 I dati di interesse provengono dal dataset **fetal_health**, esportabile gratuitamente dal link citato a fine paragrafo. La raccolta di questi dati è stata fatta mediante SisPorto, un programma di analisi automatizzata del tracciato cardiotografico che registra e riporta graficamente, l'attività elettrica del cuore e delle contrazioni uterine. Su queste calcola poi una serie di metriche che vengono valutate durante il monitoraggio cardiotografico del feto, così come indicato dalla FIGO (Federazione Internazionale di Ginecologia e Ostetricia).
 Tramite queste rilevazioni si è ottenuto un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* rappresentata dalle seguenti modalità: 1,2,3 che indicano rispettivamente uno stato di salute del feto Normale, Sospetto, Patologico. 
+Nel contesto valutativo della cardiotografia un tracciato è definito:
 
+NORMALE se la frequenza cardiaca fetale e la variabilità, così come le contrazioni uterine, rientrano negli intervalli attesi. Ciò suggerisce che il feto è in buona salute e sta ricevendo un adeguato apporto di ossigeno.
 
+SOSPETTO quando i valori ottenuti mostrano deviazioni lievi dalla norma, senza implicare necessariamente un problema grave. Potrebbe segnalare la necessità di ulteriori monitoraggi o valutazioni per garantire il benessere del feto. Questa categoria potrebbe includere pattern non ottimali ma che non suggeriscono immediatamente una condizione patologica.
 
+PATOLOGICO se presenti anomalie che possono rappresentare un rischio per la salute del feto. Ciò potrebbe includere pattern come decelerazioni prolungate, ridotta variabilità o altre irregolarità sintomo di una possibile sofferenza o compromessa ossigenazione del feto. In tali casi, potrebbe essere necessaria un'azione medica e ulteriori valutazioni per affrontare le problematiche sottostanti.
 
 Per completezza di informazione segue una tabella che riporta sinteticamente la descrizione e le modalità dell variabili:
 
@@ -54,11 +58,10 @@ Per completezza di informazione segue una tabella che riporta sinteticamente la 
 VARIABILE     | DESCRIZIONE  | MODALITÀ 
 ------------- | -------------| ---------
 baseline_value| Frequenza cardiaca fetale di base (FHR) | Valore in Bpm
-accelerations|Numero di accelerazioni cardiache al secondo | Valore in Hz
-fetal_movement|Numero di accelerazioni fetali al secondo| Valore in Hz                
-uterine_contractions| Numero di contrazioni uterine al secondo| Valore in Hz
-light_decelerations|Numero di decelerazioni leggere al secondo| Valore in Hz            
-severe_decelerations|Numero di decelerazioni gravi al secondo| Valore in Hz          
+accelerations|Numero di accelerazioni cardiache al secondo | Valore in Hz |
+fetal_movement|Numero di accelerazioni fetali al secondo| Valore in Hz  |              
+uterine_contractions| Numero di contrazioni uterine al secondo| Valore in Hz |
+light_decelerations|Numero di decelerazioni leggere al secondo| Valore in Hz |         severe_decelerations|Numero di decelerazioni gravi al secondo| Valore in Hz |         
 prolongued_decelerations|Numero di decelerazioni prolungate al secondo|Valore in Hz | abnormal_short_term_variability|Percentuale di tempo con variabilità a breve termine anomala|Valore in Percentuale|
 mean_value_of_short_term_variability| Media della variabilità a breve termine|Valore in Millisecondi|  
 percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anomala |Valore in Percentuale|                      
