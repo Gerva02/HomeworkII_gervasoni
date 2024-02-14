@@ -38,7 +38,7 @@ La riduzione della mortalità neonatale fa parte dei principi cardine dell'Agend
 Di questi 904 400 neonati sopravvivono solo pochi giorni a causa di complicanze alla nascita, e oltre un milione sono quelli che muoiono durante il parto. 
 La maggior parte di questi decessi sono causati dalla scarsa qualità dell’assistenza prima e durante il parto. Il miglioramento dei servizi sanitari e il potenziamento dei supporti informatici a costi accessibili,quindi, sono punti chiave per arginare queste tragedie.<br><br>
 Fatte queste premesse, non si può non considerare la cardiotografia computerizzata CTGc vista la posizione di primaria importanza che occupa nel fornire l'ausilio al monitoraggio della salute del feto. Essa infatti è stata introdotta con l’obiettivo di ridurre i falsi positivi e la soggettività dell’interpretazione poichè fornisce un’interpretazione oggettiva della CTG consentendo la comunicazione di numeri piuttosto che di opinioni. Negli anni infatti ci si è resi conto che i risultati pratici conseguiti dall’uso «di massa» della cardiotocografia sono stati di gran lunga inferiori alle aspettative a causa della carenza di criteri univoci di interpretazione e alla scarsa preparazione degli operatori sanitari. <br><br>
-Grazie alla cardiotografia computerizzata, invece, non solo si riesce ad ottenere una migliore interpretazione del cardiotogramma, ma sfruttando la grande mole di dati raccolti, si è diffusa la sperimentazione di numerosi algoritmi di machine learning. 
+Grazie alla cardiotografia computerizzata,invece, non solo si riesce ad ottenere una migliore interpretazione del cardiotogramma, ma sfruttando la grande mole di dati raccolti, si è diffusa la sperimentazione di numerosi algoritmi di machine learning. 
 Nel progetto seguente ci siamo cimentati nel svilupparne alcuni coi quali identificare con maggior precisione quali sono i parametri che più di altri caratterizzano la salute del feto oltrechè prevedere con minore margine di errore i quadri clinici che richiedono un particolare occhio di riguardo. <br><br>
 
 ### 2) Materiali
@@ -102,14 +102,11 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Classification-Kaggle](https://www.kaggle.com/datasets/andrewmvd/fetal-health-classification/data>) 
 
 ### 3) Analisi esplorativa
-In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. Se ne è dedotto che "histogram_mean", "histogram_median" e "histogram_mode" sono fortemente correlate. Si nota come le variabili anche se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della MDA. Inoltre essendo dati presi da macchine, quindi "data entry",è improbabile la presenza di outliers.
-```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
+In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. Se ne è dedotto che le variabili *histogram_mean*, *histogram_median* e *histogram_mode* sono fortemente correlate. Si nota come le variabili anche se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della MDA. Inoltre essendo dati presi da macchine, quindi "data entry",è improbabile la presenza di outliers.
 
-```
 Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè a quanto peso ha la singola variabile all'interno della componente principale).
 Dopodichè abbiamo fatto un ggpairs delle variabili selezionate. Dal grafico si nota che
-le ultime 2 variabili selezionate ("mean_value_of_long_term_variability" e "uterine_contractions")
-non rispettano la normalità e la simmetria in tutti i gruppi.
+le ultime 2 variabili selezionate *mean_value_of_long_term_variability* e *uterine_contractions* non rispettano la normalità e la simmetria in tutti i gruppi.
 ```{r, echo=FALSE}
 n <- nrow(fetal_Health)
 #analisi delle componenti principali: 
@@ -148,7 +145,7 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
           # margin Imposta i margini intorno al grafico
   scale_fill_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
 ```
-A livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile "histogram_mean". Non si esclude che non vi sia corrispondenza a livello bivariato (scatterplot precedenti) o multivariato che non è verificabile con strumenti grafici.  
+A livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile *histogram_mean*. Non si esclude che non vi sia corrispondenza a livello bivariato (scatterplot precedenti) o multivariato che non è verificabile con strumenti grafici.  
 Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili.
 
 Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi così come segue:
