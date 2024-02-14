@@ -398,7 +398,7 @@ data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health
 
 new_train<-data_train %>%
   filter(fetal_health == "Normale") %>%
-  sample_n(size=300) %>%
+  sample_n(size=600) %>%
   rbind(tibble(data_new_patologici),tibble(data_new_sospetto) ) %>%
   as.data.frame()
 
