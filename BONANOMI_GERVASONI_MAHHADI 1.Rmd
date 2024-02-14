@@ -57,15 +57,15 @@ abnormal_short_term_variability|Percentuale di tempo con variabilità a breve te
 mean_value_of_short_term_variability| Media della variabilità a breve termine|Millisecondi|  
 percentage_of_time_with_abnormal_long_term...| Percentuale di tempo con variabilità a lungo termine anomala | Percentuale|                      
 mean_value_of_long_term_variability| Media della variabilità a lungo termine| Millisecondi|   
-histogram_width| Larghezza dell'istogramma della FHR| Numerico|                       
-histogram_min| Valore minimo dell'istogramma della FHR| Numerico|                         
-histogram_max| Valore massimo dell'istogramma della FHR| Numerico| 
+histogram_width| Larghezza dell'istogramma della FHR| Bpm|                       
+histogram_min| Valore minimo dell'istogramma della FHR| Bpm|                      
+histogram_max| Valore massimo dell'istogramma della FHR| Bpm| 
 histogram_number_of_peaks| Numero di picchi nell'istogramma della FHR| Numerico (conteggio)|
 histogram_number_of_zeroes| Numero di zeri nell'istogramma della FHR| Numerico (conteggio)|
-histogram_mode | Modalità dell'istogramma della FHR | Numerico|
-histogram_mean| Valore medio dell'istogramma della FHR| Numerico|             
-histogram_median| Mediana dell'istogramma della FHR| Numerico |               
-histogram_variance| Varianza dell'istogramma della FHR| Numerico|
+histogram_mode | Moda dell'istogramma della FHR | Bpm|
+histogram_mean| Valore medio dell'istogramma della FHR| Bpm|             
+histogram_median| Mediana dell'istogramma della FHR| Bpm |               
+histogram_variance| Varianza dell'istogramma della FHR| Bpm^2|
 histogram_tendency| Asimmetria dell'istogramma della FHR  | **-1**:sinistra **0**:simmetrica **1**:destra |
 fetal_health| Salute fetale (etichetta di classe)|**1**:Sano **2**:Sospetto **3**:Patologico |                     
                  
