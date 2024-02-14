@@ -458,7 +458,7 @@ modello_MDA_k3<-function(data,etichette){
 #stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy e la confusion matrix
 
 set.seed(123)
-mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
+mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=list(5,4,5),modelNames="VII") #tutto da coreggere anche nel markdown
 etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
 confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) 
 
@@ -617,12 +617,14 @@ data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health
 
 new_train<-data_train %>%
   filter(fetal_health == "Normale") %>%
-  sample_n(size=300) %>%
+  sample_n(size=600) %>%
   rbind(tibble(data_new_patologici),tibble(data_new_sospetto) ) %>%
   as.data.frame()
 
+table(new_train$fetal_health)
+
 mm <-mixmodGaussianModel(family = "all",
-                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5, 0.25 e 0.25 dall'azione
+                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti dall'azione
 #di oversampling e undersampling    
 mod = MclustDA(new_train[,-5],
                new_train$fetal_health ,G=1:5,
@@ -640,7 +642,7 @@ real_labels <- as.factor(data_test$fetal_health)
 #etichette_prediction_oversampling<-as.factor(PREDICTION@partition)
 #levels(etichette_prediction_oversampling)<-c("Normale","Sospetto","Patologico")
 
-SMOTE_Confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
+(SMOTE_Confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) )
 SMOTE_Confusion$table
 
 prob.post_incertezza<- tibble(predict(mod, select(data_test,-fetal_health))$z) %>%
@@ -655,4 +657,52 @@ data_test %>%
 #non sembra bellissimo come grafico
 
 
+
+
+
+
 # MDA CV oversampling/undersampling-----------------------------------------------------------------
+
+
+accuracy_over<-function(g,mod,nCV=5,data,etichette){
+  set.seed(123)
+  mm<-mixmodGaussianModel(free.proportions = F)
+  mod_mda<-MclustDA(data,class=etichette,G=as.list(g),models=mm,modelName=mod)
+  return(1-cvMclustDA(mod_mda,nfold=nCV)$ce)
+}
+
+modello_MDA_k3_over<-function(data,etichette){
+  g1<-g2<-g3<-c(1,2,3,4,5)
+  g1<-as.data.frame(g1)
+  g2<-as.data.frame(g2)
+  g3<-as.data.frame(g3)
+  join<-cross_join(cross_join(g1,g2),g3)
+  join["mod"]<-"VII" #altrimenti con più modelli il codice impegherebbe troppo tempo
+  #usiamo come alternativa il modello VII  che sono delle ipersfere del quale varia solo il volume
+  out<-apply(join,MARGIN=1,function(pos) accuracy_over(g=pos[1:3],mod=pos[4],nCV=4,data=data,etichette=etichette))
+  lis<-list(modello=join[which.max(out),],accuracy=out[which.max(out)]) #questa accuracy non è valida siccome è stimata sullo stesso dataset usato
+  #per allenaere il modello (fuori dalla funzione viene valutato su un test set)
+  return(lis)
+}
+
+(out<-modello_MDA_k3_over(new_train[,1:4],as.factor(new_train$fetal_health))) #G=c(3,5,5)
+#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy e la confusion matrix
+
+set.seed(123)
+mm_over<-mixmodGaussianModel(free.proportions=F)
+mod_mda_k3_over<-MclustDA(new_train[,1:4],new_train$fetal_health,G=list(3,5,5),models=mm_over,modelName="VII")
+summary(mod_mda_k3_over)
+etichette_prediction_MDA_cv_over<-predict(mod_mda_k3_over, select(data_test,-fetal_health))$class
+confusionMatrix(etichette_prediction_MDA_cv_over, data_test$fetal_health) 
+
+?mixmodGaussianModel
+
+
+#MDA CON CV NON RISULTA MIGLIORE DEL BIC PROBABILMENTE A CAUSA DEI TROPPI VINCOLI IMPOSTI
+#G DA 1 5 PER CIASCUNA ETICHETTA
+#VII IN CIASCUNA ETICHETTA
+#pj NON STIMATI A CAUSA DELL'OVERSAMPLING
+
+#SAPENDO CHE CROSS VALIDATION è UN METODO DI VALUTAZIONE SUPERIORE ALLA SELEZIONE TRAMITE BIC PROBABILMENTE
+#POTENDO CONFRONTARE TUTTI I 14 POSSINBILI MODELLI ALL'INTERNO DI CIASCUNA ETICHETTA RISULTEREBBE UN RISULTATO MIGLIORE DELLA SELEZIONE 
+#TRAMITE BIC A CAUSA DEL NUMERO DI VINCOLI DECISAMENTE INFERIORI MA è UN PROCEDIMENTO TROPPO DISPENDIOSO PER LA POTENZA COMPUTAZIONALE DEL QUALE DISPONIAMO
