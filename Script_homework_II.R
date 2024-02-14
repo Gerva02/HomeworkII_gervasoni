@@ -608,7 +608,8 @@ data_test %>%
 
 
 # smote fatto meglio ------------------------------------------------------
-
+#install.packages("scutr")
+library(scutr)
 
 dt <- as.data.frame(data_train)
 data_new_patologici  <-oversample_smote(dt, "Patologico" , cls_col = "fetal_health", m = 600)
@@ -621,7 +622,7 @@ new_train<-data_train %>%
   as.data.frame()
 
 mm <-mixmodGaussianModel(family = "all",
-                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
+                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5, 0.25 e 0.25 dall'azione
 #di oversampling e undersampling    
 mod = MclustDA(new_train[,-5],
                new_train$fetal_health ,G=1:5,
@@ -652,3 +653,6 @@ data_test %>%
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*7)
 #non sembra bellissimo come grafico
+
+
+# MDA CV oversampling/undersampling-----------------------------------------------------------------
