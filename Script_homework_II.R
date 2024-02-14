@@ -611,7 +611,7 @@ data_test %>%
 #install.packages("scutr")
 library(scutr)
 
-dt <- as.data.frame(data_train)
+dt <- as.data.frame(data_train) #vedi in fondo la scelta delle u.s.
 data_new_patologici  <-oversample_smote(dt, "Patologico" , cls_col = "fetal_health", m = 600)
 data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health", m = 300)
 
