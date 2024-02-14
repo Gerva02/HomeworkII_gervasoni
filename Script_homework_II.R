@@ -663,7 +663,7 @@ data_test %>%
 
 # MDA CV oversampling/undersampling-----------------------------------------------------------------
 
-
+'''
 accuracy_over<-function(g,mod,nCV=5,data,etichette){
   set.seed(123)
   mm<-mixmodGaussianModel(free.proportions = F)
@@ -696,7 +696,7 @@ etichette_prediction_MDA_cv_over<-predict(mod_mda_k3_over, select(data_test,-fet
 confusionMatrix(etichette_prediction_MDA_cv_over, data_test$fetal_health) 
 
 ?mixmodGaussianModel
-
+'''
 
 #MDA CON CV NON RISULTA MIGLIORE DEL BIC PROBABILMENTE A CAUSA DEI TROPPI VINCOLI IMPOSTI
 #G DA 1 5 PER CIASCUNA ETICHETTA
