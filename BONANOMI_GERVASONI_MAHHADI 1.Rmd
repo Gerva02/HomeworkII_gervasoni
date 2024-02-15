@@ -232,8 +232,7 @@ DITEMI SE VOLETE FARLO A MO DI TABELLA COI VALORI DEGLI INDICI O SE VOLETE METTE
 
 ### 5) Model Based Classification
 Il primo step dell’analisi è stato quello di dividere il dataset in training e test set. In particolare,abbiamo assegnato, in modo casuale, il 70% delle osservazioni del dataset al training set e il restante 30% al test set. Questa fase è essenziale nel momento in cui si vanno ad applicare approcci
-di tipo supervisionato, il cui scopo è quello di fare generalizzazione e prevedere nuove istanze per la
-variabile target.
+di tipo supervisionato, il cui scopo è quello di fare generalizzazione e prevedere nuove istanze per la variabile target.
 ```{r,echo=FALSE}
 train_test<-function(data,perc=0.7){
   set.seed(123)
@@ -267,8 +266,9 @@ EDDA_Confusion <- confusionMatrix(etichette_prediction_EDDA,as_factor(pull(data_
 EDDA_Confusion$table
 ```
 
-L'accuracy è elevata solo a causa della differenza di numerosità tra i gruppi; infatti ben 61 dei casi sospetti vengono nuovamente classificati come normali. Notiamo questa mal classificazione,seppur in minor parte, anche nei casi patologici (osservabile sia tramite la
-confusion matrix che mediante sensitivity e specificity). Plottando il grafico notiamo maggior incertezza nella regione in cui sono presenti gli individui sospetti:
+L'accuracy è elevata solo a causa della differenza di numerosità tra i gruppi. Notiamo questa mal classificazione sia nei casi sospetti sia,seppur in minor parte, nei casi patologici. Si può osservare tramite la
+confusion matrix o mediante le sensitivity molto basse (0.24 e 0.35 di sospetti e patologici). 
+Plottando il grafico notiamo maggior incertezza nella regione in cui sono presenti gli individui sospetti ed in parte anche negli individui patologici:
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
@@ -285,17 +285,15 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 ```
 
 #### 5.3) MDA
-Come preannunciato, considerato il ggpairs e l'algoritmo EM ottenuti, si evince la necessità di implementare un modello di classificazione di tipo MDA con selezione tramite BIC e successiva valutazione sul test set. Così facendo si ottiene un'accuracy dello 0.85.
+Come preannunciato, considerato il ggpairs e l'algoritmo EM ottenuti, si evince la necessità di implementare un modello di classificazione di tipo MDA con selezione tramite BIC e successiva valutazione sul test set.
 ```{r,echo=FALSE}
 set.seed(123)
 mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
 #summary(mod2)
 ```
 
-La classe dei sospetti resta la più problematica stando ai valori di 
-sensitivity (che risulta bassa in patologico) e specificity (alta in patologico).
-In ogni caso la classificazione tramite MDA risulta migliore di quella eseguita attraverso il modello EDDA.
-
+La classe dei sospetti resta la più problematica stando ai valori della sensitivity ma ha subito comunque un discreto incremento rispetto alla classificazione EDDA (si può affermare che è meglio un modello MDA)
+Proviamo a valuatre un mda basato su cross validation:
 ```{r,echo=FALSE}
 # prob.post_incertezza<- tibble(PREDICTION@proba) %>%
 #   rowwise() %>% # operiamo riga per riga
@@ -334,21 +332,24 @@ In ogni caso la classificazione tramite MDA risulta migliore di quella eseguita 
 # confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) 
 
 ```
-Di conseguenza abbiamo implementato una funzione che valuta il miglior modello mda tramite cross validation con nfold uguale a 4 e restituisce il più accurato:
+Successivamente abbiamo implementato una funzione che valuta il miglior modello mda tramite cross validation con nfold=4 che ci permette di ottenere la seguente confusion matrix:
+N.B. la stima del modello tramite cross validation richiede una potenza computazionale non indifferente soprattutto se i modelli da testare e il numero di cluster è molto elevato, per questo motio abbiamo optato per una funzione che imponesse come vincolo che il modello utilizzato in ciascuna delle classi fosse di tipo VII da 1 a 5 gruppi (empiricamente si è visto essere molto accurato ma con un numero di parametri decisamente inferiore (trade-off tra precisione del modello e prestazioni del pc richieste)).
 ```{r,echo=FALSE}
-etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class
-MDA_Confusion <- confusionMatrix(etichette_prediction_MDA,as_factor(pull(data_test,fetal_health)))
-MDA_Confusion$table
+set.seed(123)
+mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
+etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
+MDA_Confusion_cv <- confusionMatrix(etichette_prediction_MDA_cv,as_factor(pull(data_test,fetal_health)))
+MDA_Confusion_cv$table
 ```
-
-Il modello così ottenuto trova difficoltà nel distinguere fra "Sospetto" e "Patologico". Inoltre, è aumentata la sensitivity del caso "sospetto", ma è peggiorata quella del caso "patologico".
+Tramite il modello stimato con cross validation siamo riusciti a migliorare la classificazione dei sospetti a discapito di quella dei patologici. (sentitivity più equilibrate)
+Il modello così ottenuto trova difficoltà sempre nella classificazione delle 2 classi con numerosità campionaria inferiore per cui si può ipotizzare di implementare un modello mda caratterizzato da alcune tecniche di oversampling e undersampling.
 
 #### 5.4) Smote 2.0 
 Proviamo a valutare i risultati ottenuti effettuando le analisi sul dataset dopo aver bilanciato le classi. A tale scopo ci serviamo di SMOTE, un algoritmo che genera sinteticamente nuovi esempi per
 le classi minoritarie, identificando i K-nearest neighbors (K-vicini prossimi) e creando combinazioni
 lineari tra le osservazioni esistenti. Questo processo migliora la rappresentazione della classe meno frequente nel dataset, aiutando i modelli di classificazione poichè li espone a più esempi di classi meno rappresentate cosìcche la classificazione diventi più accurata.
 
-Nel nostro caso applichiamo l'algoritmo smote per allenare il modello con 600 osservazioni per la classe dei patologici (quella di nostro interesse) 300 per la classe dei "sospetti" e facciamo undersampling in modo che il classificatore venga allenato su 300 "Normali". Inoltre utilizziamo il numero di "nearest neighbor" di default che è `k = 5`. 
+Nel nostro caso applichiamo l'algoritmo smote per allenare il modello con 600 osservazioni per la classe dei patologici (quella di nostro interesse) 300 per la classe dei "sospetti" e facciamo undersampling in modo che il classificatore venga allenato su 600 "Normali". Inoltre utilizziamo il numero di "nearest neighbor" di default che è `k = 5`. 
 Così facendo otteniamo un modello la cui confusion matrix presenta un minor numero di casi patologici e dubbiosi mal classificati. Oltretutto il rateo di patologici classificato come normale è calato drasticamente, il che è auspicabile rispetto a classificare i patologici come sani, e cioè non procedere con un taglio cesareo o con l'ossigenazione del feto quando necessario.
 
 ```{r , echo = F}
@@ -361,13 +362,14 @@ data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health
 
 new_train<-data_train %>%
   filter(fetal_health == "Normale") %>%
-  sample_n(size=600) %>%
+  sample_n(size=300) %>%
   rbind(tibble(data_new_patologici),tibble(data_new_sospetto) ) %>%
   as.data.frame()
 
 mm <-mixmodGaussianModel(family = "all",
                          free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
 #di oversampling e undersampling    
+set.seed(123)
 mod = MclustDA(new_train[,-5],
                new_train$fetal_health ,G=1:5,
                models=mm , verbose = F)
@@ -387,9 +389,9 @@ real_labels <- as.factor(data_test$fetal_health)
 SMOTE_Confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
 SMOTE_Confusion$table
 ```
-Questi miglioramenti sono ulteriormente confermati dall'aumento della sensitivity del caso patologico e del caso sospetto che passano rispettivamente da 0.7 a 0.8 e da 0.45 a 0.68, per cui è evidente che siamo più accurati nell'identificare i casi anormali. Altresì marcata è la diminuzione della sensitivity dei casi normali.
+Questi miglioramenti sono ulteriormente confermati dall'aumento della sensitivity del caso patologico e del caso sospetto che passano rispettivamente da 0.63 a 0.8 e da 0.54 a 0.66, per cui è evidente che siamo più accurati nell'identificare i casi anormali, mantenendo comunque una elevata specificity anche al calare della numerosità della classe normale. Altresì marcata è la diminuzione della sensitivity dei casi normali che è accettabile di fronte ad un discreto aumento in quelle delle classi anormali.
 Da ricordare il trade-off che si fa quando vengono utlizzate tecniche di oversampling/undersampling e cioè quello di ridurre la sensitivity della classe maggioritaria per aumentare le sensibilità delle classi minoritarie (dunque aumentando anche la specificity della maggioritaria).
-In altre parole se poniamo come ipotesi nulla l' "essere di classe maggioritaria", quello che facciamo è ridurre l'errore di primo tipo e aumentare l'errore di secondo
+(In altre parole se poniamo come ipotesi nulla l' "essere di classe maggioritaria", quello che facciamo è ridurre l'errore di primo tipo e aumentare l'errore di secondo) parte da controllare
 ```{r,  echo = F}
 SMOTE_Confusion$byClass[,1:2]
 ```
