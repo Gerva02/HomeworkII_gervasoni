@@ -213,10 +213,10 @@ grafico2<-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="u
 Sia dal grafico che dalle medie stimate dei singoli gruppi si deduce chiaramente come l'EM non distingue correttamente i gruppi.
 In particolare, il gruppo dei sospetti viene completamente incluso all'interno dei normali e viene creata una nuova classe a noi sconosciuta che si colloca tra sani e i paologici. Quest'ultimo risulta essere, al netto di poche unità statistiche lontane dal baricentro, l'unico gruppo evidenziato correttamente. 
 A seguito di queste osservazioni non è possibile effettuare dei confronti tramite una confusion matrix o calcolare degli indicatori come CER, adjusted rand index o accuracy (a parte sensitivity dei patologici: 0.78) avendo trovato una clusterizzazione scorretta. Per questo motivo è possibile fornire unicamente degli indicatori di bontà del modello che sottolineano nuovamente la bassa precisione delle analisi. In particolare abbiamo calcolato l'R^2 sia attraverso il determinante (0.73) che con la traccia (0.27).
-Al contrario per quanto riguarda l'entropia (356) ed l'entropia relativa (0.15) possiamo dedurre che il modello risulta affidabile. <br>
+Al contrario per quanto riguarda l'individuazione dei cluster possiamo affermare che il modello risulta relativamente affidabile, infatti l'entropia relativa è pari a 0.15. <br>
 Riteniamo opportuno confrontare i modelli VEV,7 ed EVV,3 che sono per distacco i migliori.  <br>
-Il modello con 7 gruppi in termini di bontà risulta migliore e lo si denota dal fatto che sia R^2 calcolato tramite determinante (0.89) che quello calcolato tramite traccia (0.39) sono superiori. 
-Al contrario in termini di allocazione delle unità statistiche si denota un peggioramento osservabile dalla presenza di incertezza maggiore in ciascuna unità statistica e da un'entropia assoluta (1019) e relativa (0.25) superiore. 
+Il modello con 7 gruppi in termini di bontà risulta migliore e lo si denota dal fatto che sia R^2 calcolato tramite determinante che quello calcolato tramite traccia sono superiori. 
+Al contrario in termini di allocazione delle unità statistiche si denota un peggioramento osservabile dalla presenza di incertezza maggiore in ciascuna unità statistica e da un'entropia assoluta e relativa superiore. 
 ```{r,echo=FALSE}
 tibble(indice=c("R^2 determinante","R^2 traccia","entropia","entropia relativa"),EVV_3=c(0.73,0.27,356,0.15),VEV_7=c(0.89,0.39,1019,0.25))
 
@@ -387,7 +387,7 @@ Da ricordare il trade-off che si fa quando vengono utlizzate tecniche di oversam
 SMOTE_Confusion$byClass[,1:2]
 ```
 
-Dal grafico vediamo come le unità statistiche patologiche son ben distinguibili anche se distanti dai rispettivi baricentri.
+Dal grafico vediamo come le unità statistiche patologiche son ben distinguibili anche se distanti dai rispettivi baricentri:
 ```{r,fig.align='center', fig.width=5,fig.height=3.5}
 prob.post_incertezza<- tibble(predict(mod, select(data_test,-fetal_health))$z) %>%
   rowwise() %>% # operiamo riga per riga
@@ -403,11 +403,12 @@ data_test %>%
 theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = margin(10, 0, 20, 0)))  # hjust Imposta l'allineamento orizzontale al centro
           # margin Imposta i margini intorno al grafico
 ```
-
+La scelta del modello MDA finale e delle unità statistiche utilizzate all'interno del training set (300 normali, 300 sospetti e 600 patologici) è volta a minimizzare l'errore di primo tipo ovvero classificare un soggetto patologico come sano e, a parità di errore di primo tipo, abbiamo optato per il modello che minimizza anche l'errore di secondo tipo ovvero classificare come patologico un soggetto che non lo è e di conseguenza effettuare interventi invasivi non necessari.
 
 ### 6) Discussione finale
 In definitva si può affermare che la classe dei casi sospetti è molto difficile da definire sia nei modelli di clustering che nei modelli di classification. 
 Abbiamo anche osservato come i modelli di tipo MDA sono più accurati dei modelli EDDA, probabilmente a causa della presenza di sottogruppi in ciascuna classe. 
-Tramite l'utilizzo di SMOTE, di un undersampling e un di classificatore MDA otteniamo un risultato migliore per le classi minoritarie, ma ci appare evidente che lo scarso numero di osservazioni e l'accuratezza  relativamente bassa rendano il nostro classificatore non attendibile per applicazioni mediche. Questi limiti intrinseci del nostro classificatore potrebbero essere superati ricorrendo a tecniche di machine learning più sofisticate che oltre a classificare meglio le classi mantengono un certo grado di interpretabilità dei risultati, fondamentale per fornire risposte giustificate ai medici e rassicurare i pazienti.
+Tramite l'utilizzo di SMOTE e di un undersampling all'interno di un classificatore MDA otteniamo un risultato migliore per le classi minoritarie, ma ci appare evidente che lo scarso numero di osservazioni e l'accuratezza  relativamente bassa rendano il nostro classificatore non attendibile per applicazioni mediche. Questi limiti intrinseci del nostro classificatore potrebbero essere superati ricorrendo a tecniche di machine learning più sofisticate che oltre a classificare meglio le unità statistiche, mantengono un certo grado di interpretabilità dei risultati, fondamentale per fornire risposte giustificate ai medici e rassicurare i pazienti.
+
 
 <div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
