@@ -109,7 +109,7 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Classification-Kaggle](https://www.kaggle.com/datasets/andrewmvd/fetal-health-classification/data>) 
 
 ### 3) Analisi esplorativa
-In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. Se ne è dedotto che le variabili *histogram_mean*, *histogram_median* e *histogram_mode* sono fortemente correlate. Non si riesco a dedurre osservazioni particolarmente utili al clustering,ma si nota come le variabili anche se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della MDA. Inoltre essendo dati presi da macchine, quindi "data entry",è improbabile la presenza di outliers.
+In prima analisi abbiamo deciso di analizzare la correlazione e la distribuzione delle variabili mediante ggpairs. Se ne è dedotto che le variabili *histogram_mean*, *histogram_median* e *histogram_mode* sono fortemente correlate; di conseguenza non è necessario includerne più di una. Non si riesco a dedurre osservazioni particolarmente utili per la fase di clustering a livello univariato o bivariato ma ciò non esclude la presenza di gruppi a livello multivariato (non visualizzabili).Infine si nota che le variabili se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della classificazione MDA. Inoltre essendo dati presi da macchine, è improbabile la presenza di errori dovuti a "data entry" (gli outliers sono altra roba....).
 
 Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè a quanto peso ha la singola variabile all'interno della componente principale).
 ```{r, echo=FALSE}
@@ -124,7 +124,7 @@ k <- ncol(fetal_Health)
 (load_vars <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
 
 ```
-Dopodichè abbiamo ripetuto il ggpairs, ma delle solo variabili selezionate. Notiamo che le ultime 2 variabili selezionate *mean_value_of_long_term_variability* e *uterine_contractions* non rispettano la normalità e la simmetria in tutti i gruppi.
+Dopodichè abbiamo ripetuto il ggpairs, ma delle solo variabili selezionate. Notiamo che le ultime 2 variabili selezionate *mean_value_of_long_term_variability* e *uterine_contractions* non rispettano la normalità e la simmetria in tutti i gruppi (analizzando dati reali sono situazioni molto frequenti che quindi accettiamo nel modello).
 Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi coi casi sospetti che si collocano a destra dei sani e non al centro,confermando l'anomalia delle osservazioni della seconda classe,sulle cui oservazioni sono richieste ulteriori analisi:
 ```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
 fetal_Health %>%
@@ -157,13 +157,13 @@ ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) 
        y = "Value",
        fill = "Variable") +
   theme_minimal() +
-labs( title = "BoxPlot variabili mantenute")+
+labs( title = "BoxPlot componenti principali")+
 theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = margin(10, 0, 20, 0)))+  # hjust Imposta l'allineamento orizzontale al centro
           # margin Imposta i margini intorno al grafico
   scale_fill_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
 ```
 A livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile *histogram_mean* che però potrebbe avere un comportamento simile alle altre a livello bivariato (scatterplot precedenti) o multivariato (non verificabile con strumenti grafici).
-Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili.
+Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili. (boxplot suddivisi per etichette ci danno info solo x classification-----tutto questo da rivedere siccome abbiamo qualche ripetizione di robe già dette prima)
 
 
 ### 4) Model Based Clustering
