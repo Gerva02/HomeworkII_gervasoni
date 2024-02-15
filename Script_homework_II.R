@@ -148,7 +148,8 @@ ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) 
   theme_minimal()
 #a livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile "histogram_mean"
 #non significa che non vi sia corrispondenza a livello bivariato (scatterplot precdenti) o multivariato (non visibile con strumenti grafici)  
-# a sostegno delle osservazioni precdenti sul gruppo dei sospetti in generale sono individui più simili al gruppo dei sani ma questo
+# a sostegno delle osservazioni precdenti sul gruppo dei sospetti in generale sono individui
+#più simili al gruppo dei sani ma questo
 #non vale per ogni variabile (3 su 4)
 
 
