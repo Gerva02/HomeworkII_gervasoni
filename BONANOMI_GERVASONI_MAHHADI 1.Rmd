@@ -242,7 +242,7 @@ data_test<-out$data_test
 ```
 
 #### 5.2) EDDA (Valutato tramite Cross validation) 
-Ora che abbiamo ottenuto il traning set alleniamo un modello EDDA.Il modello allenato ci restituisce il modello VEV che valutiamo sul test set. Otteniamo la confusion matrix con un valore dell'accuracy dello 0.8447.
+Ora che abbiamo ottenuto il traning set alleniamo un modello EDDA. Il modello allenato ci restituisce il modello VEV che valutiamo sul test set. Otteniamo la confusion matrix con un valore dell'accuracy dello 0.8447.
 ```{r,}
 set.seed(123)
 pr<-mixmodLearn(data_train[,1:4], c(data_train$fetal_health),
@@ -258,9 +258,9 @@ EDDA_Confusion <- confusionMatrix(etichette_prediction_EDDA,as_factor(pull(data_
 EDDA_Confusion$table
 ```
 
-L'accuracy è elevata solo a causa della differenza di numerosità tra i gruppi. Notiamo questa mal classificazione sia nei casi sospetti sia,seppur in minor parte, nei casi patologici. Si può osservare tramite la
-confusion matrix o mediante le sensitivity molto basse (0.24 e 0.35 di sospetti e patologici). 
-Plottando il grafico notiamo maggior incertezza nella regione in cui sono presenti gli individui sospetti ed in parte anche negli individui patologici:
+L'accuracy è elevata solo a causa della differenza di numerosità tra le classi, per cui non è un buon indicatore per la bontà del modello. Difatti notiamo una mal classificazione sia nei casi sospetti sia, seppur in minor parte, nei casi patologici. Si può osservare tramite la
+confusion matrix o mediante le sensitivity molto basse (0.24 nei sospetti e 0.35 nei patologici). 
+Plottando il grafico osserviamo un'elevata incertezza in diverse aree:
 ```{r,fig.align='center', fig.width=5,fig.height=3}
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
@@ -270,7 +270,7 @@ data_test %>%
   geom_point(size=prob.post_incertezza$incertezza*10)+
   geom_point(data = filter(data_test,etichette_prediction_EDDA != data_test$fetal_health ), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_EDDA != data_test$fetal_health]*10)+
-labs( title = "Incertezza classificazione EDDA")+
+labs( title = "Classificazione EDDA")+
   scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red")) +
 theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = margin(10, 0, 20, 0)))  # hjust Imposta l'allineamento orizzontale al centro
           # margin Imposta i margini intorno al grafico
@@ -284,8 +284,7 @@ mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health)
 #summary(mod2)
 ```
 
-La classe dei sospetti resta la più problematica stando ai valori della sensitivity ma ha subito comunque un discreto incremento rispetto alla classificazione EDDA (si può affermare che è meglio un modello MDA)
-Proviamo a valuatre un mda basato su cross validation:
+La classe dei sospetti resta la più problematica stando ai valori della sensitivity, ma ha subito comunque un discreto incremento rispetto alla classificazione EDDA.
 ```{r}
 # prob.post_incertezza<- tibble(PREDICTION@proba) %>%
 #   rowwise() %>% # operiamo riga per riga
@@ -323,8 +322,9 @@ Proviamo a valuatre un mda basato su cross validation:
 # confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health) 
 
 ```
-Successivamente abbiamo implementato una funzione che valuta il miglior modello mda tramite cross validation con nfold=4 che ci permette di ottenere la seguente confusion matrix:
-N.B. la stima del modello tramite cross validation richiede una potenza computazionale non indifferente soprattutto se i modelli da testare e il numero di cluster è molto elevato, per questo motio abbiamo optato per una funzione che imponesse come vincolo che il modello utilizzato in ciascuna delle classi fosse di tipo VII da 1 a 5 gruppi (empiricamente si è visto essere molto accurato ma con un numero di parametri decisamente inferiore (trade-off tra precisione del modello e prestazioni del pc richieste)).
+Successivamente abbiamo implementato una funzione che valuta il miglior modello mda tramite cross validation con `nfold=4`, essendo un criterio più accurato rispetto al BIC.
+N.B. la stima del modello tramite cross validation richiede una potenza computazionale non indifferente, alla quale ovviamo con un vincolo, imponendo che il modello utilizzato in ciascuna delle classi sia di tipo VII da 1 a 5 gruppi. <br>
+Si è visto empiricamente essere molto accurato, ma con un numero di parametri da stimare decisamente inferiore.
 ```{r}
 set.seed(123)
 mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
@@ -332,15 +332,15 @@ etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health)
 MDA_Confusion_cv <- confusionMatrix(etichette_prediction_MDA_cv,as_factor(pull(data_test,fetal_health)))
 MDA_Confusion_cv$table
 ```
-Tramite il modello stimato con cross validation siamo riusciti a migliorare la classificazione dei sospetti a discapito di quella dei patologici. (sentitivity più equilibrate)
-Il modello così ottenuto trova difficoltà sempre nella classificazione delle 2 classi con numerosità campionaria inferiore per cui si può ipotizzare di implementare un modello mda caratterizzato da alcune tecniche di oversampling e undersampling.
+Tramite il modello stimato con cross validation siamo riusciti a migliorare la classificazione dei sospetti a discapito di quella dei patologici. 
+Appurato che il modello così ottenuto riscontra difficoltà nella classificazione dei 2 gruppi minoritari, optiamo per l'implementazione di un modello mda, integrando tecniche di oversampling e undersampling.
 
 #### 5.4) Smote 2.0 
 Proviamo a valutare i risultati ottenuti effettuando le analisi sul dataset dopo aver bilanciato le classi. A tale scopo ci serviamo di SMOTE, un algoritmo che genera sinteticamente nuovi esempi per
 le classi minoritarie, identificando i K-nearest neighbors (K-vicini prossimi) e creando combinazioni
 lineari tra le osservazioni esistenti. Questo processo migliora la rappresentazione della classe meno frequente nel dataset, aiutando i modelli di classificazione poichè li espone a più esempi di classi meno rappresentate cosìcche la classificazione diventi più accurata.
 
-Nel nostro caso applichiamo l'algoritmo smote per allenare il modello con 600 osservazioni per la classe dei patologici (quella di nostro interesse) 300 per la classe dei "sospetti" e facciamo undersampling in modo che il classificatore venga allenato su 600 "Normali". Inoltre utilizziamo il numero di "nearest neighbor" di default che è `k = 5`. 
+Nel nostro caso applichiamo l'algoritmo smote per allenare il modello con 600 osservazioni per la classe dei patologici (quella di nostro interesse), 300 per la classe dei Sospetti e facciamo undersampling in modo che il classificatore venga allenato su 300 Normali. Inoltre utilizziamo il numero di "nearest neighbor" di default che è `k = 5`. 
 Così facendo otteniamo un modello la cui confusion matrix presenta un minor numero di casi patologici e dubbiosi mal classificati. Oltretutto il rateo di patologici classificato come normale è calato drasticamente, il che è auspicabile rispetto a classificare i patologici come sani, e cioè non procedere con un taglio cesareo o con l'ossigenazione del feto quando necessario.
 
 ```{r , echo = F}
@@ -380,14 +380,14 @@ real_labels <- as.factor(data_test$fetal_health)
 SMOTE_Confusion<-confusionMatrix(etichette_prediction_oversampling,real_labels) 
 SMOTE_Confusion$table
 ```
-Questi miglioramenti sono ulteriormente confermati dall'aumento della sensitivity del caso patologico e del caso sospetto che passano rispettivamente da 0.63 a 0.8 e da 0.54 a 0.66, per cui è evidente che siamo più accurati nell'identificare i casi anormali, mantenendo comunque una elevata specificity anche al calare della numerosità della classe normale. Altresì marcata è la diminuzione della sensitivity dei casi normali che è accettabile di fronte ad un discreto aumento in quelle delle classi anormali.
-Da ricordare il trade-off che si fa quando vengono utlizzate tecniche di oversampling/undersampling e cioè quello di ridurre la sensitivity della classe maggioritaria per aumentare le sensibilità delle classi minoritarie (dunque aumentando anche la specificity della maggioritaria).
-(In altre parole se poniamo come ipotesi nulla l' "essere di classe maggioritaria", quello che facciamo è ridurre l'errore di primo tipo e aumentare l'errore di secondo) parte da controllare
+Questi miglioramenti sono ulteriormente confermati dall'aumento della sensitivity del caso patologico e del caso sospetto che passano rispettivamente da 0.63 a 0.8 e da 0.54 a 0.66, per cui è evidente che siamo più accurati nell'identificare i casi anormali, mantenendo comunque una elevata specificity anche al calare della numerosità della classe normale. Altresì marcata è la diminuzione della sensitivity dei casi normali, che è accettabile di fronte ad un notevole aumento in quelle delle classi anormali.
+Da ricordare il trade-off che si fa quando vengono utlizzate tecniche di oversampling/undersampling e cioè quello di ridurre la sensitivity della classe maggioritaria per aumentare le sensibilità delle classi minoritarie.
+
 ```{r,  echo = F}
 SMOTE_Confusion$byClass[,1:2]
 ```
 
-Dal grafico vediamo come le unità statistiche patologiche son ben distinguibili anche se distanti dal baricentro della classe contenente i casi patologici. 
+Dal grafico vediamo come le unità statistiche patologiche son ben distinguibili anche se distanti dai rispettivi baricentri.
 ```{r,fig.align='center', fig.width=5,fig.height=3.5}
 prob.post_incertezza<- tibble(predict(mod, select(data_test,-fetal_health))$z) %>%
   rowwise() %>% # operiamo riga per riga
@@ -407,7 +407,7 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 
 ### 6) Discussione finale
 In definitva si può affermare che la classe dei casi sospetti è molto difficile da definire sia nei modelli di clustering che nei modelli di classification. 
-Abbiamo anche osservato come i modelli di tipo MDA sono più accurati dei modelli EDDA probabilmente a causa della presenza di sottogruppi in ciascuna classe. 
+Abbiamo anche osservato come i modelli di tipo MDA sono più accurati dei modelli EDDA, probabilmente a causa della presenza di sottogruppi in ciascuna classe. 
 Tramite l'utilizzo di SMOTE, di un undersampling e un di classificatore MDA otteniamo un risultato migliore per le classi minoritarie, ma ci appare evidente che lo scarso numero di osservazioni e l'accuratezza  relativamente bassa rendano il nostro classificatore non attendibile per applicazioni mediche. Questi limiti intrinseci del nostro classificatore potrebbero essere superati ricorrendo a tecniche di machine learning più sofisticate che oltre a classificare meglio le classi mantengono un certo grado di interpretabilità dei risultati, fondamentale per fornire risposte giustificate ai medici e rassicurare i pazienti.
 
 <div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
