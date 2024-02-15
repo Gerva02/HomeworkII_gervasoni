@@ -130,7 +130,7 @@ Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzion
 fetal_Health %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point(alpha=0.4) +
-labs( title = "Real classification")+
+labs( title = "Scatterplot condizionato")+
 theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = margin(10, 0, 20, 0)))+  # hjust Imposta l'allineamento orizzontale al centro
           # margin Imposta i margini intorno al grafico
   scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
@@ -208,8 +208,7 @@ Per avere un riscontro visivo rappresentiamo il grafico della clusterizzazione o
 ```{r,fig.align='center', fig.width=5,fig.height=4}
 grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            classification=health_mclust_BIC_k3$classification,
-           col=c("red","dodgerblue3","#66FF66"), symbols=c(0 ,16 ,17),
-           sub="(b) Model-Based Clustering") +
+           col=c("red","dodgerblue3","#66FF66"), symbols=c(0 ,16 ,17)) +
   title("Grafico della clusterizzazione EVV")
 
 ```
@@ -416,6 +415,6 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 ### 6) Discussione finale
 In definitva si può affermare che la classe dei casi sospetti è molto difficile da definire sia nei modelli di clustering che nei modelli di classification. 
 Abbiamo anche osservato come i modelli di tipo MDA sono più accurati dei modelli EDDA probabilmente a causa della presenza di sottogruppi in ciascuna classe. 
-Tramite l'utilizzo di SMOTE, di un undersampling e un di classificatore MDA otteniamo un risultato migliore per le classi minoritarie, ma ci appare evidente che lo scarso numero osservazioni e l'accuratezza comunque relativamente bassa rendano il nostro classificatore non attendibile per applicazioni mediche. Questi limiti intrinseci del nostro classificatore potrebbero essere superati ricorrendo a tecniche di machine learning più sofisticate che oltre a classificare meglio le classi mantengono un certo grado di interpretabilità dei risultati, fondamentale per fornire risposte giustificate ai medici e rassicurare i pazienti.
+Tramite l'utilizzo di SMOTE, di un undersampling e un di classificatore MDA otteniamo un risultato migliore per le classi minoritarie, ma ci appare evidente che lo scarso numero di osservazioni e l'accuratezza  relativamente bassa rendano il nostro classificatore non attendibile per applicazioni mediche. Questi limiti intrinseci del nostro classificatore potrebbero essere superati ricorrendo a tecniche di machine learning più sofisticate che oltre a classificare meglio le classi mantengono un certo grado di interpretabilità dei risultati, fondamentale per fornire risposte giustificate ai medici e rassicurare i pazienti.
 
 <div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
