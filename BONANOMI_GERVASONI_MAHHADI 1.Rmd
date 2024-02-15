@@ -109,7 +109,7 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Classification-Kaggle](https://www.kaggle.com/datasets/andrewmvd/fetal-health-classification/data>) 
 
 ### 3) Analisi esplorativa
-In prima analisi abbiamo deciso di analizzare la correlazione mediante ggpairs. Se ne è dedotto che le variabili *histogram_mean*, *histogram_median* e *histogram_mode* sono fortemente correlate. Non si riesco a dedurre osservazioni particolarmente utili al clustering,ma si nota come le variabili anche se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della MDA. Inoltre essendo dati presi da macchine, quindi "data entry",è improbabile la presenza di outliers.
+In prima analisi abbiamo deciso di analizzare la correlazione e la distribuzione delle variabili mediante ggpairs. Se ne è dedotto che le variabili *histogram_mean*, *histogram_median* e *histogram_mode* sono fortemente correlate; di conseguenza non è necessario includerne più di una. Non si riesco a dedurre osservazioni particolarmente utili per la fase di clustering a livello univariato o bivariato ma ciò non esclude la presenza di gruppi a livello multivariato (non visualizzabili).Infine si nota che le variabili se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della classificazione MDA. Inoltre essendo dati presi da macchine, è improbabile la presenza di errori dovuti a "data entry" (gli outliers sono altra roba....).
 
 Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè a quanto peso ha la singola variabile all'interno della componente principale).
 ```{r, echo=FALSE}
@@ -124,13 +124,13 @@ k <- ncol(fetal_Health)
 (load_vars <- names(fetal_Health)[apply(pca$loadings[,1:4], 2, function(x) which(x**2==max(x**2)))])
 
 ```
-Dopodichè abbiamo ripetuto il ggpairs, ma delle solo variabili selezionate. Notiamo che le ultime 2 variabili selezionate *mean_value_of_long_term_variability* e *uterine_contractions* non rispettano la normalità e la simmetria in tutti i gruppi.
+Dopodichè abbiamo ripetuto il ggpairs, ma delle solo variabili selezionate. Notiamo che le ultime 2 variabili selezionate *mean_value_of_long_term_variability* e *uterine_contractions* non rispettano la normalità e la simmetria in tutti i gruppi (analizzando dati reali sono situazioni molto frequenti che quindi accettiamo nel modello).
 Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi coi casi sospetti che si collocano a destra dei sani e non al centro,confermando l'anomalia delle osservazioni della seconda classe,sulle cui oservazioni sono richieste ulteriori analisi:
 ```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
 fetal_Health %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point(alpha=0.4) +
-labs( title = "Clusterizzazione esperti")+
+labs( title = "Real classification")+
 theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = margin(10, 0, 20, 0)))+  # hjust Imposta l'allineamento orizzontale al centro
           # margin Imposta i margini intorno al grafico
   scale_color_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
@@ -157,13 +157,13 @@ ggplot(fetal_Health_viz, aes(x = fetal_health, y = Value, fill =fetal_health )) 
        y = "Value",
        fill = "Variable") +
   theme_minimal() +
-labs( title = "BoxPlot variabili mantenute")+
+labs( title = "BoxPlot componenti principali")+
 theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = margin(10, 0, 20, 0)))+  # hjust Imposta l'allineamento orizzontale al centro
           # margin Imposta i margini intorno al grafico
   scale_fill_manual(values = c("Normale" = "#66FF66", "Sospetto" = "dodgerblue3", "Patologico" = "red"))
 ```
 A livello univariato non si evince particolare differenza tra i vari gruppi ad eccezione della variabile *histogram_mean* che però potrebbe avere un comportamento simile alle altre a livello bivariato (scatterplot precedenti) o multivariato (non verificabile con strumenti grafici).
-Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili.
+Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei sospetti risulta generalmente più simile al gruppo dei sani. Questo vale per 3 delle 4 variabili. (boxplot suddivisi per etichette ci danno info solo x classification-----tutto questo da rivedere siccome abbiamo qualche ripetizione di robe già dette prima)
 
 
 ### 4) Model Based Clustering
@@ -203,15 +203,8 @@ etichette_stimate<-health_mclust_BIC_k3$classification
 precisione_EM<-classError(etichette_stimate, class=etichette)
 accuracy<-1-length(precisione_EM$misclassified)/n
 ```
-Grazie alla Confusion Matrix notiamo come la sensitivity è molto alta solo nella classe "Normale",
-al contrario la specificity è molto bassa.È evidente come l'EM non riesce a distinguere bene fra il patologico e il normale. Infatti 253 casi sospetti che vengono classificati come "Normali":
-```{r,echo=FALSE, warning= FALSE}
-etichette_stimate<-as.factor(etichette_stimate)
-levels(etichette_stimate)<-c("Patologico","Normale","Sospetto")
-prova <- confusionMatrix(etichette_stimate,etichette)
-prova$table
-```
-Per avere un riscontro visivo rappresentiamo il grafico della clusterizzazione ottenuta:
+
+Per avere un riscontro visivo rappresentiamo il grafico della clusterizzazione ottenuta specificando il numero esatto dei gruppi:
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
 grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            classification=health_mclust_BIC_k3$classification,
@@ -227,24 +220,15 @@ grafico2<-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="u
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165),colors=c("red","dodgerblue3","#66FF66")) + title("Grafico incertezze")
 
 ```
-
-
-```{r , echo = F}
-zij<-health_mclust_BIC_k3$z
-post_prob<-apply(zij,1,max)
-incertezza<-1-post_prob
-tibble(index=1:n,incertezza_k3=incertezza)%>%
-  arrange(desc(incertezza_k3))%>%
-  print(n=10)
-
-zij_best<-Mclust(fetal_Health_EM,G=7,"VEV")$z
-post_prob_best<-apply(zij_best,1,max)
-incertezza_best<-1-post_prob_best
-tibble(index=1:n,incertezza_k7=incertezza_best)%>%
-  arrange(desc(incertezza_k7))%>%
-  print(n=10)
-
-```
+Specificare un nome di questo paragrafo tipo "conclusioni clustering".
+Sia dal grafico sia dalle medie stimate dei singoli gruppi si può notare facilmente come l'EM non sia in grado di riconoscere correttamente i gruppi.
+Nello specifico il gruppo dei sospetti viene completamente incluso all'interno del gruppo dei normali e viene creato un nuovo gruppo a noi sconosciuto che si colloca tra il gruppo dei normali e quello dei patologici (unico gruppo evidenziato correttamente al netto di poche u.s. che anche in origine erano molto distanti dalla gran parte dei soggetti patologici (baricentro)).
+Queste conclusioni non sono accurate siccome la visualizzazione permette di includere solo 2 variabili mentre il nostro modello si basa su 4 di esse
+A seguito di queste osservazioni non è possibile effettuare dei confronti tramite una confusion matrix o calcolare degli indicatori come CER, adjusted rand index o Accuracy (a parte sensitivity dei patologici: 0.78) avendo trovato una clusterizzazione totalmente sbagliata. Per questo motivo è solo possibile fornire degli indicatori di bontà del nostro modello che comunque rispecchiano la bassa precisione delle analisi come R2det=0.73 e R2tr=0.27.
+Al contrario per quanto riguarda entropia (356) ed entropia relativa (0.15) il modello (avendo pochi gruppi) non risulta inaffidabile.
+Interessante è svolgere un confronto con il modello migliore stimato tramite ICL che risulta essere un VEV con 7 gruppi (ad indicare nuovamente che all'interno delle etichette sono presenti dei sotto gruppi) ed è valutato positivamente a livello di R2 (0.89 per quello calcolato con determinante e 0.39 per quello calcolato tramite traccia) ma peggiora di molto in termini di incertezza (molto elevata) nell'allocazione delle u.s. ed entropia (1019 e 0.25 quella relativa).
+VEV,7 e EVV,3 sono gli unici gruppi che vale la pena confrontare siccome sono molto più vicini tra loro stando all'ICL rispetto al terzo modello.
+DITEMI SE VOLETE FARLO A MO DI TABELLA COI VALORI DEGLI INDICI O SE VOLETE METTERE LE INCERTEZZE DELLE PRIME 10 U.S. MAGGIORMENTE INCERTE
 
 ### 5) Model Based Classification
 Il primo step dell’analisi è stato quello di dividere il dataset in training e test set. In particolare,abbiamo assegnato, in modo casuale, il 70% delle osservazioni del dataset al training set e il restante 30% al test set. Questa fase è essenziale nel momento in cui si vanno ad applicare approcci
