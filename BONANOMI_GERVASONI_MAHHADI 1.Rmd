@@ -44,13 +44,10 @@ Nel progetto seguente ci siamo cimentati nel sviluppare alcuni modelli coi quali
 ### 2) Materiali
 I dati di interesse provengono dal dataset **fetal_health**, esportabile gratuitamente dal link citato a fine paragrafo. La raccolta di questi dati è stata fatta mediante SisPorto, un programma di analisi automatizzata del tracciato cardiotografico che registra e riporta graficamente, l'attività elettrica del cuore e delle contrazioni uterine. Su queste calcola poi una serie di metriche che vengono valutate durante il monitoraggio cardiotografico del feto, così come indicato dalla FIGO (Federazione Internazionale di Ginecologia e Ostetricia).
 Tramite queste rilevazioni si è ottenuto un dataset con 2126 osservazioni di cardiotografie fetali suddivise per 21 variabili a cui si somma l'etichetta di classe *fetal_health* rappresentata dalle seguenti modalità: 1,2,3 che indicano rispettivamente uno stato di salute del feto Normale, Sospetto, Patologico. 
-Nel contesto valutativo della cardiotografia un tracciato è definito:
-
-NORMALE se la frequenza cardiaca fetale e la variabilità, così come le contrazioni uterine, rientrano negli intervalli attesi. Ciò suggerisce che il feto è in buona salute e sta ricevendo un adeguato apporto di ossigeno.
-
-SOSPETTO quando i valori ottenuti mostrano deviazioni lievi dalla norma, senza implicare necessariamente un problema grave. Potrebbe segnalare la necessità di ulteriori monitoraggi o valutazioni per garantire il benessere del feto. Questa categoria potrebbe includere pattern non ottimali ma che non suggeriscono immediatamente una condizione patologica.
-
-PATOLOGICO se presenti anomalie che possono rappresentare un rischio per la salute del feto. Ciò potrebbe includere pattern come decelerazioni prolungate, ridotta variabilità o altre irregolarità sintomo di una possibile sofferenza o compromessa ossigenazione del feto. In tali casi, potrebbe essere necessaria un'azione medica e ulteriori valutazioni per affrontare le problematiche sottostanti.
+Nel contesto valutativo della cardiotografia un tracciato è definito:<br>
+**NORMALE** se la frequenza cardiaca fetale e la variabilità, così come le contrazioni uterine, rientrano negli intervalli attesi. Ciò suggerisce che il feto è in buona salute e sta ricevendo un adeguato apporto di ossigeno.<br>
+**SOSPETTO** quando i valori ottenuti mostrano deviazioni lievi dalla norma, senza implicare necessariamente un problema grave. Potrebbe segnalare la necessità di ulteriori monitoraggi o valutazioni per garantire il benessere del feto. Questa categoria potrebbe includere pattern non ottimali ma che non suggeriscono immediatamente una condizione patologica.<br>
+**PATOLOGICO** se presenti anomalie che possono rappresentare un rischio per la salute del feto. Ciò potrebbe includere pattern come decelerazioni prolungate, ridotta variabilità o altre irregolarità sintomo di una possibile sofferenza o compromessa ossigenazione del feto. In tali casi, potrebbe essere necessaria un'azione medica e ulteriori valutazioni per affrontare le problematiche sottostanti.
 
 Per completezza di informazione segue una tabella che riporta sinteticamente la descrizione e le modalità dell variabili:
 
