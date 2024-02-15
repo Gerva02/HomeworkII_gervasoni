@@ -653,3 +653,5 @@ data_test %>%
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*7)
 #non sembra bellissimo come grafico
+
+tibble(indice=c("R^2 determinante","R^2 traccia","entropia","entropia relativa"),EVV_3=c(0.73,0.27,356,0.15),VEV_7=c(0.89,0.39,1019,0.25))
