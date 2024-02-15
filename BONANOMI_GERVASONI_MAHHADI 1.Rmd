@@ -174,36 +174,27 @@ health_mclust_ICL<-mclustICL(fetal_Health_EM, G=2:10) #l'algoritmo EM non riesce
 #bassa disponibilità di u.s. (nemmeno VVV con k=3)
 summary(health_mclust_ICL)
 ```
-Essendo un dataset con un numero relativamente limitato di osservazioni l'algoritmo EM non riesce a stimare dei modelli complessi come il VVV (nemmeno VVV con k=3), mentre osserviamo che VEV,7 e EVV,3 sono molto vicini tra loro. Non viene prediletto un k particolare. Inoltre, notiamo dal grafico ottenuto come gran parte dei modelli valutati in base all'ICL risultano della stessa precisione qualunque sia il numero di gruppi. Ipotizziamo che ciò può essere dato dal fatto che essendo dati reali è verosimile che ciascun gruppo abbia diversi sotto gruppi. Alla luce di questo riconfermiamo la nostra intenzione di allenare un MDA in fase di model-based classification.
+Essendo un dataset con un numero relativamente limitato di osservazioni l'algoritmo EM non riesce a stimare dei modelli eccessivamente complessi come il VVV (nemmeno VVV con k=3), inoltre osserviamo che i due modelli migliori ovvero VEV,7 e EVV,3 sono molto vicini tra loro rispetto al terzo modello. Inoltre, notiamo dal grafico ottenuto come gran parte dei modelli valutati in base all'ICL sono equalmente precisi qualunque sia il numero di gruppi. Questo può essere dettato dal fatto che essendo dati reali è verosimile la presenza di sottogruppi all'interno di ciascuna classe; alla luce di questo riconfermiamo la nostra intenzione di allenare un MDA in fase di model-based classification.
 ```{r,,fig.align='center', fig.width=5,fig.height=4}
 plot(health_mclust_ICL,ylim=c(-33000,-29000)) 
 title("Andamento ICL")
-```
-Provando a valutare il BIC (non accurato come ICL, in quanto non tiene conto dell'entropia) viene restituito un modello VEV k=8.
-```{r}
 set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM,G=2:10) 
 #summary(health_mclust_BIC) # qua niente summary giusto
-```
-In definitiva possiamo dire che l'EM è molto instabile e poco robusto per cui diventa cruciale la scelta dei valori iniziali. Difatti sia tramite ICL che con il BIC il model based clustering fornisce un numero di gruppi differente. Provando, invece, a specificare il numero dei gruppi ICL e BIC restituiscono lo stesso modello. Fossero stati diversi avremmo dato priorità al modello fornito tramite ICL per le sue proprietà. 
-```{r}
 set.seed(123) 
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
 #summary(health_mclust_ICL_k3) #EVV 
-
-
 set.seed(123)
 health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
 #summary(health_mclust_BIC_k3) #EVV
 ```
-```{r}
+Provando a valutare il BIC (non accurato come ICL, in quanto non tiene conto dell'entropia) viene restituito un modello VEV k=8.
+In definitiva possiamo dire che l'EM è molto instabile e poco robusto per cui diventa cruciale la scelta dei valori iniziali. Difatti sia tramite ICL che con il BIC il model based clustering fornisce un numero di gruppi differente. Provando, invece, a specificare il numero dei gruppi pari a 3, sia ICL che BIC restituiscono il modello EVV. 
+Per avere un riscontro visivo rappresentiamo il grafico della clusterizzazione ottenuta specificando il numero esatto dei gruppi:
+```{r,fig.align='center', fig.width=5,fig.height=4}
 etichette_stimate<-health_mclust_BIC_k3$classification
 precisione_EM<-classError(etichette_stimate, class=etichette)
 accuracy<-1-length(precisione_EM$misclassified)/n
-```
-
-Per avere un riscontro visivo rappresentiamo il grafico della clusterizzazione ottenuta specificando il numero esatto dei gruppi:
-```{r,fig.align='center', fig.width=5,fig.height=4}
 grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            classification=health_mclust_BIC_k3$classification,
            col=c("red","dodgerblue3","#66FF66"), symbols=c(0 ,16 ,17)) +
@@ -211,22 +202,25 @@ grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classi
 
 ```
 
-Ai fini di visualizzare meglio l'incertezza,invece, ci siamo serviti del grafico che segue. La posizione dei punti ci permette di dedurre dove è stata allocata la corrispondente u.s., mentre l'incertezza della clusterizzazione aumenta al crescere delle dimensioni del punto:
+Ai fini di visualizzare meglio l'incertezza,invece, ci siamo serviti del grafico che segue. La colorazione dei punti ci permette di dedurre dove è stata allocata la corrispondente unità statistica, mentre l'incertezza della clusterizzazione aumenta al crescere delle dimensioni del punto:
 ```{r,fig.align='center', fig.width=5,fig.height=4}
 grafico2<-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
-           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165),colors=c("red","dodgerblue3","#66FF66")) + title("Grafico incertezze")
+           parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(125,216),xlim=c(85,170),colors=c("red","dodgerblue3","#66FF66")) + title("Grafico incertezze")
 
 ```
 
 #### 4.2) Discussione dei risultati del clustering
-Sia dal grafico che dalle medie stimate dei singoli gruppi si deduce chiaramente come l'EM non sia in grado di riconoscere correttamente i gruppi.
-In particolare, il gruppo dei sospetti viene completamente incluso all'interno del gruppo dei normali e viene creato un nuovo gruppo a noi sconosciuto che si colloca tra il gruppo dei normali e quello dei patologici. Oltretutto esso risulta l'unico gruppo evidenziato correttamente al netto di poche u.s. che anche in origine erano molto distanti dalla gran parte dei soggetti patologici (baricentro).
-Queste conclusioni non sono accurate siccome la visualizzazione permette di includere solo 2 variabili mentre il nostro modello si basa su 4 di esse
-A seguito di queste osservazioni non è possibile effettuare dei confronti tramite una confusion matrix o calcolare degli indicatori come CER, adjusted rand index o accuracy (a parte sensitivity dei patologici: 0.78) avendo trovato una clusterizzazione totalmente sbagliata. Per questo motivo è solo possibile fornire degli indicatori di bontà del nostro modello che comunque rispecchiano la bassa precisione delle analisi come R2det=0.73 e R2tr=0.27.
-Al contrario per quanto riguarda entropia (356) ed entropia relativa (0.15) il modello (avendo pochi gruppi) non risulta inaffidabile.
-Interessante è svolgere un confronto con il modello migliore stimato tramite ICL che risulta essere un VEV con 7 gruppi (ad indicare nuovamente che all'interno delle etichette sono presenti dei sotto gruppi) ed è valutato positivamente a livello di R2 (0.89 per quello calcolato con determinante e 0.39 per quello calcolato tramite traccia) ma peggiora di molto in termini di incertezza (molto elevata) nell'allocazione delle u.s. ed entropia (1019 e 0.25 quella relativa).
-VEV,7 e EVV,3 sono gli unici gruppi che vale la pena confrontare siccome sono molto più vicini tra loro stando all'ICL rispetto al terzo modello.
-DITEMI SE VOLETE FARLO A MO DI TABELLA COI VALORI DEGLI INDICI O SE VOLETE METTERE LE INCERTEZZE DELLE PRIME 10 U.S. MAGGIORMENTE INCERTE
+Sia dal grafico che dalle medie stimate dei singoli gruppi si deduce chiaramente come l'EM non distingue correttamente i gruppi.
+In particolare, il gruppo dei sospetti viene completamente incluso all'interno dei normali e viene creata una nuova classe a noi sconosciuta che si colloca tra sani e i paologici. Quest'ultimo risulta essere, al netto di poche unità statistiche lontane dal baricentro, l'unico gruppo evidenziato correttamente. 
+A seguito di queste osservazioni non è possibile effettuare dei confronti tramite una confusion matrix o calcolare degli indicatori come CER, adjusted rand index o accuracy (a parte sensitivity dei patologici: 0.78) avendo trovato una clusterizzazione scorretta. Per questo motivo è possibile fornire unicamente degli indicatori di bontà del modello che sottolineano nuovamente la bassa precisione delle analisi. In particolare abbiamo calcolato l'R^2 sia attraverso il determinante (0.73) che con la traccia (0.27).
+Al contrario per quanto riguarda l'entropia (356) ed l'entropia relativa (0.15) possiamo dedurre che il modello risulta affidabile.
+Riteniamo opportuno confrontare i modelli VEV,7 ed EVV,3 che sono per distacco i migliori. 
+Il modello con 7 gruppi in termini di bontà risulta migliore e lo si denota dal fatto che sia R^2 calcolato tramite determinante (0.89) che quello calcolato tramite traccia (0.39) sono superiori. 
+Al contrario in termini di allocazione delle unità statistiche si denota un peggioramento osservabile dalla presenza di incertezza maggiore in ciascuna unità statistica e da un'entropia assoluta (1019) e relativa (0.25).
+```{r,echo=FALSE}
+tibble(indice=c("R^2 determinante","R^2 traccia","entropia","entropia relativa"),EVV_3=c(0.73,0.27,356,0.15),VEV_7=c(0.89,0.39,1019,0.25))
+
+```
 
 ### 5) Model Based Classification
 Il primo step dell’analisi è stato quello di dividere il dataset in training e test set. In particolare,abbiamo assegnato, in modo casuale, il 70% delle osservazioni del dataset al training set e il restante 30% al test set. Questa fase è essenziale nel momento in cui si vanno ad applicare approcci
