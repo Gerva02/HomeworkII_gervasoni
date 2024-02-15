@@ -711,3 +711,9 @@ confusionMatrix(etichette_prediction_MDA_cv_over, data_test$fetal_health)
 #la selezione del numero di u.s. date da over/undersampling è volta a minimizzare l'errore di primo tipo (sia con 600 300 600 sia con 300 300 e 600 (malati) è uguale)
 #di conseguenza massimizziamo la potenza (stat2) (ovvero 1-errore di secondo tipo) cioè il classificare patologici i normali o sospetti 
 #(in genere 7 sospetti su 8 stando ai dati sono normali ma non so quanto coerente con la scienza....e quanto ha senso come analisi statistica...roba già detta) 
+
+#confrono medie originali con quelle stimate dall'EM
+fetal_Health%>%group_by(fetal_health)%>%summarize(mean(histogram_mean),mean(histogram_max),mean(mean_value_of_long_term_variability),mean(uterine_contractions))%>%print(width=Inf)
+mu1
+mu2
+mu3 #quello più sballato che non si avvicina a sospetti per nulla (almeno rispetto agli altri 2)
