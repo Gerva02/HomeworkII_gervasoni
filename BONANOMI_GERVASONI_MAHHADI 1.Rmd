@@ -218,8 +218,9 @@ Riteniamo opportuno confrontare i modelli VEV,7 ed EVV,3 che sono per distacco i
 Il modello con 7 gruppi in termini di bontà risulta migliore e lo si denota dal fatto che sia R^2 calcolato tramite determinante che quello calcolato tramite traccia sono superiori. 
 Al contrario in termini di allocazione delle unità statistiche si denota un peggioramento osservabile dalla presenza di incertezza maggiore in ciascuna unità statistica e da un'entropia assoluta e relativa superiore. 
 ```{r,echo=FALSE}
-tibble(indice=c("R^2 determinante","R^2 traccia","entropia","entropia relativa"),EVV_3=c(0.73,0.27,356,0.15),VEV_7=c(0.89,0.39,1019,0.25))
+S<-tibble(indice=c("R^2 determinante","R^2 traccia","entropia","entropia relativa"),EVV_3=c(0.73,0.27,356,0.15),VEV_7=c(0.89,0.39,1019,0.25))
 
+print(as.data.frame(S))
 ```
 
 ### 5) Model Based Classification
