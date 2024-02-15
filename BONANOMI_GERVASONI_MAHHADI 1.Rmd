@@ -213,10 +213,10 @@ grafico2<-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="u
 Sia dal grafico che dalle medie stimate dei singoli gruppi si deduce chiaramente come l'EM non distingue correttamente i gruppi.
 In particolare, il gruppo dei sospetti viene completamente incluso all'interno dei normali e viene creata una nuova classe a noi sconosciuta che si colloca tra sani e i paologici. Quest'ultimo risulta essere, al netto di poche unità statistiche lontane dal baricentro, l'unico gruppo evidenziato correttamente. 
 A seguito di queste osservazioni non è possibile effettuare dei confronti tramite una confusion matrix o calcolare degli indicatori come CER, adjusted rand index o accuracy (a parte sensitivity dei patologici: 0.78) avendo trovato una clusterizzazione scorretta. Per questo motivo è possibile fornire unicamente degli indicatori di bontà del modello che sottolineano nuovamente la bassa precisione delle analisi. In particolare abbiamo calcolato l'R^2 sia attraverso il determinante (0.73) che con la traccia (0.27).
-Al contrario per quanto riguarda l'entropia (356) ed l'entropia relativa (0.15) possiamo dedurre che il modello risulta affidabile.
-Riteniamo opportuno confrontare i modelli VEV,7 ed EVV,3 che sono per distacco i migliori. 
+Al contrario per quanto riguarda l'entropia (356) ed l'entropia relativa (0.15) possiamo dedurre che il modello risulta affidabile. <br>
+Riteniamo opportuno confrontare i modelli VEV,7 ed EVV,3 che sono per distacco i migliori.  <br>
 Il modello con 7 gruppi in termini di bontà risulta migliore e lo si denota dal fatto che sia R^2 calcolato tramite determinante (0.89) che quello calcolato tramite traccia (0.39) sono superiori. 
-Al contrario in termini di allocazione delle unità statistiche si denota un peggioramento osservabile dalla presenza di incertezza maggiore in ciascuna unità statistica e da un'entropia assoluta (1019) e relativa (0.25).
+Al contrario in termini di allocazione delle unità statistiche si denota un peggioramento osservabile dalla presenza di incertezza maggiore in ciascuna unità statistica e da un'entropia assoluta (1019) e relativa (0.25) superiore. 
 ```{r,echo=FALSE}
 tibble(indice=c("R^2 determinante","R^2 traccia","entropia","entropia relativa"),EVV_3=c(0.73,0.27,356,0.15),VEV_7=c(0.89,0.39,1019,0.25))
 
