@@ -1,5 +1,4 @@
-#qua faremo lo script e dopo nel markdown faremo vedere gli output dell'analisi
-#ovviamente senza mostrare lo script `echo = FALSE`
+
 #install.packages("Rmixmod")
 #install.packages("caret")
 rm(list=ls())
@@ -13,23 +12,14 @@ library(caret)
 
 # data exploration  -------------------------------------------------------
 
-#TO do :
-# Usare grafici migliore per scartare variabili 
-# fare un buon gg paris v
-# PCA v
 
-# #metto che si vedono tutte le variabili:
-# options(tibble.width=Inf) no PLS
-#capiamo meglio come mai nelle analisi dobbiamo escludere (o capire come incorporare) 
-#le variabili con hist e severe decelleration
 
-#bisogna strutturare meglio la analisi iniziale 
+
 fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
-  mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
+  mutate_at(vars(fetal_health),as.factor)
 
 levels(fetal_Health$fetal_health) <- c("Normale","Sospetto","Patologico")
 
-#istogrammi da non includere nel markdown ma da riportare le osservazioni/motivazioni per cui non sono utilizzate
 sum(fetal_Health$severe_decelerations != 0)# not normaly distributed most values are 0 
 hist(fetal_Health$histogram_number_of_zeroes) # è un conteggio dunque probabilmente si distribuisce come poisson
 hist(fetal_Health$histogram_number_of_peaks) # è un conteggio dunque probabilmente si distribuisce come poisson
@@ -42,7 +32,7 @@ hist(fetal_Health$fetal_movement) #fortemente asimmetrica
 hist(fetal_Health$prolongued_decelerations) #fortemente asimmetrica
 
 #variabile sospetta fetal_Health$mean_value_of_long_term_variability, fetal_Health$mean_value_of_short_term_variability
-#hanno un lower bound di 0 >>>>>le possiamo accettare
+#hanno un lower bound di 0 
 
 fetal_Health <- fetal_Health %>%
   select(-c(severe_decelerations,
@@ -78,9 +68,6 @@ fetal_Health%>%select(-fetal_health)%>%ggpairs() #ggpairs senza etichette: osser
 #non sono presewnti (soprattutto nelle 4 pca selezionate) molte distribuzioni con multimodalità ma
 #è normale siccome siamo su datoi reali e siccome la clusterizzazione è improbabile che sia evidente a livello 
 #univariato 
-
-# commento che si può fare: è evidente (anche in casi unidensionali) che le variabili (anche se distinte per fetal health)
-#SONO MULTIMODALI (perforza andrà usato un MDA)
 
 
 #essendo dati presi da macchine è improbabile la presenza di outliers dovuto a "data entry"
@@ -122,8 +109,6 @@ fetal_Health %>%
 #i sospetti si collocano a destra dei sani e non tra sani e malati>>>>motivazione:
 #gli individui sospetti sono semplicemente dei casi sul quale la ricerca in campo medico non ha svolto analisi approfondite; 
 #infatti sono individui in cui i dati raccolti sono molto diversi sia dagli individui sani sia dagli individui malati
-
-#ASH CONTROLLA SE QUESTA COSA CORRISPONDE ALLA REALTà!!!!!!!!!!!!!!
 
 
 #dataset per model-based clustering:
@@ -192,16 +177,14 @@ summary(health_mclust_BIC_k3) #EVV
 
 
 #in questo caso ICL e BIC restituiscono lo stesso modello (se fossero diversi sarebbe opportuno dare piorità al modello fornito tramite ICL)
-#credo che i parametri siano gli stessi ????
 
 
 (etichette_stimate<-health_mclust_BIC_k3$classification)
 table(etichette)
-table(etichette_stimate) #probabilmente il gruppo 2 corrisponde ai "Normali" e si può ipotizzare che il gruppo 3 siano i "Sospetti" ed 
-#il gruppo 1 i "Patologici" (stando alle numerosità) ma siccome l'EM rislta poco robusto non è sicuro: VEDI GRAFICO
+table(etichette_stimate) 
 
 (precisione_EM<-classError(etichette_stimate, class=etichette))
-(CER<-precisione_EM$errorRate) #potremmo definirlo CER??????? 
+(CER<-precisione_EM$errorRate) 
 (accuracy<-1-CER)
 #76% di accuracy
 
@@ -210,8 +193,7 @@ adjustedRandIndex (etichette_stimate , etichette) #rand index molto basso
 (etichette_stimate<-as.factor(etichette_stimate))
 levels(etichette_stimate)<-c("Patologico","Normale","Sospetto") #sembra la classificazione più coerente con le numerosità e con l'output di "classError" 
 #(considera l'abbinamento più adeguato tra i possibili delle etichette originaliu con quelle stimate)
-
-#LA ACCCURACY NON TORNA...DA RICONTROLLARE 
+ 
 confusionMatrix(etichette_stimate,etichette) #la sensitivity è molto alta solo nella classe "Normale"
 #al contrario la specificity è molto bassa (significa che tra patologico e normale non riesce ad ottenere una buonma divisione)
 # in generale si può dire che i gruppi "Sospetto" e "Patologico" non sono rilevati correttamente dall'EM
@@ -224,23 +206,20 @@ coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            sub="(b) Model-Based Clustering")
 points(fetal_Health_EM[precisione_EM$misclassified,c(1,2)],pch=19) #rappresentazione in nero delle u.s. missclassified
 #si osserva che quanto meno le u.s. facenti parte del gruppo dei malati vengono allocate correttamente
-#MODIFICA: FARE points SOLO CON LE 10/20 U.S. CON MAGGIOR INCERTEZZ APER VEDERE DOVE L'ALGORITMO HA MAGGIOR DIFFICOLTà 
+
 
 #questo grafico rappresenta l'incertezza delle u.s.:
 coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, xlim=c(85,170),
            ylim=c(125,216)) #più questa che vogliamo implementare
            
-#DA CONTROLLARE:
-#(da questi grafici si vede subito come (ok siamo nel bidimensionale che non è veritiero come nel multidimensionale (d=4)) l'EM fatichi a riconoscere
-#gli individui sospetti )
 
 #Infatti vie è una sostanziale differenza tra i cluster iniziali con le etichette note e quelli conb le etichette stimate
 #il gruppo iniziale dei sospetti si fonde a quello dei normali e il gruppo dei normnali viene scisso in 2 sotto gruppi (uno molto grande che include anche gran parte 
 #dei sospetti ed uno più piccolo che si pone a metà tra i malati ed i normali) (stando a questo grafico tutte le assosciazioni con la confusion matrix le distanze l'incertezza ecc
-#non hanno senso e sono da ricontrollare IMPORTANTE)>>>>>soprattutto le conflusioni sulla matrice delle distanze KLs
+#non hanno senso e sono da ricontrollare)>>>>>soprattutto le conflusioni sulla matrice delle distanze KLs
 #il gruppo dei malati si distingue comunque abbastanza bene ma l'EM non riconosce (ovviamente) quel gruppo di individui malati che nel grafico iniziale erano molto distandi dal
-#baricentro degli individui malati (in basso a destra....) DA RICONTROLLARE
+#baricentro degli individui malati (in basso a destra....) 
 
 (pj<-health_mclust_BIC_k3$parameters$pro)
 zij<-health_mclust_BIC_k3$z
@@ -248,7 +227,7 @@ zij<-health_mclust_BIC_k3$z
 (entropia<-(-1)*sum(rowSums(zij*log(zij))))
 (entropia_relativa<-entropia/n/log(3))  #non male
 
-(mu1<-health_mclust_BIC_k3$parameters$mean[,1]) #questi sono i patologici e sono l'unica cosa che ha senso confrontsare a livello di sensitivity (NON a livello di specificity)
+(mu1<-health_mclust_BIC_k3$parameters$mean[,1]) #questi sono i patologici e sono l'unica cosa che ha senso confrontsare a livello di sensitivity 
 (mu2<-health_mclust_BIC_k3$parameters$mean[,2])
 (mu3<-health_mclust_BIC_k3$parameters$mean[,3])
 (mu<-mu1*pj[1]+mu2*pj[2]+mu3*pj[3])
@@ -302,7 +281,8 @@ dim(zij_best)
 (entropia_best<-(-1)*sum(rowSums(zij_best*log(zij_best)),na.rm=T)) #entropia molto più alta
 entropia_best/n/log(7) #idem entropia relativa
 
-#ha senso un R2 
+
+#R2 
 mu<-matrix(NA,nrow=4,ncol=7)
 for (i in 1:7){
   mu[,i]<-health_mclust_best$parameters$mean[,i]
@@ -378,7 +358,7 @@ levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
 
 
 (confmatrix <-confusionMatrix(etichette_prediction_EDDA,  data_test$fetal_health)) #l'accuracy è elevata solo a causa
-#della differenza di numerosità tra i gruppi; infatti ben61 dei casi sospetti vengono nuovamente classificati come normali
+#della differenza di numerosità tra i gruppi; infatti ben 61 dei casi sospetti vengono nuovamente classificati come normali
 #anche (seppur in minor parte) nei casi patologici si verifica questa missclassification (osservabile tramite sia la
 #confusion matrix sia tramite sensitivity e specificity)
 
@@ -402,10 +382,6 @@ data_test %>%
 set.seed(123)
 mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
 
-#COMMENTO DA CONTROLLARE
-#bisogna capire come mai non mi specifica i modelli se non metto niente in model names e
-#se lascio g senza niente (perchè devo specificare che modello e quanti g non dovrebbe farlo da solo????)
-# Ok era semplicemente perchè gli davamo da stimare troppi parametri 
 summary(mod2)
 
 etichette_prediction_MDA<-predict(mod2, select(data_test,-fetal_health))$class 
@@ -465,7 +441,7 @@ confusionMatrix(etichette_prediction_MDA_cv, data_test$fetal_health)
 #fatica in "Sospetto" e "Patologico"
 #abbiamo aumentato la sensitivity del caso "sospetto" ma peggiorato quello del caso "patologico"
 
-
+'''
 
 # MDA classificare sospetti come sani o malati -----------------------------------------------------------------
 
@@ -505,109 +481,20 @@ table(predict(mod_mda_k2,fetal_Healt_sospetti[,1:4])$class)/nrow(fetal_Healt_sos
 
 
 
+'''
 
 
-# MDA under/oversampling --------------------------------------------------------------------------------------
+# smote  ------------------------------------------------------
 
-# idea del modello: basandosi sull'analisi precedente nel quale 7 individui su 8 della classe dei sospetti sono classificati nella normali, non avendo certezze scientifiche
-# sul futuro del feto essendo dati anomali ma sul quale la ricerca in campo medico non è sufficientemente approfondita; vista la difficoltà dei modelli nel classificare la 
-#classe dei sospetti (sensitivity troppo bassa) costruiamo un modello solo con lo scopo di classificare un feto come patologico o no...senza suddividere i dati in 
-#normale e sospetto
-
-# over sampling
 
 #install.packages( "https://cran.r-project.org/src/contrib/Archive/DMwR/DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
 #install.packages("grid")
 #install.packages("DMwR")
 #install.packages("ROCR")
-
 library(lattice)
 library(grid)
 library(DMwR)
 
-(train2<-data_train %>% 
-  as.data.frame())
-table(train2$fetal_health)
-
-levels(train2$fetal_health) <- c("Normale","Normale","Patologico") # i sospetti vengono considerati normali (vedi definizione patologici)
-
-table(train2$fetal_health)
-
-
-new_train <- SMOTE(fetal_health ~ ., train2, perc.over= 600, perc.under = 117) #oversampling e undersampling
-#SMOTE è un algoritmo di bilanciamento dei dati utilizzato per affrontare 
-#il problema dei dataset sbilanciati. Genera sinteticamente nuovi esempi per 
-#la classe minoritaria, identificando vicini prossimi e creando combinazioni 
-#lineari tra le istanze esistenti. Questo processo migliora la rappresentazione 
-#della classe meno frequente nel dataset, aiutando i modelli di machine learning a 
-#generalizzare meglio durante l'addestramento. La corretta regolazione dei parametri,
-#come il numero di vicini, è essenziale per evitare eccessiva generazione di dati sintetici. In generale, l'applicazione di SMOTE contribuisce a una classificazione più accurata delle classi minoritarie in un contesto di dataset sbilanciati.
-
-# + perc.over/100 % is the number of cases generated (in questo caso 1/3 sono reali)
-
-
-#  if 200 new examples were generated for the minority class, a value of perc.under of 100 will randomly select exactly 
-#  200 cases belonging to the majority classes from the original data set to belong to the final data set. Values above 100 will select more examples from the majority classes.
-# in questo caso prendiamo (+ perc.over/100 %) * ncasi * perc.under 
-
-table(new_train$fetal_health) 
-
-
-
-mm <-mixmodGaussianModel(family = "all",
-                                        free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
-#di oversampling e undersampling                                      
-
-modsmote <- mixmodLearn(new_train[,-5], new_train$fetal_health ,models=mm,
-                        criterion = "CV")
-
-modsmote@bestResult
-?mixmodGaussianModel
-summary(modsmote) 
-
-
-
-
-
-PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=modsmote["bestResult"])
-PREDICTION@classificationRule
-
-(real_labels <- as.factor(data_test$fetal_health)) #etichette vere
-levels(real_labels) <- c("Normale","Normale","Patologico")
-
-(etichette_prediction_oversampling<-as.factor(PREDICTION@partition))
-levels(etichette_prediction_oversampling)<-c("Normale","Patologico")
-
-confusionMatrix(etichette_prediction_oversampling,real_labels) 
-#aumento della sensitivity del caso patologico (significa che siamo pèiù accurati nell'identificare un caso patologico) da 0.7 a 0.83
-#qui la sensitivity del caso patologico è indicata dalla specificity del caso normale
-#tende il modello ad essere pessimista sui casi normali preferendo una classificazione come patologici
-#cioè se Ho: caso patologico allora in generale abbiamo un basso errore di primo tipo (classificare i patologici come normali) ma
-#un errore di secondo tipo necessariamente più alto (preferribile avere errore di secondo tipo alto e di primo tipo basso)
-#errore di primo tipo: classificare malati come sani
-#errore di secondo tipo: classificare sani come malati
-
-
-prob.post_incertezza<- tibble(PREDICTION@proba) %>%
-  rowwise() %>% # operiamo riga per riga
-  mutate(incertezza = 1 - max(c_across(everything()))) 
-
-
-data_test %>%
-  ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = real_labels)) +
-  geom_point(size=prob.post_incertezza$incertezza*5)+
-  geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
-             color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*5)
-#si può notare che le etichette dei malati sono ben evidenziate anche se poste lontane dal baricentro del gruppo dei malati
-
-
-
-
-
-
-
-
-# smote fatto meglio ------------------------------------------------------
 
 library(scutr)
 dt <- as.data.frame(data_train)
@@ -621,8 +508,7 @@ new_train<-data_train %>%
   as.data.frame()
 
 mm <-mixmodGaussianModel(family = "all",
-                         free.proportions = F) #modello in cui i pj non sono stimati siccome vengono imposti pari a circa 0.5 dall'azione
-#di oversampling e undersampling    
+                         free.proportions = F) 
 set.seed(123)
 mod = MclustDA(new_train[,-5],
                new_train$fetal_health ,G=1:5,
@@ -652,6 +538,6 @@ data_test %>%
   geom_point(size=prob.post_incertezza$incertezza*7)+
   geom_point(data = filter(data_test,etichette_prediction_oversampling != real_labels), 
              color = "black", alpha = 0.3,size=prob.post_incertezza$incertezza[etichette_prediction_oversampling != real_labels]*7)
-#non sembra bellissimo come grafico
+
 
 tibble(indice=c("R^2 determinante","R^2 traccia","entropia","entropia relativa"),EVV_3=c(0.73,0.27,356,0.15),VEV_7=c(0.89,0.39,1019,0.25))
