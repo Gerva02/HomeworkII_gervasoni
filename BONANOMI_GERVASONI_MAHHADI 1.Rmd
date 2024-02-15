@@ -204,7 +204,7 @@ precisione_EM<-classError(etichette_stimate, class=etichette)
 accuracy<-1-length(precisione_EM$misclassified)/n
 ```
 Grazie alla Confusion Matrix notiamo come la sensitivity è molto alta solo nella classe "Normale",
-al contrario la specificity è molto bassa.È evidente come l'EM non riesce a distinguere bene fra il patologico e il normale. Infatti 253 casi sospetti che vengono classificati come "Normali".
+al contrario la specificity è molto bassa.È evidente come l'EM non riesce a distinguere bene fra il patologico e il normale. Infatti 253 casi sospetti che vengono classificati come "Normali":
 ```{r,echo=FALSE, warning= FALSE}
 etichette_stimate<-as.factor(etichette_stimate)
 levels(etichette_stimate)<-c("Patologico","Normale","Sospetto")
@@ -222,7 +222,6 @@ grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classi
 ```
 
 Ai fini di visualizzare meglio l'incertezza,invece, ci siamo serviti del grafico che segue. La posizione dei punti ci permette di dedurre dove è stata allocata la corrispondente u.s., mentre l'incertezza della clusterizzazione aumenta al crescere delle dimensioni del punto:
-
 ```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
 grafico2<-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165),colors=c("red","dodgerblue3","#66FF66")) + title("Grafico incertezze")
