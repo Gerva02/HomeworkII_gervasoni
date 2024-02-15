@@ -429,9 +429,11 @@ modello_MDA_k3<-function(data,etichette){
   return(lis)
 }
 
-
-(out<-modello_MDA_k3(data_train[,1:4],as.factor(data_train$fetal_health))) #G=(5,4,5)
-#stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy e la confusion matrix
+#------------------------------------------------------------------------------------------------------------------#
+# 2 minuti per eseguire il comando:                                                                                #
+# (out<-modello_MDA_k3(data_train[,1:4],as.factor(data_train$fetal_health))) #G=(5,4,5)                            #
+# stimiasmo il modello migliore e sul test set forniamo la precisione tramite accuracy e la confusion matrix       #
+#------------------------------------------------------------------------------------------------------------------#
 
 set.seed(123)
 mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
