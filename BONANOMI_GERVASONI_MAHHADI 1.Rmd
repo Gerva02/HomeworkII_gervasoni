@@ -11,11 +11,11 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F)
 knitr::opts_chunk$set(comment = NA)
 
 ```
-```{r warning=FALSE, message= FALSE,echo=FALSE }
+```{r warning=FALSE, message= FALSE }
 library(tidyverse)
 library(mclust)
 library(Rmixmod)
@@ -80,7 +80,7 @@ fetal_health| Salute fetale (etichetta di classe)|**1**:Sano **2**:Sospetto **3*
 Il dataset non presenta valori mancanti. Valutando la distribuzione delle variabili abbiamo visto come quelle di conteggio naturalmente seguono una distribuzione assimilabile a quella di Poisson di conseguenza si è optato per escluderle dalle successive analisi. È stata esclusa anche la variabile *histogram_tendency* poichè fattoriale. Le variabili *percentage_of_time_with_abnormal_long_term_variability* e *histogram_variance* non son state considerate perchè non hanno comportamento normale. Le restanti variabili escluse dimostravano una pronunciata asimmetria.
 Da un'analisi preliminare dell'istogramma delle frequenze relative condizionato per classi si evince come la classe dei sani è predominante, il che è fisiologico considerando che nella popolazione, l'incidenza di casi patologici è molto limitata:
 
-```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
+```{r,fig.align='center', fig.width=5,fig.height=3.5}
 fetal_Health <- tibble(read.csv("fetal_health.csv")) %>%
   mutate_at(vars(fetal_health),as.factor) # non è elegante da migliorare
 levels(fetal_Health$fetal_health) <- c("Normale","Sospetto","Patologico")
@@ -112,7 +112,7 @@ Ulteriori dettagli sul dataset sono presenti al seguente link: [Fetal Health Cla
 In prima analisi abbiamo deciso di analizzare la correlazione e la distribuzione delle variabili mediante ggpairs. Se ne è dedotto che le variabili *histogram_mean*, *histogram_median* e *histogram_mode* sono fortemente correlate; di conseguenza non è necessario includerne più di una. Non si riesco a dedurre osservazioni particolarmente utili per la fase di clustering a livello univariato o bivariato ma ciò non esclude la presenza di gruppi a livello multivariato (non visualizzabili).Infine si nota che le variabili se distinte per fetal_health sono multimodali quindi successivamente ci serviremo della classificazione MDA. Inoltre essendo dati presi da macchine, è improbabile la presenza di errori dovuti a "data entry" (gli outliers sono altra roba....).
 
 Procediamo ora con l'analisi delle componenti principali. Anzitutto, visto l'ordine di grandezza differente fra le variabili abbiamo eseguito una standardizzazione. Con la PCA abbiamo ottenuto che 4 componenti coprono l'80% della variabilità. A questo punto abbiamo selezionato le prime 4 variabili in base ai loadings (cioè a quanto peso ha la singola variabile all'interno della componente principale).
-```{r, echo=FALSE}
+```{r }
 n <- nrow(fetal_Health)
 #analisi delle componenti principali: 
 pca <- fetal_Health%>%
@@ -126,7 +126,7 @@ k <- ncol(fetal_Health)
 ```
 Dopodichè abbiamo ripetuto il ggpairs, ma delle solo variabili selezionate. Notiamo che le ultime 2 variabili selezionate *mean_value_of_long_term_variability* e *uterine_contractions* non rispettano la normalità e la simmetria in tutti i gruppi (analizzando dati reali sono situazioni molto frequenti che quindi accettiamo nel modello).
 Inoltre dallo scatterplot delle prime 2 variabili si evince una netta distinzione tra i gruppi coi casi sospetti che si collocano a destra dei sani e non al centro,confermando l'anomalia delle osservazioni della seconda classe,sulle cui oservazioni sono richieste ulteriori analisi:
-```{r, echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
+```{r, ,fig.align='center', fig.width=5,fig.height=3.5}
 fetal_Health %>%
   ggplot(mapping = aes(x=histogram_mean , y = histogram_max, color = fetal_health)) +
   geom_point(alpha=0.4) +
@@ -137,7 +137,7 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 
 ```
 Fatte queste premesse, per il clustering abbiamo optato per il dataset con le sole variabili selezionate tramite pca così da avere una buona sintesi delle variabili a costo di perdere interpretabilità nei risultati. Segue la proiezione di un facetted box plot col quale rileviamo alcuni outlier che verranno conservati per mantenere la multimodalità:
-```{r,echo=FALSE,fig.align='center', fig.width=6.5,fig.height=4}
+```{r,fig.align='center', fig.width=6.5,fig.height=4}
 #dataset per model-based clustering:
 fetal_Health_EM<-fetal_Health%>%
   select(all_of(load_vars)) #dataset solo con le variabili selezionate tramite pca (non servono le etichette per il clustering)
@@ -169,7 +169,7 @@ Si nota nuovamente, a sostegno delle osservazioni precedenti, che il gruppo dei 
 ### 4) Model Based Clustering
 
 Arrivati a questo punto, implementiamo un EM di normali senza specificare il numero dei gruppi:
-```{r,echo=FALSE}
+```{r}
 #install.packages("mclust")
 set.seed(123) 
 health_mclust_ICL<-mclustICL(fetal_Health_EM, G=2:10) #l'algoritmo EM non riesce a stimare modelli complessi come VVV a causa della
@@ -177,18 +177,18 @@ health_mclust_ICL<-mclustICL(fetal_Health_EM, G=2:10) #l'algoritmo EM non riesce
 summary(health_mclust_ICL)
 ```
 Essendo un dataset con un numero relativamente limitato di osservazioni l'algoritmo EM non riesce a stimare dei modelli complessi come il VVV (nemmeno VVV con k=3), mentre osserviamo che VEV,7 e EVV,3 sono molto vicini tra loro. Non viene prediletto un k particolare. Inoltre, notiamo dal grafico ottenuto come gran parte dei modelli valutati in base all'ICL risultano della stessa precisione qualunque sia il numero di gruppi. Ipotizziamo che ciò può essere dato dal fatto che essendo dati reali è verosimile che ciascun gruppo abbia diversi sotto gruppi. Alla luce di questo riconfermiamo la nostra intenzione di allenare un MDA in fase di model-based classification.
-```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
+```{r,,fig.align='center', fig.width=5,fig.height=4}
 plot(health_mclust_ICL,ylim=c(-33000,-29000)) 
 title("Andamento ICL")
 ```
 Provando a valutare il BIC (non accurato come ICL, in quanto non tiene conto dell'entropia) viene restituito un modello VEV k=8.
-```{r,echo=FALSE}
+```{r}
 set.seed(123)
 health_mclust_BIC<-Mclust(fetal_Health_EM,G=2:10) 
 #summary(health_mclust_BIC) # qua niente summary giusto
 ```
 In definitiva possiamo dire che l'EM è molto instabile e poco robusto per cui diventa cruciale la scelta dei valori iniziali. Difatti sia tramite ICL che con il BIC il model based clustering fornisce un numero di gruppi differente. Provando, invece, a specificare il numero dei gruppi ICL e BIC restituiscono lo stesso modello. Fossero stati diversi avremmo dato priorità al modello fornito tramite ICL per le sue proprietà. 
-```{r,echo=FALSE}
+```{r}
 set.seed(123) 
 health_mclust_ICL_k3<-mclustICL(fetal_Health_EM,G=3)
 #summary(health_mclust_ICL_k3) #EVV 
@@ -198,14 +198,14 @@ set.seed(123)
 health_mclust_BIC_k3<-Mclust(fetal_Health_EM,G=3)
 #summary(health_mclust_BIC_k3) #EVV
 ```
-```{r,echo=FALSE}
+```{r}
 etichette_stimate<-health_mclust_BIC_k3$classification
 precisione_EM<-classError(etichette_stimate, class=etichette)
 accuracy<-1-length(precisione_EM$misclassified)/n
 ```
 
 Per avere un riscontro visivo rappresentiamo il grafico della clusterizzazione ottenuta specificando il numero esatto dei gruppi:
-```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
+```{r,fig.align='center', fig.width=5,fig.height=4}
 grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classification",
            classification=health_mclust_BIC_k3$classification,
            col=c("red","dodgerblue3","#66FF66"), symbols=c(0 ,16 ,17),
@@ -215,7 +215,7 @@ grafico1<-coordProj (as.data.frame(fetal_Health_EM), dimens=c(1,2), what="classi
 ```
 
 Ai fini di visualizzare meglio l'incertezza,invece, ci siamo serviti del grafico che segue. La posizione dei punti ci permette di dedurre dove è stata allocata la corrispondente u.s., mentre l'incertezza della clusterizzazione aumenta al crescere delle dimensioni del punto:
-```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=4}
+```{r,fig.align='center', fig.width=5,fig.height=4}
 grafico2<-coordProj (data=as.data.frame(fetal_Health_EM), dimens=c(1,2), what="uncertainty",
            parameters=health_mclust_BIC_k3$parameters , z=health_mclust_BIC_k3$z, ylim=c(130,211),xlim=c(90,165),colors=c("red","dodgerblue3","#66FF66")) + title("Grafico incertezze")
 
@@ -233,7 +233,7 @@ DITEMI SE VOLETE FARLO A MO DI TABELLA COI VALORI DEGLI INDICI O SE VOLETE METTE
 ### 5) Model Based Classification
 Il primo step dell’analisi è stato quello di dividere il dataset in training e test set. In particolare,abbiamo assegnato, in modo casuale, il 70% delle osservazioni del dataset al training set e il restante 30% al test set. Questa fase è essenziale nel momento in cui si vanno ad applicare approcci
 di tipo supervisionato, il cui scopo è quello di fare generalizzazione e prevedere nuove istanze per la variabile target.
-```{r,echo=FALSE}
+```{r}
 train_test<-function(data,perc=0.7){
   set.seed(123)
   index<-sample(c("train","test"),size=nrow(data),replace=T,prob=c(perc,1-perc))
@@ -251,14 +251,14 @@ data_test<-out$data_test
 
 #### 5.2) EDDA (Valutato tramite Cross validation) 
 Ora che abbiamo ottenuto il traning set alleniamo un modello EDDA.Il modello allenato ci restituisce il modello VEV che valutiamo sul test set. Otteniamo la confusion matrix con un valore dell'accuracy dello 0.8447.
-```{r,echo=FALSE}
+```{r,}
 set.seed(123)
 pr<-mixmodLearn(data_train[,1:4], c(data_train$fetal_health),
                  models=mixmodGaussianModel(family='all'),
                  criterion=c('CV','BIC'))
 #summary(pr) #la parte di evaluation deve essere svolta sul test set
 ```
-```{r,echo=FALSE}
+```{r}
 PREDICTION<- mixmodPredict(data = select(data_test,-fetal_health), classificationRule=pr["bestResult"])   
 etichette_prediction_EDDA <- as.factor(PREDICTION@partition)
 levels(etichette_prediction_EDDA) <- c("Normale","Sospetto", "Patologico")
@@ -269,7 +269,7 @@ EDDA_Confusion$table
 L'accuracy è elevata solo a causa della differenza di numerosità tra i gruppi. Notiamo questa mal classificazione sia nei casi sospetti sia,seppur in minor parte, nei casi patologici. Si può osservare tramite la
 confusion matrix o mediante le sensitivity molto basse (0.24 e 0.35 di sospetti e patologici). 
 Plottando il grafico notiamo maggior incertezza nella regione in cui sono presenti gli individui sospetti ed in parte anche negli individui patologici:
-```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3}
+```{r,fig.align='center', fig.width=5,fig.height=3}
 prob.post_incertezza<- tibble(PREDICTION@proba) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
@@ -286,7 +286,7 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 
 #### 5.3) MDA
 Come preannunciato, considerato il ggpairs e l'algoritmo EM ottenuti, si evince la necessità di implementare un modello di classificazione di tipo MDA con selezione tramite BIC e successiva valutazione sul test set.
-```{r,echo=FALSE}
+```{r}
 set.seed(123)
 mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health) 
 #summary(mod2)
@@ -294,14 +294,13 @@ mod2 <- MclustDA(data_train[,1:4], data_train$fetal_health)
 
 La classe dei sospetti resta la più problematica stando ai valori della sensitivity ma ha subito comunque un discreto incremento rispetto alla classificazione EDDA (si può affermare che è meglio un modello MDA)
 Proviamo a valuatre un mda basato su cross validation:
-```{r,echo=FALSE}
+```{r}
 # prob.post_incertezza<- tibble(PREDICTION@proba) %>%
 #   rowwise() %>% # operiamo riga per riga
 #   mutate(incertezza = 1 - max(c_across(everything()))) 
 # ```
 # 
-# ##### 5.3.2)MDA (Cross Validation) 
-# ```{r,echo=FALSE}
+#
 # accuracy<-function(g,mod,nCV=5,data,etichette){
 #   set.seed(123)
 #   mod_mda<-MclustDA(data,class=etichette,G=as.list(g),modelName=mod)
@@ -334,7 +333,7 @@ Proviamo a valuatre un mda basato su cross validation:
 ```
 Successivamente abbiamo implementato una funzione che valuta il miglior modello mda tramite cross validation con nfold=4 che ci permette di ottenere la seguente confusion matrix:
 N.B. la stima del modello tramite cross validation richiede una potenza computazionale non indifferente soprattutto se i modelli da testare e il numero di cluster è molto elevato, per questo motio abbiamo optato per una funzione che imponesse come vincolo che il modello utilizzato in ciascuna delle classi fosse di tipo VII da 1 a 5 gruppi (empiricamente si è visto essere molto accurato ma con un numero di parametri decisamente inferiore (trade-off tra precisione del modello e prestazioni del pc richieste)).
-```{r,echo=FALSE}
+```{r}
 set.seed(123)
 mod_mda_k3<-MclustDA(data_train[,1:4],data_train$fetal_health,G=c(5,4,5),modelNames="VII")
 etichette_prediction_MDA_cv<-predict(mod_mda_k3, select(data_test,-fetal_health))$class
@@ -397,7 +396,7 @@ SMOTE_Confusion$byClass[,1:2]
 ```
 
 Dal grafico vediamo come le unità statistiche patologiche son ben distinguibili anche se distanti dal baricentro della classe contenente i casi patologici. 
-```{r,echo=FALSE,fig.align='center', fig.width=5,fig.height=3.5}
+```{r,fig.align='center', fig.width=5,fig.height=3.5}
 prob.post_incertezza<- tibble(predict(mod, select(data_test,-fetal_health))$z) %>%
   rowwise() %>% # operiamo riga per riga
   mutate(incertezza = 1 - max(c_across(everything()))) 
@@ -418,3 +417,4 @@ theme(plot.title = element_text(hjust = 0.5,face = "bold", size = 14,margin = ma
 In definitva si può affermare che la classe dei casi sospetti è molto difficile da definire sia nei modelli di clustering che nei modelli di classification. 
 Abbiamo anche osservato come i modelli di tipo MDA sono più accurati dei modelli EDDA probabilmente a causa della presenza di sottogruppi in ciascuna classe. 
 Tramite l'utilizzo di SMOTE e undersampling e un classificatore MDA otteniamo un risultato migliore per classi minoritarie, ma risulta ovvio che lo scarso numero osservazioni e l'accuratezza comunque relativamente bassa rendano il nostro classificatore non adatto ad usi medici, ma potrebbe diventarlo tramite metodi di classificazione più sofisticata che possono permettere di altri tipi di dati.
+
