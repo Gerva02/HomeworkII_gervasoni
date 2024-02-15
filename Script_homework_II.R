@@ -609,7 +609,7 @@ data_test %>%
 
 # smote fatto meglio ------------------------------------------------------
 
-
+library(scutr)
 dt <- as.data.frame(data_train)
 data_new_patologici  <-oversample_smote(dt, "Patologico" , cls_col = "fetal_health", m = 600)
 data_new_sospetto    <-oversample_smote(dt, "Sospetto" , cls_col = "fetal_health", m = 300)
